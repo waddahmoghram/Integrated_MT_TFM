@@ -20,7 +20,7 @@
 
         for jj = 1:cornerCount
             CurrentFrameRectImage{jj} = imcrop(CurrentFrameImageAdjust,  DriftROI_rect(jj, :)); 
-            tFormMatrix = imregtform(gather(RefFrameDIC_RectImage{jj}), gather(CurrentFrameRectImage{jj}), TransformationType, optimizer, metric);  
+            tFormMatrix = imregtform(gather(RefFrameDIC_RectImage{jj}), gather(CurrentFrameRectImage{jj}), TransformationType, optimizer, gather(metric));  
             meanDIC_DriftROIs(jj,1:2) = tFormMatrix.T(3, 1:2);
             meanDIC_DriftROIs(jj,3) = vecnorm(meanDIC_DriftROIs(jj,1:2), 2, 2);        % displacement             
         end

@@ -4,6 +4,7 @@
         1. Combined VideoanalysisDIC.m, VideoAnalysisEPI.m
 
 %}    
+format longg
 %% _______________________________ Predetermined Variables DIC 
     % Initial Parameters. Make sure you track previously.
     choiceTrackDIC ='Yes';
@@ -23,7 +24,7 @@
     TrackingMethodList = {'imfindcircles()', 'imgregtform()'};
 %     TrackingMethodListChoiceIndex = listdlg('ListString', TrackingMethodList, 'SelectionMode', 'single', 'InitialValue', 1, ...
 %         'PromptString', 'Choose the tracking Algorith:', 'ListSize', [200, 100]);
-    TrackingMethodListChoiceIndex = 2;                      % going with imregtform() as our standard
+    TrackingMethodListChoiceIndex = 1;                      % going with imregtform() as our standard
 %     if isempty(TrackingMethodListChoiceIndex), TrackingMethodListChoiceIndex = 1; end
     TrackingMethod = TrackingMethodList{TrackingMethodListChoiceIndex}; 
     controlMode =  'Controlled Force';
@@ -308,6 +309,7 @@
     if useGPU, RefFrameDIC = gpuArray(RefFrameDIC); end
     RefFrameDICAdjust = imadjust(RefFrameDIC, stretchlim(RefFrameDIC,[0, 1]));  
     
+    TrackingMethod = 'imgregtform()';
     switch TrackingMethod
         case 'imfindcircles()'                 %% Quicker, but noisier.
             commandwindow;
@@ -321,36 +323,17 @@
             axis image
 
             switch SmallerROIChoice
-                case 'Yes'
-%                     prompt = {'ROI Width (pixels)', 'ROI Heigh (pixels)', 'Top-Left Corner X-Coordinates (pixels)', 'Top-Left Corner Y-Coordinates (pixels)'};
-%                     dlgTitle = sprintf('ROI Dimensions : Total Size = [%g, %g] pixels', size(RefFrameDICAdjust, 2), size(RefFrameDICAdjust, 1));
-%                     dims = [1 70];
-%                     defInput = {'256', '256', '1', '1'};
-%                     opts.Interpreter = 'tex';
-%                     SmallerROIinitialSize = inputdlg(prompt, dlgTitle, dims, defInput, opts);
-%                     DIC_ROI_Rect_Dim = [str2double(SmallerROIinitialSize{3,:}), str2double(SmallerROIinitialSize{4,:}), str2double(SmallerROIinitialSize{1,:}) - 1, str2double(SmallerROIinitialSize{2,:}) - 1];   % one pixel less at end, 1:255 = 256 pixels.
+                case 'Yes'      
                     imSize = size(RefFrameDICAdjust);
-%                     close(figHandle)  
-%                     title({'Draw a rectangle to select an ROI.', 'Zoom and adjust as needed to select a tight box'})
-%                     BeadROIrectHandle = imrect(figAxesHandle, DIC_ROI_Rect_Dim);              % Can also be a needle tip
-%                     addNewPositionCallback(BeadROIrectHandle,@(p) title({strcat('ROI Position [X,Y,W,H]=', char(32), mat2str(p,3), char(32), 'pixels'), 'Double-Click on Last ROI when finished with adjusting all ROIs'})); 
-%                     ConstraintFunction = makeConstrainToRectFcn('imrect',get(figAxesHandle,'XLim'),get(figAxesHandle,'YLim'));
-%                     setPositionConstraintFcn(BeadROIrectHandle,ConstraintFunction);
-%                     CroppedRectangle = wait(BeadROIrectHandle);                                     % Freeze MATLAB command until the figure is double-clicked, then it is resumed. Returns whole pixels instead of fractions
-%                     CroppedRectangle = (round(CroppedRectangle));
-%                     close(figHandle)    
-%                     [BeadROI_DIC, BeadROI_rect] = imcrop(RefFrameImageAdjust, CroppedRectangle);
-%                     pause(2)
-                    SideLengths =  2 * [1, 1] * round((DIC_ROI_Microns_PerSide / ScaleMicronPerPixel));
-                    CroppedRectangle = [(imSize / 2) - round((DIC_ROI_Microns_PerSide / ScaleMicronPerPixel)), SideLengths];
-                    close(figHandle)
-                    [BeadROI_DIC, BeadROI_rect] = imcrop(RefFrameDICAdjust, CroppedRectangle);
-                    
+                    close(figHandle)    
+                    SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel));        % ±12 µm to pixels
+                    BeadROI_CroppedRectangle = [round((imSize / 2) - SideLengths ./2), SideLengths];
+                    [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
 %                 case 'No'
 %                     BeadROI = RefFrameImageAdjust;
 %                     BeadROIrect = [1,1, size(BeadROI, 2), size(BeadROI, 1)];        % width is columns, and height is rows.
             end
-                     
+            
             figMagBeadROI = imshow(BeadROI_DIC, 'InitialMagnification', 400);
             figure(figMagBeadROI.Parent.Parent)
             [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.7, 'Sensitivity', 0.95);   %'Sensitivity', 0.8
@@ -366,7 +349,7 @@
             clear BeadPositionXYCornerPixels         
             clear BeadRadius 
             BeadRadius = nan(size(FramesDoneNumbersDIC))';
-            BeadPositionXYCornerPixels  = nan(numel(FramesDoneNumbersDIC), 2);
+            BeadPositionXYCenterPixels  = nan(numel(FramesDoneNumbersDIC), 2);
             reverseString = ''; 
 %             
             figMagBeadTracked = figure('color', 'w');
@@ -374,30 +357,20 @@
             axis image
             
             %___ needs to be upgraded to use parallel processing and invoking 'MagBeadTrackedPosition_imtFindCircles.m'
-            for CurrentDIC_Frame = FramesDoneNumbersDIC
-                ProgressMsg = sprintf('\nTracking Frame %d/%d\n', CurrentDIC_Frame, FramesDoneNumbersDIC(end));
-                fprintf([reverseString, ProgressMsg]);
-                reverseString = repmat(sprintf('\b'), 1, length(ProgressMsg));
-                CurrentDIC_FrameFullImage = MD_DIC.channels_.loadImage(CurrentDIC_Frame);
-                
-                if useGPU, CurrentDIC_FrameFullImage = gpuArray(CurrentDIC_FrameFullImage); end
-                CurrentDIC_FrameImageFullAdjust = imadjust(CurrentDIC_FrameFullImage, stretchlim(RefFrameDIC,[0, 1]));   
-                CurrentDIC_FrameImage = imcrop(CurrentDIC_FrameImageFullAdjust, BeadROI_rect);
-                [CurrentCenters, CurrentRadii, metric] = imfindcircles(CurrentDIC_FrameImage, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.4, 'Sensitivity', 0.8);   % lowered edge from threshold from 0.8 & sensitivity from 0.95 on 2021-06-27
-                BeadRadius(CurrentDIC_Frame, :) = CurrentRadii(BeadNodeID);
-                BeadPositionXYCornerPixels(CurrentDIC_Frame,1:2) = CurrentCenters(BeadNodeID, :);
-                
-                CurrentDIC_FrameImageAdj = imadjust(CurrentDIC_FrameImage, stretchlim(CurrentDIC_FrameImage,[0, 1]));
-                colormap(GrayColorMap);
-                imagesc(figMagBeadTrackedAxes, 1, 1, CurrentDIC_FrameImageAdj);
-                axis image
-                
-                hold on
-                b = viscircles(CurrentCenters(BeadNodeID, :), CurrentRadii(BeadNodeID, :), 'EdgeColor','r','LineWidth', 1,    'EnhanceVisibility', false);
-                plot(CurrentCenters(BeadNodeID, 1), CurrentCenters(BeadNodeID, 2), 'r.', 'MarkerSize', 4)
-            end
-            close all
-
+            disp('---------------------------------------------------------------------------------')
+            disp('Tracking the displacement of the magnetic bead. No Drift correction yet')
+            parfor_progress(numel(FramesDoneNumbersDIC));
+            parfor CurrentDIC_Frame_Numbers = FramesDoneNumbersDIC                
+                [CurrentCenter, CurrentRadius] = MagBeadTrackedPosition_imtFindCircles(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_CroppedRectangle, ...
+                    BeadRadiusRange, 'dark', 'TwoStage', 0.4,  0.8);
+                BeadRadius(CurrentDIC_Frame_Numbers, :) = CurrentRadius;
+                BeadPositionXYCenterPixels(CurrentDIC_Frame_Numbers, :) = CurrentCenter;
+                parfor_progress;
+            end        
+            parfor_progress(0);
+            
+            BeadPositionXYcenter = BeadROI_CroppedRectangle(1:2) + BeadPositionXYCenterPixels + largerROIPositionPixels; 
+            
         case 'imgregtform()'                            %% Slower, but more accurate.
             TrackingModeList = {'multimodal','monomodal'};
 %             TrackingModeListChoiceIndex = listdlg('ListString', TrackingModeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
@@ -407,7 +380,8 @@
             TrackingMode = TrackingModeList{TrackingModeListChoiceIndex}; 
 
             [optimizer, metric] = imregconfig(TrackingMode);
-
+            if isgpuarray(metric), metric = double(gather(metric));end
+            
             TransformationTypeList = {'translation', 'rigid', 'similarity', 'affine'};
 %             TransformationTypeListChoiceIndex = listdlg('listString', TransformationTypeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
 %                'PromptString', 'Choose Displacement Mode:', 'ListSize', [200, 100]);
@@ -444,29 +418,56 @@
 %             setPositionConstraintFcn(BeadROIrectHandle,ConstraintFunction);
 %             CroppedRectangle = wait(BeadROIrectHandle);                                     % Freeze MATLAB command until the figure is double-clicked, then it is resumed. Returns whole pixels instead of fractions
             imSize = size(RefFrameDICAdjust);
-            close(figHandle)    
-            SideLengths =  2 * [1, 1] * round((5 / ScaleMicronPerPixel));
-            CroppedRectangle = [(imSize / 2) - round((5 / ScaleMicronPerPixel)), SideLengths];
-            [BeadROI_DIC, BeadROI_rect] = imcrop(RefFrameDICAdjust, CroppedRectangle);
+%             close(figHandle)    
+            SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel));        % ±12 µm to pixels
+            BeadROI_CroppedRectangle = [round((imSize / 2) - SideLengths ./2), SideLengths];
+            [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
 
 %             pause(2)
-%             fig2 = imshow(BeadROI, 'InitialMagnification', 400);
+%             fig2 = imshow(BeadROI_DIC, 'InitialMagnification', 400);
 %             figure(fig2.Parent.Parent)
 %             BeadROIcenterPixels = ginput(1);
 %             close(fig2.Parent.Parent)
+% 
             BeadROIcenterPixels = SideLengths / 2;
+
+            figHandleROI = figure('color', 'w');
+            figAxesHandleROI = gca;
+            colormap(GrayColorMap);
+            imagesc(figAxesHandleROI,imadjust(BeadROI_DIC, []))
+            hold on
+            set(figAxesHandleROI, 'FontWeight', 'bold','LineWidth',1, 'XMinorTick', 'on', 'YMinorTick', 'on', 'TickDir', 'out', 'Box', 'on') 
+            xlabel('X (pixels)'), ylabel('Y (pixels)')
+            xlabel('X (pixels)'), ylabel('Y (pixels)')
+            title('4X ROI to be tracked')            
+            axis image
+            [centers, BeadRadius, ~] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.7, 'Sensitivity', 0.95);   %'Sensitivity', 0.8
+                
+            viscircles(centers, BeadRadius, 'EdgeColor','r');
+            [ClosestBeadDist, BeadNodeID] = min(vecnorm(BeadROIcenterPixels - centers, 2, 2));
+            BeadROIcenterPixels = centers(BeadNodeID, :);
+            plot(BeadROIcenterPixels(:,1),BeadROIcenterPixels(:,2), 'r.', 'MarkerSize', 15)           % does not work when the needle is attached, or maube the lighting?
+            LocationScale = SideLengths - [3,3];                  % bottom right corner
+            ScaleLength =   round((max(SideLengths) * ScaleMicronPerPixel)/5, 1, 'significant');     
+            scalebar(figAxesHandleROI,'ScaleLength', ScaleLength, 'ScaleLengthRatio', ScaleMicronPerPixel, 'color', [0,0,0]', ...
+                'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
+            MagBeadTrackingROIsFullFileNameFig = fullfile(MagBeadOutputPath, 'BeadTrackingROI_DIC.fig');
+            MagBeadTrackingROIsFullFileNamePNG = fullfile(MagBeadOutputPath, 'BeadTrackingROI_DIC.png');    
+            savefig(figHandleROI, MagBeadTrackingROIsFullFileNameFig, 'compact')
+            saveas(figHandleROI, MagBeadTrackingROIsFullFileNamePNG, 'png')
+            close(figHandleROI)
 
             clear BeadPositionXYCornerPixels 
 %             refImg = imref2d(size(BeadROI_DIC));
 
             BeadPositionXYCornerPixels = nan(numel(FramesDoneNumbersDIC), 2);
             disp('---------------------------------------------------------------------------------')
-            disp('Tracking the displacement of the magnetic bead. Not Drift correction yet')
+            disp('Tracking the displacement of the magnetic bead. No Drift correction yet')
             parfor_progress(numel(FramesDoneNumbersDIC));
-            parfor CurrentDIC_Frame = FramesDoneNumbersDIC                
+            parfor CurrentDIC_Frame_Numbers = FramesDoneNumbersDIC                
                 switch TransformationType
                     case 'translation'
-                        BeadPositionXYCornerPixels(CurrentDIC_Frame,:) = MagBeadTrackedPosition_imtRegForm(MD_DIC, CurrentDIC_Frame, BeadROI_DIC, ...
+                        BeadPositionXYCornerPixels(CurrentDIC_Frame_Numbers,:) = MagBeadTrackedPosition_imtRegForm(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_DIC, BeadROI_CroppedRectangle, ...
                             TransformationType, optimizer, metric, 0);
                     case 'rigid'
 
@@ -475,11 +476,18 @@
             end        
             parfor_progress(0);
             disp('Tracking the displacement of the magnetic bead complete')
+            BeadPositionXYcenter = BeadPositionXYCornerPixels + BeadROIcenterPixels + largerROIPositionPixels; 
         otherwise
             return
     end    
+% % % % % %     
+% % % % % %     MagBeadDriftROIsFullFileNameFig = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs_DIC.fig');
+% % % % % %     MagBeadDriftROIsFullFileNamePNG = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs_DIC.png');    
+% % % % % %     savefig(figHandle, MagBeadDriftROIsFullFileNameFig, 'compact')
+% % % % % %     saveas(figHandle, MagBeadDriftROIsFullFileNamePNG, 'png')
+% % % % % %     
     % Tracking  
-    BeadPositionXYcenter = BeadPositionXYCornerPixels + BeadROIcenterPixels + (BeadROI_rect(1:2) - [1,1]) + largerROIPositionPixels; 
+
     % say (20,20) top-left of ROI = (1,1), Therefore, (2,2) in ROI = (20,20) + (2,2) - (1,1) = (21,21) in Bigger Position for imcrop()    
     MagBeadCoordinatesXYpixels = BeadPositionXYcenter .* [1, -1];           % Convert the y-coordinates to Cartesian to match previous output.    
     MagBeadCoordinatesXYNetpixels = BeadPositionXYcenter - BeadPositionXYcenter(1,:);       
@@ -499,9 +507,12 @@
     [BeadMaxNetDisplMicron, BeadMaxNetDisplFrame]  = max(BeadPositionXYdisplMicron(:,3));
 
     MagBeadTrackedDisplacementsFullFileName = fullfile(MagBeadOutputPath, 'MagBeadTrackedDisplacements.mat');
-    save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', 'BeadROI_DIC', 'BeadROI_rect', ...
+    save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', ...
         'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
         'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
+% % % % %     save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', 'BeadROI_DIC', ...
+% % % % %         'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
+% % % % %         'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
 
     switch TrackingMethod
         case 'imfindcircles()'
@@ -742,6 +753,9 @@
     fprintf('psfSigma = %0.3f, Microsphere count = %d\n', ...
         psfSigma, size(localbeads, 1))
     fprintf('Corners of square and even-numbered grid are at [%0.3g, %0.3g , %0.3g, %0.3g] pixels\n', gridXmin, gridYmin, gridXmax, gridYmax)
+    
+    
+    
  
 %% =============================== 8.0 Correct displacements for drift based on displacement in 4 corner ROIs
 %_____________  Tracking the Drift Velocity in the DIC Video       
@@ -758,7 +772,7 @@
     figHandle = figure('color', 'w', 'Renderer', RendererMode, 'Units', 'pixels');
     figAxesHandle = gca;
     colormap(GrayColorMap);
-    imagesc(figAxesHandle, 1, 1, RefFrameDICAdjust);
+    DIC_image = imagesc(figAxesHandle, 1, 1, RefFrameDICAdjust);
     hold on
     set(figAxesHandle, 'Box', 'on', 'XTick', [], 'YTick', [])
 %                         set(figAxesHandle, 'FontWeight', 'bold','LineWidth',1, 'XMinorTick', 'on', 'YMinorTick', 'on', 'TickDir', 'out', 'Box', 'on')    
@@ -776,7 +790,7 @@
             DriftROI_rect(3,:) = [gridXmax - cornerLengthPix_X, gridYmin, cornerLengthPix_X, cornerLengthPix_Y];
             DriftROI_rect(4,:) = [gridXmax - cornerLengthPix_X, gridYmax - cornerLengthPix_Y, cornerLengthPix_X, cornerLengthPix_Y];
             for jj = 1:cornerCount
-                RefFrameDIC_RectHandle(jj) = rectangle(figAxesHandle,'Position', DriftROI_rect(jj, :), 'EdgeColor', 'm',  'FaceColor', 'none', 'LineWidth', 3, 'LineStyle', '-');   
+                RefFrameDIC_RectHandle(jj) = rectangle(figAxesHandle,'Position', DriftROI_rect(jj, :), 'EdgeColor', 'm',  'FaceColor', 'none', 'LineWidth', 1, 'LineStyle', '-');   
                 RefFrameDIC_RectImage{jj} = imcrop(RefFrameDICAdjust,  DriftROI_rect(jj, :));
                 X{jj} = RefFrameDIC_RectHandle(jj).Position(1) + (0:RefFrameDIC_RectHandle(jj).Position(3));
                 Y{jj} = RefFrameDIC_RectHandle(jj).Position(2) + (0:RefFrameDIC_RectHandle(jj).Position(4));
@@ -789,18 +803,99 @@
         otherwise
         return;
     end
-    MagBeadDriftROIsFullFileNameFig = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs.fig');
-    MagBeadDriftROIsFullFileNamePNG = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs.png');    
+    % scalebar
+    LocationScale = MD_EPI.imSize_ - [3,3];                  % bottom right corner
+    ScaleLength =   round((max(MD_EPI.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant');     
+    scalebar(figAxesHandle,'ScaleLength', ScaleLength, 'ScaleLengthRatio', ScaleMicronPerPixel, 'color', [0,0,0]', ...
+        'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
+    hold on
+    BeadCentroid = plot(figAxesHandle, BeadPositionXYcenter(1,1), BeadPositionXYcenter(1,2), 'r.', 'MarkerSize', 10);
+    
+    MagBeadDriftROIsFullFileNameFig = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs_DIC.fig');
+    MagBeadDriftROIsFullFileNamePNG = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs_DIC.png');    
     savefig(figHandle, MagBeadDriftROIsFullFileNameFig, 'compact')
     saveas(figHandle, MagBeadDriftROIsFullFileNamePNG, 'png')
-    close all
     
+% EPI Frame ROIs & grid & bead
+    GrayLevels = 2^ImageBits;   
+    colormapLUT = [linspace(0,1,GrayLevels)', zeros(GrayLevels,2)];             % Look up table 
+
+    ComplementColor = median(imcomplement(colormapLUT));               % User Complement of the colormap for maximum visibililty of the quiver.
+
+    cla
+    GrayLevelsPercentile = [0.05, 0.999];
+    RefFrameEPIadjusted = imadjust(RefFrameEPI, stretchlim(RefFrameEPI,GrayLevelsPercentile));
+    EPI_image = imagesc(figAxesHandle, 1, 1, RefFrameEPIadjusted);
+    hold on
+    colormap(colormapLUT)   
+    plot(figAxesHandle, reg_grid(:,:,1), reg_grid(:,:,2), 'Color', ComplementColor, 'Marker', '.', 'MarkerSize', 1, 'LineStyle', 'none') % plot grid
+    
+    % scalebar
+    LocationScale = MD_EPI.imSize_ - [3,3];                  % bottom right corner
+    ScaleLength =   round((max(MD_EPI.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant'); 
+    ScaleBarColor = ComplementColor;
+    s = scalebar(figAxesHandle,'ScaleLength', ScaleLength, 'ScaleLengthRatio', ScaleMicronPerPixel, 'color', ScaleBarColor, ...
+        'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
+    hold on
+    % plot detected beads                 
+    Beads = plot(figAxesHandle, localbeads(:,1), localbeads(:,2), 'MarkerSize', 7, 'Marker', '.', 'MarkerFaceColor', 'b', 'MarkerEdgeColor', 'w', 'LineStyle', 'none');
+    
+    switch IdenticalCornersChoice
+        case 'Yes'
+            for jj = 1:cornerCount
+                rectangle(figAxesHandle,'Position', DriftROI_rect(jj, :), 'EdgeColor', 'm',  'FaceColor', 'none', 'LineWidth', 1, 'LineStyle', '-');   
+            end
+            pause(0.1)              % pause to allow it to draw the rectangles.
+            title(figAxesHandle, sprintf('%0.2g%% %d Corners ROIs. Tracked Beads & TFM Grid', CornerPercentageDefault * 100, cornerCount));
+        otherwise
+        return;
+    end
+    LocationBeadCount = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
+    BeadText = text(figAxesHandle, LocationBeadCount(1), LocationBeadCount(2), sprintf('Beads to be Tracked = %d. Beads Found = %d ', numel(localbeads(:, 1)), numel(beads(:, 1))));
+    set(BeadText, 'color', s.Children(1).Color, 'FontSize', s.Children(1).FontSize, 'FontName', s.Children(1).FontName, ...
+        'FontWeight', s.Children(1).FontWeight, 'VerticalAlignment', 'baseline')
+    
+    MagBeadDriftROIsFullFileNameFig = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs_EPI.fig');
+    MagBeadDriftROIsFullFileNamePNG = fullfile(MagBeadOutputPath, 'DriftCorrectionCornerROIs_EPI.png');    
+    savefig(figHandle, MagBeadDriftROIsFullFileNameFig, 'compact')
+    saveas(figHandle, MagBeadDriftROIsFullFileNamePNG, 'png')
+    
+    close all
+%-----------------------    
     DIC_DriftROIsMeanAllFrames = nan(numel(FramesDoneNumbersDIC), 3);
     disp('---------------------------------------------------------------------------------')
     disp('Correcting for drift displacement of the magnetic bead.')          
     fprintf('Starting drift correction step based on %d%% per side area\n', CornerPercentage * 100)
-        parfor_progress(numel(FramesDoneNumbersDIC));  
-    parfor CurrentFrame = FramesDoneNumbersDIC        
+    parfor_progress(numel(FramesDoneNumbersDIC));
+    
+    parfor CurrentFrame = FramesDoneNumbersDIC  
+           TrackingModeList = {'multimodal','monomodal'};
+%             TrackingModeListChoiceIndex = listdlg('ListString', TrackingModeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
+%                 'PromptString', 'Choose the tracking mode:', 'ListSize', [200, 100]); 
+%      
+            TrackingModeListChoiceIndex = 2;                       
+            TrackingMode = TrackingModeList{TrackingModeListChoiceIndex}; 
+
+            [optimizer, metric] = imregconfig(TrackingMode);
+            if isgpuarray(metric), metric = double(gather(metric));end
+            
+            TransformationTypeList = {'translation', 'rigid', 'similarity', 'affine'};
+%             TransformationTypeListChoiceIndex = listdlg('listString', TransformationTypeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
+%                'PromptString', 'Choose Displacement Mode:', 'ListSize', [200, 100]);
+%             if isempty(TransformationTypeListChoiceIndex), TransformationTypeListChoiceIndex = 1; end
+            TrackingModeListChoiceIndex = 1;
+            TransformationType = TransformationTypeList{TrackingModeListChoiceIndex};
+
+            switch TrackingMode
+                case 'monomodal'
+                    switch TransformationType
+                        case 'translation'
+                            optimizer.MinimumStepLength = 1e-7;
+                            optimizer.MaximumStepLength = 3.125e-5;
+                            optimizer.MaximumIterations = 10000;    
+                    end
+            end
+
         DIC_DriftROIsMeanAllFrames(CurrentFrame, :) = cornerMeanDrifts(MD_DIC, CurrentFrame, DriftROI_rect, RefFrameDIC_RectImage, TransformationType, optimizer, metric);                    
 %         if ShowOutput
 %             fprintf('Drift Correction for Frame %d/%d: [\tD_x = %0.4g pix, \t\t D_y = %0.4g pix, \t\t D_net = %0.4g] pix.\n',  CurrentFrame, VeryLastFrame, DIC_DriftROIsMeanAllFrames(CurrentFrame, :)); 
@@ -881,10 +976,10 @@
 %         GelConcentrationMgMl = input('What was the final concentration of the gel (mg/mL)?     ');    
 %     end
 %     
-    ND2FilePrefix = split(ND2FileNamePartsDIC{1}, '-');
+    ND2FilePrefix = split(ND2FileNamePartsDIC{1}, '_');
     GelConcentrationMgMlStr = ND2FilePrefix{2};
-    GelConcentrationMgMl = str2double(GelConcentrationMgMlStr(1));
-    GelConcentrationMgMlStr = sprintf('%0.2f mg/mL', GelConcentrationMgMl);
+    GelConcentrationMgMl = sscanf(GelConcentrationMgMlStr, '%f'); 
+    GelConcentrationMgMlStr = sprintf('%0.3f mg/mL', GelConcentrationMgMl);
     GelPolymerizationTempC = ND2FilePrefix(3);
     GelSampleNumber = ND2FileNamePartsDIC{2};
     BeadNumber = ND2FileNamePartsDIC{3};
@@ -906,7 +1001,7 @@
     end
 
     fprintf('%s\n', GelType{:})
-    fprintf('Gel concentration chosen is %.1f mg/mL. \n', GelConcentrationMgMl);
+    fprintf('Gel concentration chosen is %.3f mg/mL. \n', GelConcentrationMgMl);
     save(MagBeadTrackedDisplacementsFullFileName, 'GelConcentrationMgMl', 'thickness_um','GelConcentrationMgMlStr', 'GelType',...
             'GelPolymerizationTempC', 'BeadMaxNetDisplMicronDriftCorrected', 'BeadMaxNetDisplMicronDriftCorrected', 'BeadMaxNetDisplFrameDriftCorrected',...
             'EDCorNOTstr', 'EDCorNOT', 'GelSampleNumber', 'BeadNumber', 'RunNumber', '-append')
@@ -1026,7 +1121,7 @@
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
 
-% %% =============================== Part 2: TFM Calculations. 1. Displacement filtering and drift corrections ======================
+%% %%%%%%%%%%%%%%%%%% Part 2: TFM Calculations. 1. Displacement filtering and drift corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % %_________________ Calculating the EPI displacement 
 %     calculateMovieDisplacementField(MD_EPI, displacementParameters)
 % %_________________ Correct displacements for spatial outliers
