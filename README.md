@@ -1,6 +1,7 @@
 # Integrated_MT_TFM
-Latest compilations of MT_TFM geared towards AIM3 of my PhD thesis
-**Written by Waddah Moghram, PhD student in Biomedical Engineering at the University of Iowa on 2019-05-01
+Latest compilations of MT_TFM geared towards AIM3 of my PhD thesis entitled
+**"Integration of Magnetic Tweezers and Traction Force Microscopy to Investigate Extracellular Matrix Microrheology and Keratinocyte Mechanobiology"**
+by **Waddah Moghram**, PhD student in Biomedical Engineering at the University of Iowa Between 2016-06-28 through 2021-10-31.**
 
 This code is a compilation of other codes that is to be used to conduct the complete analysis for the following:
 
