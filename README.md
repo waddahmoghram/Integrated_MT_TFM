@@ -4,6 +4,11 @@ Latest compilations of MT_TFM geared towards AIM3 of my PhD thesis
 
 This code is a compilation of other codes that is to be used to conduct the complete analysis for the following:
 
+## Chapter 2 Code
+
+
+
+## Chapter 3 Code
 1. DIC Video Analysis (MT):
 	1. Run Dr. Sander Modified code to track the magnetic bead. See protocol on how to execute that code.
 	2. Run ExtractBeadCoorindates
@@ -25,3 +30,14 @@ This code is a compilation of other codes that is to be used to conduct the comp
 		3. traction force (integrated stresses over the area) vs. time.
 
 3. Compare MT force vs. TFM force. Use timestamps to match results.**
+
+## Chapter 4 Code
+
+
+
+
+## Chapter 5 Code
+
+
+
+# References
