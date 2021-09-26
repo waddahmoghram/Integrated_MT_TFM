@@ -25,7 +25,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 
-% clear all
+clear all
 load ('example_tracks.mat')
 % example_tracks contains a structure array d that contains the tracked
 % particle data from (i) a reference image, and (ii) an image where tractions are
@@ -102,7 +102,6 @@ pix = 116e-9; % Size of one pixel in meters
 EM = 3e+3; % Young's modulus in Pascal
 thick = 37e-6;  % Film thickness in microns
 nu =.499; % Poisson's ratio. If Poisson's ratio=1/2, set nu=0.499 to avoid some division by (1-2*nu) issues in the code.
-
 %% Create the grid to interpolate the particle tracking data onto
 % This section should remain unchanged if adapting to 3d TFM.
 
@@ -113,8 +112,8 @@ end
 
 % Select number of points for interpolated grid
 ovr = 1; % Spatial oversampling (ovr=1 gives grid spacing= avg interparticle distance). ovr should be <=1.
-nb_beads = length(d(1).r); % Total number of beads
-nx = round(ovr*sqrt(nb_beads)); % Number of points on each side of the interpolation grid
+nb_beads=length(d(1).r); % Total number of beads
+nx=round(ovr*sqrt(nb_beads)); % Number of points on each side of the interpolation grid
 if mod(nx,2)==0
     nx = nx+1; % Make sure odd number points in grid
 end
@@ -123,9 +122,8 @@ end
 % artifacts in the stress calculation. fracpad is the fraction of extra padding on
 % each side of the original data. Thus fracpad=0.5 doubles the width and
 % height of the original field of view
-fracpad = 0.5;
+fracpad=0.5;
 npad = round(fracpad*nx);
-
 % Calculate the boundaries of the data set
 xmn = min(d(tref).r(:,1));
 xmx = max(d(tref).r(:,1));
@@ -133,12 +131,12 @@ ymn = min(d(tref).r(:,2));
 ymx = max(d(tref).r(:,2));
 
 dx = max( (xmx-xmn)/nx, (ymx-ymn)/nx); % Distance between the grid points
-c = .5*[xmn+xmx,ymn+ymx]; % Centre of data set
+c=.5*[xmn+xmx,ymn+ymx]; % Centre of data set
 
 % Construct the grid
 xi = linspace(-(nx-1)/2-npad,(nx-1)/2+npad,nx+2*npad)*dx+c(1);
 yi = linspace(-(nx-1)/2-npad,(nx-1)/2+npad,nx+2*npad)*dx+c(2);
-[X,Y] = meshgrid(xi,yi); % Matrix of gridpoints
+[X,Y]=meshgrid(xi,yi); % Matrix of gridpoints
 
 %% Interpolate the particle track data onto the grid
 % If adapting to 3d TFM, the out-of-plane displacements should be
@@ -148,15 +146,16 @@ figure
 im = double(imread('control_dic.tif'))/max(max(double(imread('control_dic.tif'))));
 colormap gray
 hold on
-size_cell_image = size(im); % Size of control image in pixels
+size_cell_image=size(im); % Size of control image in pixels
+
 imagesc(im);
 
 for i = 1:length(d)
-    d(i).dx_interp = surface_interpolate(d(i).r(:,1),d(i).r(:,2),d(i).dr(:,1),X,Y,8);
-    d(i).dy_interp = surface_interpolate(d(i).r(:,1),d(i).r(:,2),d(i).dr(:,2),X,Y,8);
+    d(i).dx_interp=surface_interpolate(d(i).r(:,1),d(i).r(:,2),d(i).dr(:,1),X,Y,8);
+    d(i).dy_interp=surface_interpolate(d(i).r(:,1),d(i).r(:,2),d(i).dr(:,2),X,Y,8);
  
     %find indices of all NaNs
-    ind2 = find(isnan(d(i).dx_interp));
+    ind2=find(isnan(d(i).dx_interp));
     
     % Calculate field of view array at each timepoint (points within the
     % original data set). fov has zeros outside of field of view, and ones
@@ -165,7 +164,7 @@ for i = 1:length(d)
     d(i).fov(ind2)=0;
 
     if i>1
-        quiver(X/pix,Y/pix,d(i).dx_interp/pix,d(i).dy_interp/pix, 'color', 'y');
+        quiver(X/pix,Y/pix,d(i).dx_interp/pix,d(i).dy_interp/pix);
         axis image
         xlabel('x [pixels]');
         ylabel('y [pixels]');
@@ -183,12 +182,12 @@ end
 % be negligible). If performing 3d TFM, ensure that the arguments to calcQ
 % are modified appropriately. (see documentation for calcQ)
 
-[nr,nc] = size(X);
+[nr,nc]=size(X);
 
-fracpad= 2;  %fraction of field of view to pad displacements on either side of current fov+extrapolated to get high k contributions to Q
+fracpad=2;  %fraction of field of view to pad displacements on either side of current fov+extrapolated to get high k contributions to Q
 nr2 = round((1+2*fracpad)*nr);
-if mod(nr2,2) == 0
-    nr2 = nr2+1;
+if mod(nr2,2)==0
+    nr2=nr2+1;
 end
 Q = calcQ(thick,thick,EM,nu,nr2,dx,2); % Q matrix that interpolates between displacements and stresses at the substrate surface in Fourier space.
 
@@ -196,64 +195,65 @@ Q = calcQ(thick,thick,EM,nu,nr2,dx,2); % Q matrix that interpolates between disp
 % This is effectively a low-pass exponential filter.
 % No changes should be necessary if modifying code for 3d TFM.
 
-qmax = nr2/(pi*min_feature_size);
+qmax=nr2/(pi*min_feature_size);
 
 % Get distance from of a grid point from the centre of the array
-y = repmat((1:nr2)'-nr2/2,1,nr2);
-x = y';
-q = sqrt(x.^2+y.^2);
+y=repmat((1:nr2)'-nr2/2,1,nr2);
+x=y';
+q=sqrt(x.^2+y.^2);
 
 % Make the filter
-qmsk = exp(-(q./qmax).^2);
-qmsk = ifftshift(qmsk);
+qmsk=exp(-(q./qmax).^2);
+qmsk=ifftshift(qmsk);
 
 %% Calculate stresses from displacements
-% If modifying code to perform 3d TFM, a corresponding z calculation needs to be added at each step.
+% If modifying code to perform 3d TFM, a corresponding z calculation needs
+% to be added at each step.
 
 % Make 1d Hann windows
-[szr,szc] = size(d(1).dx_interp);
-w_c = 0.5*(1-cos(2*pi*(0:szc-1)/(szc-1)));
-w_r = 0.5*(1-cos(2*pi*(0:szr-1)/(szr-1)));
+[szr,szc]=size(d(1).dx_interp);
+w_c=0.5*(1-cos(2*pi*(0:szc-1)/(szc-1)));
+w_r=0.5*(1-cos(2*pi*(0:szr-1)/(szr-1)));
 
 % Mesh Hann windows together to form 2d Hann window
-[wnx,wny] = meshgrid(w_c,w_r);
-wn = wnx.*wny;
+[wnx,wny]=meshgrid(w_c,w_r);
+wn=wnx.*wny;
 
 % Pad the window
-padwidth = (nr2-nr)/2;
-padheight = (nr2-nr)/2;
-[sz1,sz2] = size(wn);
-wn = [zeros(sz1+2*padheight,padwidth) [zeros(padheight,sz2);wn;zeros(padheight,sz2)] zeros(sz1+2*padheight,padwidth)];
+padwidth=(nr2-nr)/2;
+padheight=(nr2-nr)/2;
+[sz1,sz2]=size(wn);
+wn=[zeros(sz1+2*padheight,padwidth) [zeros(padheight,sz2);wn;zeros(padheight,sz2)] zeros(sz1+2*padheight,padwidth)];
 % If you have the Image Processing Toolbox, this is equivalent to
-% wn = padarray(wn,[(nr2-nr)/2,(nr2-nr)/2]);
+% wn=padarray(wn,[(nr2-nr)/2,(nr2-nr)/2]);
 
 for i = 1:length(d)
     % Get rid of NaN's in the interpolated displacement data
-	d(i).dx_interp = extrapdisp(d(i).dx_interp);
-	d(i).dy_interp = extrapdisp(d(i).dy_interp);
+	d(i).dx_interp=extrapdisp(d(i).dx_interp);
+	d(i).dy_interp=extrapdisp(d(i).dy_interp);
         
 	% Pad and filter x displacements then multiply by the Hann window function
-    [sz1,sz2] = size(d(i).dx_interp);
-    utmp(1).u = [zeros(sz1+2*padheight,padwidth) [zeros(padheight,sz2);d(i).dx_interp;zeros(padheight,sz2)] zeros(sz1+2*padheight,padwidth)];
+    [sz1,sz2]=size(d(i).dx_interp);
+    utmp(1).u=[zeros(sz1+2*padheight,padwidth) [zeros(padheight,sz2);d(i).dx_interp;zeros(padheight,sz2)] zeros(sz1+2*padheight,padwidth)];
     %If you have the Image Processing Toolbox, this line is equivalent to
 	%utmp(1).u=padarray(d(i).dx_interp,[(nr2-nr)/2,(nr2-nr)/2]);
-    utmp(1).u = real(ifft2(qmsk.*fft2(utmp(1).u)));    
-    utmp(1).u = utmp(1).u.*wn; 
+    utmp(1).u=real(ifft2(qmsk.*fft2(utmp(1).u)));    
+    utmp(1).u=utmp(1).u.*wn; 
    
     % Pad and filter y displacements then multiply by the Hann window function
-    utmp(2).u = [zeros(sz1+2 * padheight,padwidth) [zeros(padheight,sz2);d(i).dy_interp;zeros(padheight,sz2)] zeros(sz1+2*padheight,padwidth)];
+    utmp(2).u=[zeros(sz1+2*padheight,padwidth) [zeros(padheight,sz2);d(i).dy_interp;zeros(padheight,sz2)] zeros(sz1+2*padheight,padwidth)];
     %If you have the Image Processing Toolbox, this line is equivalent to
-    %utmp(2).u = padarray(d(i).dy_interp,[(nr2-nr)/2,(nr2-nr)/2]);
-    utmp(2).u = real(ifft2(qmsk.*fft2(utmp(2).u)));    
-    utmp(2).u = utmp(2).u.*wn; 
+    %utmp(2).u=padarray(d(i).dy_interp,[(nr2-nr)/2,(nr2-nr)/2]);
+    utmp(2).u=real(ifft2(qmsk.*fft2(utmp(2).u)));    
+    utmp(2).u=utmp(2).u.*wn; 
     
 	stmp = disp2stress(utmp,Q);
     
     % Remove the padding
-    d(i).stress_x = stmp(1).s((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
-    d(i).stress_y = stmp(2).s((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
-    d(i).ux = utmp(1).u((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
-    d(i).uy = utmp(2).u((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
+    d(i).stress_x=stmp(1).s((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
+    d(i).stress_y=stmp(2).s((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
+    d(i).ux=utmp(1).u((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
+    d(i).uy=utmp(2).u((nr2-nr)/2+1:((nr2-nr)/2+nr),(nr2-nr)/2+1:((nr2-nr)/2+nr));
          
 	% Calculate the strain energy density = u.sigma/2 - see Mertz et al. PRL
 	% 108, 198101 (2012).
@@ -276,8 +276,8 @@ end
 %% Plot up various useful quantities
 
 % Convert cell outline data from pixels to metres
-cell_x_metres = cell_x*pix;
-cell_y_metres = cell_y*pix;
+cell_x_metres=cell_x*pix;
+cell_y_metres=cell_y*pix;
 
 % Plot up traction stress magnitude at the surface of the substrate
 % (sigma.sigma).
@@ -326,5 +326,5 @@ im = double(imread('control_dic.tif'))/max(max(double(imread('control_dic.tif'))
 figure, 
 imagesc(im); hold on
 colormap gray
-quiver(str(i).r(:,1)/pix,str(i).r(:,2)/pix,sc*str(i).dr(:,1),sc*str(i).dr(:,2),0,'y');
+quiver(str(i).r(:,1)/pix,str(i).r(:,2)/pix,sc*str(i).dr(:,1),sc*str(i).dr(:,2),0,'b');
 axis image, hold off
