@@ -37,3 +37,4 @@ function [CurrentBeadCenter, CurrentBeadRadius] = MagBeadTrackedPosition_imFindC
     [~, BeadNodeID] = min(vecnorm(CurrentBeadCenter - CurrentCenters, 2, 2));
     CurrentBeadCenter = CurrentCenters(BeadNodeID, :) - ROI_cropped_Extra;
     CurrentBeadRadius = CurrentRadii(BeadNodeID, :);
+end
