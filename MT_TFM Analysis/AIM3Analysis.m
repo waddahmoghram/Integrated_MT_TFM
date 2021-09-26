@@ -74,10 +74,6 @@ format longg
     commandwindow;
     disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analysis DIC related plots --------------------------')
 
-%% =============================== 2.0 Get the magnification scale to convert pixels to microns.
-    [ScaleMicronPerPixel, MagnificationTimesStr, MagnificationTimes, NumAperture] = MagnificationScalesMicronPerPixel(MagX);
-%     ScaleMicronPerPixel = MD_DIC.pixelSize_ / 1000;           % nm to um
-
 %% Add bioformats path programmatically
 try
      BioformatsPath = '.\bioformats';    % relative path of project
@@ -279,6 +275,11 @@ end
 %     AcquisitionDateEPI = [MonthNameEPI, ' ', AcquisitionDateEPIStr{2}, ', ' AcquisitionDateEPIStr{3}]; 
 %     MD_EPI.acquisitionDate_ = NotesWordsEPI{6};      
 
+%% =============================== 2.0 Get the magnification scale to convert pixels to microns.
+%     [ScaleMicronPerPixel, MagnificationTimesStr, MagnificationTimes, NumAperture] = MagnificationScalesMicronPerPixel(MagX);
+    ScaleMicronPerPixel_DIC = MD_DIC.pixelSize_ / 1000;           % nm to um
+    ScaleMicronPerPixel_EPI = MD_EPI.pixelSize_ / 1000;           % nm to um
+
 %% =============================== 5.0 Tracking Magnetic Bead (4.5 micron Tosylactivated)
     disp('_________________ Starting tracking of the magnetic bead')
     MagBeadOutputPath = fullfile(MT_OutputPath, 'Mag_Bead_Tracking');
@@ -299,7 +300,7 @@ end
     GrayColorMap =  gray(2^ImageBits);             % grayscale image for DIC image.    
 
     BeadDiameterMicron = HeaderDataDIC(5,3);
-    BeadRadius = (BeadDiameterMicron/2) / ScaleMicronPerPixel;
+    BeadRadius = (BeadDiameterMicron/2) / ScaleMicronPerPixel_DIC;
     BeadRadiusRange = BeadRadius *  [0.5, 1.5];
     BeadRadiusRange(1) = max(6, floor(BeadRadiusRange(1)));
     BeadRadiusRange(2) = ceil(BeadRadiusRange(2)) + 1;
@@ -324,13 +325,21 @@ end
             set(figAxesHandle, 'FontWeight', 'bold','LineWidth',1, 'XMinorTick', 'on', 'YMinorTick', 'on', 'TickDir', 'out', 'Box', 'on')    
             xlabel('X (pixels)'), ylabel('Y (pixels)')
             axis image
-
+            close(figHandle)
+            
             switch SmallerROIChoice
-                case 'Yes'      
-                    imSize = size(RefFrameDICAdjust);
-                    close(figHandle)    
-                    SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel));        % ±12 µm to pixels
-                    BeadROI_CroppedRectangle = [round((imSize / 2) - SideLengths ./2), SideLengths];
+                case 'Yes'
+                    MaskROI =  MD_DIC.roiMask;
+                    if ~isempty(MaskROI)
+                        [imDimX, imDimY] = find(MaskROI);
+                        imSize = size(MaskROI);
+                    else
+                        [imDimX, imDimY] = find(RefFrameDICAdjust);
+                        imSize = size(MaskROI);
+                    end
+                    
+                    SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
+                    BeadROI_CroppedRectangle = [imDimX(1), imDimY(1)] + [round((imSize / 2) - SideLengths ./2), SideLengths];
                     [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
 %                 case 'No'
 %                     BeadROI = RefFrameImageAdjust;
@@ -422,7 +431,7 @@ end
 %             CroppedRectangle = wait(BeadROIrectHandle);                                     % Freeze MATLAB command until the figure is double-clicked, then it is resumed. Returns whole pixels instead of fractions
             imSize = size(RefFrameDICAdjust);
 %             close(figHandle)    
-            SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel));        % ±12 µm to pixels
+            SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
             BeadROI_CroppedRectangle = [round((imSize / 2) - SideLengths ./2), SideLengths];
             [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
 
@@ -451,8 +460,8 @@ end
             BeadROIcenterPixels = centers(BeadNodeID, :);
             plot(BeadROIcenterPixels(:,1),BeadROIcenterPixels(:,2), 'r.', 'MarkerSize', 15)           % does not work when the needle is attached, or maube the lighting?
             LocationScale = SideLengths - [3,3];                  % bottom right corner
-            ScaleLength =   round((max(SideLengths) * ScaleMicronPerPixel)/5, 1, 'significant');     
-            scalebar(figAxesHandleROI,'ScaleLength', ScaleLength, 'ScaleLengthRatio', ScaleMicronPerPixel, 'color', [0,0,0]', ...
+            ScaleLength_DIC =   round((max(SideLengths) * ScaleMicronPerPixel_DIC)/5, 1, 'significant');     
+            scalebar(figAxesHandleROI,'ScaleLength', ScaleLength_DIC, 'ScaleLengthRatio', ScaleMicronPerPixel_DIC, 'color', [0,0,0]', ...
                 'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
             MagBeadTrackingROIsFullFileNameFig = fullfile(MagBeadOutputPath, 'BeadTrackingROI_DIC.fig');
             MagBeadTrackingROIsFullFileNamePNG = fullfile(MagBeadOutputPath, 'BeadTrackingROI_DIC.png');    
@@ -470,7 +479,7 @@ end
             parfor CurrentDIC_Frame_Numbers = FramesDoneNumbersDIC                
                 switch TransformationType
                     case 'translation'
-                        BeadPositionXYCornerPixels(CurrentDIC_Frame_Numbers,:) = MagBeadTrackedPosition_imtRegForm(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_DIC, BeadROI_CroppedRectangle, ...
+                        BeadPositionXYCornerPixels(CurrentDIC_Frame_Numbers,:) = MagBeadTrackedPosition_imRegtform(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_DIC, BeadROI_CroppedRectangle, ...
                             TransformationType, optimizer, metric, 0);
                     case 'rigid'
 
@@ -497,7 +506,7 @@ end
 
     % Convert to Cartesian Units from Image units to match previous code  (y-coordinates is negative pointing downwards instead)    
     MagBeadCoordinatesXYNetpixels(:,3) = vecnorm(MagBeadCoordinatesXYNetpixels, 2, 2);
-    BeadPositionXYdisplMicron = MagBeadCoordinatesXYNetpixels * ScaleMicronPerPixel;    
+    BeadPositionXYdisplMicron = MagBeadCoordinatesXYNetpixels * ScaleMicronPerPixel_DIC;    
     
     if useGPU
         BeadROI_DIC = gather(BeadROI_DIC);
@@ -512,10 +521,10 @@ end
     MagBeadTrackedDisplacementsFullFileName = fullfile(MagBeadOutputPath, 'MagBeadTrackedDisplacements.mat');
     save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', ...
         'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
-        'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
+        'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
 % % % % %     save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', 'BeadROI_DIC', ...
 % % % % %         'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
-% % % % %         'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
+% % % % %         'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
 
     switch TrackingMethod
         case 'imfindcircles()'
@@ -808,8 +817,8 @@ end
     end
     % scalebar
     LocationScale = MD_EPI.imSize_ - [3,3];                  % bottom right corner
-    ScaleLength =   round((max(MD_EPI.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant');     
-    scalebar(figAxesHandle,'ScaleLength', ScaleLength, 'ScaleLengthRatio', ScaleMicronPerPixel, 'color', [0,0,0]', ...
+    ScaleLength_EPI =   round((max(MD_EPI.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant');     
+    scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI, 'ScaleLengthRatio', ScaleMicronPerPixel_DIC, 'color', [0,0,0]', ...
         'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
     hold on
     BeadCentroid = plot(figAxesHandle, BeadPositionXYcenter(1,1), BeadPositionXYcenter(1,2), 'r.', 'MarkerSize', 10);
@@ -835,9 +844,9 @@ end
     
     % scalebar
     LocationScale = MD_EPI.imSize_ - [3,3];                  % bottom right corner
-    ScaleLength =   round((max(MD_EPI.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant'); 
+    ScaleLength_EPI =   round((max(MD_EPI.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant'); 
     ScaleBarColor = ComplementColor;
-    s = scalebar(figAxesHandle,'ScaleLength', ScaleLength, 'ScaleLengthRatio', ScaleMicronPerPixel, 'color', ScaleBarColor, ...
+    s = scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI, 'ScaleLengthRatio', ScaleMicronPerPixel_EPI, 'color', ScaleBarColor, ...
         'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
     hold on
     % plot detected beads                 
@@ -916,8 +925,8 @@ end
     MagBeadCoordinatesXYpixelsCorrected = MagBeadCoordinatesXYpixels(FramesDoneNumbersDIC,1:2) - DIC_DriftROIsMeanAllFrames(FramesDoneNumbersDIC,1:2);
 
     % MagBeadCoordinatesMicronXY has relative positions with the bead's initial position
-    MagBeadCoordinatesMicronXY = MagBeadCoordinatesXYpixels .* ScaleMicronPerPixel;  
-    MagBeadCoordinatesMicronXYcorrected = MagBeadCoordinatesXYpixelsCorrected .* ScaleMicronPerPixel;
+    MagBeadCoordinatesMicronXY = MagBeadCoordinatesXYpixels .* ScaleMicronPerPixel_DIC;  
+    MagBeadCoordinatesMicronXYcorrected = MagBeadCoordinatesXYpixelsCorrected .* ScaleMicronPerPixel_DIC;
 
     MagBeadCoordinatesMicronXYintial = MagBeadCoordinatesMicronXY(1,:);            
     MagBeadCoordinatesMicronXYintialCorrected = MagBeadCoordinatesMicronXYcorrected(1,:);    
@@ -1113,7 +1122,7 @@ end
             MagBeadCoordinatesMicronXYZ = MagBeadDisplacementMicronXYZ;
             NeedleTipRelativeCoordinatesXYZmicrons = [0,0,0];
             [MT_Force_xyz_N, MT_Force_xy_N, WorkBeadJ_Half_Cycle, WorkCycleFirstFrame, WorkCycleLastFrame, CompiledMT_Results] = CalculateForceMT(MagBeadCoordinatesMicronXYZ, ...
-                NeedleTipRelativeCoordinatesXYZmicrons, ScaleMicronPerPixel, ...
+                NeedleTipRelativeCoordinatesXYZmicrons, ScaleMicronPerPixel_DIC, ...
                 NeedleInclinationAngleDegrees, FirstFrame_DIC, LastFrame_DIC, TimeStampsRT_Abs_DIC, CleanSensorDataDIC, SensorDataFullFilenameDIC, ...
                 MT_Force_OutputPath, MT_ForceFullFileName, ND2FileExtensionDIC, HeaderDataDIC, thickness_um, GelConcentrationMgMl, GelType);
     end
@@ -1147,11 +1156,11 @@ end
 %     load(displFieldPath, 'displField')
 %     fprintf('Displacement Field (displField) File is successfully loaded!: \n\t %s\n', displFieldPath);
 %     
-%     [~, displField, TimeStampsRT_EPI, displFieldPath, ScaleMicronPerPixel, FramesDoneNumbersDIC, controlMode, ...
+%     [~, displField, TimeStampsRT_EPI, displFieldPath, ScaleMicronPerPixel_EPI, FramesDoneNumbersDIC, controlMode, ...
 %         rect, DriftROIs, DriftROIsCombined, reg_grid, gridSpacing, NoiseROIs, NoiseROIsCombined, TimeFilterChoiceStr, ...
 %         DriftCorrectionChoiceStr, displacementFileFullName] = ...
 %             ProcessTrackedDisplacementTFM(MD_EPI, displField, TimeStampsRT_Abs_EPI, displFieldPath, gridMagnification, EdgeErode, GridtypeChoiceStr, ...
-%                 InterpolationMethod, ShowOutput, FirstFrame_DIC, LastFrame_DIC, SaveOutput, controlMode, ScaleMicronPerPixel, CornerPercentage);
+%                 InterpolationMethod, ShowOutput, FirstFrame_DIC, LastFrame_DIC, SaveOutput, controlMode, ScaleMicronPerPixel_EPI, CornerPercentage);
 %     % update the last frame since 20 frames are eliminated after using LPEF
 %     FirstFrameDIC = FramesDoneNumbersDIC(1);
 %     LastFrameDIC = FramesDoneNumbersDIC(end);
@@ -1292,7 +1301,7 @@ end
 %     starttime = tic;
 %     
 %     [YoungModulusPaOptimum, YoungModulusPaOptimumRMSE] = fminsearch(@(YoungModulusPa)Force_MTvTFM_RMSE_BL2_Master(displField, forceFieldParameters,...
-%         FramesOptimizedNumbers, YoungModulusPa, PoissonRatio, MT_Force_xy_N_Segment, PaddingChoiceStr, HanWindowChoice, WienerWindowSize, ScaleMicronPerPixel, ...
+%         FramesOptimizedNumbers, YoungModulusPa, PoissonRatio, MT_Force_xy_N_Segment, PaddingChoiceStr, HanWindowChoice, WienerWindowSize, ScaleMicronPerPixel_EPI, ...
 %         gridMagnification, EdgeErode, CornerPercentage, FramesRegParamNumbers, ...
 %         SpatialFilterChoiceStr, GridtypeChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
 %         ConversionMicrontoMeters, ConversionMicronSqtoMetersSq, ShowOutput, CalculateRegParamMethod), YoungModulusInitialGuess, options); 
@@ -1313,7 +1322,7 @@ end
 %         TFM_MasterSolver(displField, NoiseROIsCombined, forceFieldParameters, reg_corner, ...
 %         gridMagnification, EdgeErode, PaddingChoiceStr, SpatialFilterChoiceStr, HanWindowChoice, ...
 %         GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
-%         WienerWindowSize, ScaleMicronPerPixel, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
+%         WienerWindowSize, ScaleMicronPerPixel_EPI, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
 %  
 % %% =============================== PLOTTING Raw regularization parameters
 % %     dlgQuestion = ({'File Format(s) for images?'});
@@ -1554,14 +1563,14 @@ end
 %             TFM_MasterSolver(displField, NoiseROIsCombined, forceFieldParameters, reg_corner_averaged, ...
 %             gridMagnification, EdgeErode, PaddingChoiceStr, SpatialFilterChoiceStr, HanWindowChoice, ...
 %             GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
-%             WienerWindowSize, ScaleMicronPerPixel, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
+%             WienerWindowSize, ScaleMicronPerPixel_EPI, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
 %         % Append Other Outputs
 % %         
 % %         [pos_grid, displFieldNoFilteredGrid, displFieldFilteredGrid, forceField, energyDensityField, ForceN, TractionEnergyJ, ~, ~, ~] = ...
 % %             TFM_MasterSolver(displField, NoiseROIsCombined, forceFieldParameters, reg_corner_averaged, ...
 % %             gridMagnification, EdgeErode, PaddingChoiceStr, SpatialFilterChoiceStr, HanWindowChoice, ...
 % %             GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
-% %             WienerWindowSize, ScaleMicronPerPixel, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
+% %             WienerWindowSize, ScaleMicronPerPixel_EPI, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
 % 
 %         disp('Saving TFM Analysis Output')
 %         displField = displFieldNoFilteredGrid; 
@@ -1569,13 +1578,13 @@ end
 %         displFieldNoFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridNoSpatialFilter_Averaged.mat');
 %         Notes = 'Units of "displFieldNoFilteredGrid" = pixels. Averaged displacement output. No Spatial Filter, or Han Windowing. (displFieldNoFilteredGrid)';
 %         save(displFieldNoFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
-%             'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod', 'DriftCorrectionChoiceStr', 'ScaleMicronPerPixel', '-v7.3')
+%             'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod', 'DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', '-v7.3')
 % 
 %         displField = displFieldFilteredGrid;
 %         displFieldFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridWithSpatialFilter_Averaged.mat');
 %         Notes = 'Units of "displFieldFilteredGrid" = pixels. Averaged displacement output. Wiener2D Spatial Filter, & Han Windowing.';
 %         save(displFieldFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
-%              'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel', ...
+%              'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', ...
 %              'SpatialFilterChoiceStr', 'WienerWindowSize', 'HanWindowChoice', '-v7.3')
 % 
 %          
