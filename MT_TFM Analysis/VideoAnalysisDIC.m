@@ -710,7 +710,7 @@
             catch
                 InclinationAngleDegrees = input('What is the needle inclination angle (in degrees)? ');
             end
-            fprintf('Inclination Angle of the needle is %.0f%s. \n', InclinationAngleDegrees, char(181));
+            fprintf('Inclination Angle of the needle is %.0f%s. \n', InclinationAngleDegrees, char(0x00B0));
             %________
             
             %{

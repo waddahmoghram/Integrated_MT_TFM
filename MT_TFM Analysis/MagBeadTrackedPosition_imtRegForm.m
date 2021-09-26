@@ -5,10 +5,9 @@
 
     % **************************** FUNCTIONS DEFINED IN THE SCRIPT "AIM3Analysis.m"
 
-function beadNewPosition = MagBeadTrackedPosition_imtRegForm(MD_DIC, CurrentDIC_Frame, BeadROI_DIC, ...
+function beadNewPosition = MagBeadTrackedPosition_imtRegForm(MD_DIC, CurrentDIC_FrameNumber, BeadROI_DIC, BeadROI_CroppedRectangle, ...
     TransformationType, optimizer, metric, showOutput)
-    
-    cornerCount = 4;
+
     nGPU = gpuDeviceCount;
     if nGPU > 0
         useGPU = true;
@@ -17,14 +16,24 @@ function beadNewPosition = MagBeadTrackedPosition_imtRegForm(MD_DIC, CurrentDIC_
     end
  
     if showOutput
-        fprintf('Tracking magnetic bead in frame %d/%d.\n', CurrentDIC_Frame, MD_DIC.nFrames_)
+        fprintf('Tracking magnetic bead in frame %d/%d.\n', CurrentDIC_FrameNumber, MD_DIC.nFrames_)
     end
-    CurrentDIC_FrameFullImage = MD_DIC.channels_.loadImage(CurrentDIC_Frame);
+    
+    CurrentDIC_FrameFullImage = MD_DIC.channels_.loadImage(CurrentDIC_FrameNumber);
     if useGPU, CurrentDIC_FrameFullImage = gpuArray(CurrentDIC_FrameFullImage); end
     
-    CurrentDIC_FrameImageFullAdjust = imadjust(CurrentDIC_FrameFullImage, stretchlim(CurrentDIC_FrameFullImage, [0, 1]));
-%     CurrentFrameImageROI = imcrop(CurrentDIC_FrameImageFullAdjust,
-%     CroppedRectangle); 
-    tFormMatrix = imregtform(gather(CurrentDIC_FrameImageFullAdjust), gather(BeadROI_DIC),TransformationType, optimizer, metric);
-    beadNewPosition = -tFormMatrix.T(3, 1:2);
+    [CurrentDIC_CurrentFrameImageCropped, ~] = imcrop(CurrentDIC_FrameFullImage, round(BeadROI_CroppedRectangle));
+    CurrentDIC_CurrentFrameImageCroppedAdjust = imadjust(CurrentDIC_CurrentFrameImageCropped, stretchlim(CurrentDIC_CurrentFrameImageCropped, [0, 1]));
+
+    if useGPU
+        CurrentDIC_CurrentFrameImageCroppedAdjust = gather(CurrentDIC_CurrentFrameImageCroppedAdjust);
+        BeadROI_DIC = gather(BeadROI_DIC);
+        CurrentDIC_FrameFullImage = gather(CurrentDIC_FrameFullImage);
+    end
+    
+%     tFormMatrix = imregtform(CurrentDIC_CurrentFrameImageCroppedAdjust, BeadROI_DIC,TransformationType, optimizer, metric);
+    tFormMatrix = imregtform(CurrentDIC_FrameFullImage, BeadROI_DIC,TransformationType, optimizer, metric);
+    beadNewPosition = BeadROI_CroppedRectangle(1,2) -tFormMatrix.T(3, 1:2);
+    
+    
 end

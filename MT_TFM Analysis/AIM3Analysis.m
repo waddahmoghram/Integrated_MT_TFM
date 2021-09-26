@@ -79,10 +79,13 @@ format longg
 %     ScaleMicronPerPixel = MD_DIC.pixelSize_ / 1000;           % nm to um
 
 %% Add bioformats path programmatically
+try
+     BioformatsPath = '.\bioformats';    % relative path of project
+     addpath(genpath(BioformatsPath));        % include subfolders
+catch
     BioformatsPath = uigetdir(pwd, 'Select the Bioformats folder');
-%     BioformatsPath = 'Y:\Waddah_Aim3\Codes\MT_TFM Analysis\bioformats';
     addpath(genpath(BioformatsPath));        % include subfolders
-
+end
 %% =============================== 3.0 Select the DIC image file that has the tracking output to do the analysis & choose the analysis path =======================    
     switch choiceOpenND2DIC    
         case 'Yes'
@@ -361,7 +364,7 @@ format longg
             disp('Tracking the displacement of the magnetic bead. No Drift correction yet')
             parfor_progress(numel(FramesDoneNumbersDIC));
             parfor CurrentDIC_Frame_Numbers = FramesDoneNumbersDIC                
-                [CurrentCenter, CurrentRadius] = MagBeadTrackedPosition_imtFindCircles(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_CroppedRectangle, ...
+                [CurrentCenter, CurrentRadius] = MagBeadTrackedPosition_imFindCircles(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_CroppedRectangle, ...
                     BeadRadiusRange, 'dark', 'TwoStage', 0.4,  0.8);
                 BeadRadius(CurrentDIC_Frame_Numbers, :) = CurrentRadius;
                 BeadPositionXYCenterPixels(CurrentDIC_Frame_Numbers, :) = CurrentCenter;

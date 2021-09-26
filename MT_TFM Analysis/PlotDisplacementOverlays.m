@@ -799,6 +799,9 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
     catch
         ImageBits = 14;
     end
+
+    ImageSizePixels = MD.imSize_;     
+    MarkerSize = round(ImageSizePixels(1)/ 1000, 1, 'decimals');    
     
     %% Choose color: updated on 2020-04-15
     dlgQuestion = 'Select Colormap Look Up Table (LUT):';
@@ -843,11 +846,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
     GrayLevelsPercentile = str2num(GrayLevelsPercentileStr{:});
     
     save(InputParamFile, 'GrayLevels','colormapLUT', 'GrayLevelsPercentile', '-append')
-    
-%%
-    ImageSizePixels = MD.imSize_;     
-    MarkerSize = round(ImageSizePixels(1)/ 1000, 1, 'decimals');    
-    
+        
 %%          
     figHandleInitial = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Renderer', FigRenderer);     % added by WIM on 2019-09-14. To show, remove 'visible
     figAxesHandle = axes;
