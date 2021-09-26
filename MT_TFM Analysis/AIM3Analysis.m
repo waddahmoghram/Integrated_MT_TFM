@@ -16,7 +16,8 @@ format longg
     RendererMode = 'painters';
     TrackingReadyDIC = false;
     CornerPercentageDefault = 0.10;             % added on 2020-05-26 by WIM. Consider updating to allow the user to change it.
-    MagX = 30;                        % 20X object * 1.5 eyepiece zoom 
+    MagX_DIC = 30;                        % 20X object * 1.5 eyepiece zoom 
+    MagX_EPI = 30;                        % 20X object * 1.5 eyepiece zoom 
     AnalysisPathChoice = 'No';    
     BeadNodeID = 1;
     AnalysisPath = [];
@@ -73,7 +74,7 @@ format longg
 %% =============================== 1.0 Tracking DIC Add the particle tracking folder to the path if it is not already "... Image Bead Tracking DIC Analysis" =======================
     commandwindow;
     disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analysis DIC related plots --------------------------')
-
+    
 %% Add bioformats path programmatically
 try
      BioformatsPath = '.\bioformats';    % relative path of project
@@ -226,13 +227,17 @@ end
     MT_OutputPath = fullfile(OutputPathNameDIC, 'MT_Output');
     MD_DIC = bfImport(ND2fullFileNameDIC, 'outputDirectory', MT_OutputPath, 'askUser', 0);
 
-    MD_DIC.numAperture_ = NumAperture;
+    % =============================== 2.0 Get the magnification scale to convert pixels to microns.
+    [~, MagnificationTimesStr_DIC, MagnificationTimes_DIC, NumAperture_DIC] = MagnificationScalesMicronPerPixel(MagX_DIC);
+    ScaleMicronPerPixel_DIC = MD_DIC.pixelSize_ / 1000;           % nm to um
+    
+    MD_DIC.numAperture_ = NumAperture_DIC;
     [SensorDataDICPathName, SensorDataDICFileName, ~] = fileparts(SensorDataDICFullFileName);
     SensorDataDICNotesFileName = fullfile(SensorDataDICPathName, strcat(SensorDataDICFileName, '_Notes.txt'));
     NotesDIC = fileread(SensorDataDICNotesFileName);
 
     MD_DIC.notes_ = NotesDIC;
-    MD_DIC.magnification_ = MagnificationTimes;
+    MD_DIC.magnification_ = MagnificationTimes_DIC;
     MD_DIC.timeInterval_ = AverageTimeIntervalND2_DIC;
 
 %     NotesWordsDIC = split(NotesDIC, ' ');             % split by white space
@@ -244,13 +249,16 @@ end
 %     AcquisitionDateDIC = [MonthNameDIC, ' ', AcquisitionDateDICStr{2}, ', ' AcquisitionDateDICStr{3}]; 
 %     MD_DIC.acquisitionDate_ = NotesWordsDIC{6};    
     
-%% =============================== 4.0 Select the subsequent EPI ND2 file. It will be analyzed with TFM later, but for now
-
+%% =============================== 4.0 Select the subsequent EPI ND2 file. It will be analyzed with TFM later, but for no
  % ----------------- 4.0 create TFM output path & MOvie Data File
     TFM_OutputPath = fullfile(OutputPathNameEPI, 'TFM_Output');
     MD_EPI = bfImport(ND2fullFileNameEPI, 'outputDirectory', TFM_OutputPath, 'askUser', 0);
 
-    MD_EPI.numAperture_ = NumAperture;
+    % =============================== 2.0 Get the magnification scale to convert pixels to microns.
+    [~, MagnificationTimesStr_EPI, MagnificationTimes_EPI, NumAperture_EPI] = MagnificationScalesMicronPerPixel(MagX_DIC);
+    ScaleMicronPerPixel_EPI = MD_EPI.pixelSize_ / 1000;           % nm to um
+    
+    MD_EPI.numAperture_ = NumAperture_EPI;
 
     [SensorDataEPIPathName, SensorDataEPIFileName, ~] = fileparts(SensorDataEPIFullFileName);
     SensorDataEPINotesFileName = fullfile(SensorDataEPIPathName, strcat(SensorDataEPIFileName, '_Notes.txt'));
@@ -259,7 +267,7 @@ end
     NotesEPI_Words = split(NotesEPI, ' ');             % split by white space
 
     MD_EPI.notes_ = NotesEPI;
-    MD_EPI.magnification_ = MagnificationTimes;
+    MD_EPI.magnification_ = MagnificationTimes_EPI;
     MD_EPI.timeInterval_ = AverageTimeIntervalND2_EPI;
     MD_EPI.channels_.emissionWavelength_;                   % 
     MD_EPI.channels_.excitationWavelength_ = 560;           % nm for texas red;
@@ -273,12 +281,7 @@ end
 %     MonthNameEPI = MonthNameEPI{1};
 %     
 %     AcquisitionDateEPI = [MonthNameEPI, ' ', AcquisitionDateEPIStr{2}, ', ' AcquisitionDateEPIStr{3}]; 
-%     MD_EPI.acquisitionDate_ = NotesWordsEPI{6};      
-
-%% =============================== 2.0 Get the magnification scale to convert pixels to microns.
-%     [ScaleMicronPerPixel, MagnificationTimesStr, MagnificationTimes, NumAperture] = MagnificationScalesMicronPerPixel(MagX);
-    ScaleMicronPerPixel_DIC = MD_DIC.pixelSize_ / 1000;           % nm to um
-    ScaleMicronPerPixel_EPI = MD_EPI.pixelSize_ / 1000;           % nm to um
+%     MD_EPI.acquisitionDate_ = NotesWordsEPI{6};
 
 %% =============================== 5.0 Tracking Magnetic Bead (4.5 micron Tosylactivated)
     disp('_________________ Starting tracking of the magnetic bead')
@@ -521,10 +524,10 @@ end
     MagBeadTrackedDisplacementsFullFileName = fullfile(MagBeadOutputPath, 'MagBeadTrackedDisplacements.mat');
     save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', ...
         'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
-        'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
+        'RefFrameNum', 'MagnificationTimesStr_DIC', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
 % % % % %     save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', 'BeadROI_DIC', ...
 % % % % %         'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
-% % % % %         'RefFrameNum', 'MagnificationTimesStr', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
+% % % % %         'RefFrameNum', 'MagnificationTimesStr_DIC', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
 
     switch TrackingMethod
         case 'imfindcircles()'
