@@ -37,6 +37,27 @@ This code is a compilation of other codes that is to be used to conduct the comp
 
 ## Chapter 5 Code
 
+## Previous Notes
+### Integrated MT & TFM
+Contains MT/TFM Integration Code as used in: Moghram et. al. "Integration of magnetic tweezers and traction force microscopy...." , AIP Advances 11, 045216 (2021). https://doi.org/10.1063/5.0041262
+
+#### Instructions
+1. Run movieselectorGUI
+2. Create movie data: following parameters
+3. Run TFMpackageGUI
+4. Following instruction
+
+
+#### Data Analysis
+1. Analyze DIC videos
+2. Analyze EPI videos
+3. Combine both analyses
+
+4. calculate elastic modulus using forces-balance
+5. calculate elastic modulus using energetics balance.
+
+## Plots
+
 
 
 # References
