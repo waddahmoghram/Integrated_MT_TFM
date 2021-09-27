@@ -7,15 +7,15 @@
 function beadNewPosition = MagBeadTrackedPosition_imRegtform(MD_DIC, CurrentDIC_FrameNumber, BeadROI_DIC, BeadROI_CroppedRectangle, ...
     TransformationType, optimizer, metric, showOutput)
 
+    if showOutput
+        fprintf('Tracking magnetic bead in frame %d/%d.\n', CurrentDIC_FrameNumber, MD_DIC.nFrames_)
+    end
+    
     nGPU = gpuDeviceCount;
     if nGPU > 0
         useGPU = true;
     else
         useGPU = false;
-    end
- 
-    if showOutput
-        fprintf('Tracking magnetic bead in frame %d/%d.\n', CurrentDIC_FrameNumber, MD_DIC.nFrames_)
     end
     
     CurrentDIC_FrameFullImage = MD_DIC.channels_.loadImage(CurrentDIC_FrameNumber);

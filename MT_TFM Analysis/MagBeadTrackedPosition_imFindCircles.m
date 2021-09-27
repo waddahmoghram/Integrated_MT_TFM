@@ -11,6 +11,7 @@ function [CurrentBeadCenter, CurrentBeadRadius] = MagBeadTrackedPosition_imFindC
     nGPU = gpuDeviceCount;
     if nGPU > 0
         useGPU = true;
+        CurrentDIC_FrameNumber = gpuArray(CurrentDIC_FrameNumber);
     else
         useGPU = false;
     end
