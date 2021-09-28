@@ -269,11 +269,13 @@ format longg
     MD_EPI.notes_ = NotesEPI;
     MD_EPI.magnification_ = MagnificationTimes_EPI;
     MD_EPI.timeInterval_ = AverageTimeIntervalND2_EPI;
-    MD_EPI.channels_.emissionWavelength_;                   % 
+    MD_EPI.channels_.emissionWavelength_ = 645.5; % 
     MD_EPI.channels_.excitationWavelength_ = 560;           % nm for texas red;
     MD_EPI.channels_.excitationType_ = 'Widefield';         % Widefield Fluorescence.
     MD_EPI.channels_.exposureTime_ = AverageTimeIntervalND2_EPI; % in seconds
     MD_EPI.channels_.fluorophore_ = 'TexasRed';
+    MD_EPI.channels_.imageType_ = 'Widefield';
+    MD_EPI.channels_.sanityCheck                            % evaluate PSF based on Emission Wavelength
    
 %     AcquisitionDateEPIStr = split(NotesWordsEPI{6}, '/');
 %     AcquisitionTimeStr = split(NotesWordsEPI{8}, ':');
@@ -283,22 +285,27 @@ format longg
 %     AcquisitionDateEPI = [MonthNameEPI, ' ', AcquisitionDateEPIStr{2}, ', ' AcquisitionDateEPIStr{3}]; 
 %     MD_EPI.acquisitionDate_ = NotesWordsEPI{6};
 %% Parallel Pool Start
-    poolobj = gcp('nocreate'); % If no pool, do not create new one.
-    if isempty(poolobj)
-        %                 poolsize = feature('numCores');
-        poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
-    else
-        poolsize = poolobj.NumWorkers;
-    end
     if isempty(gcp('nocreate'))
         try
-            parpool('local', poolsize);
+            poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
+%             poolsize = feature('numCores');
+        catch
+            poolsize = poolobj.NumWorkers;
+        end
+        try
+            poolobj = parpool('local', poolsize);
         catch
             try 
                 parpool;
             catch 
                 warning('matlabpool has been removed, and parpool is not working in this instance');
             end
+        end
+    else
+        try
+           poolsize = poolobj.NumWorkers;
+        catch
+           poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
         end
     end
 
@@ -493,7 +500,7 @@ format longg
 % % % % % %     savefig(figHandle, MagBeadDriftROIsFullFileNameFig, 'compact')
 % % % % % %     saveas(figHandle, MagBeadDriftROIsFullFileNamePNG, 'png')
 % % % % % %     
-    % Tracking  
+    %% Tracking  
 
     % say (20,20) top-left of ROI = (1,1), Therefore, (2,2) in ROI = (20,20) + (2,2) - (1,1) = (21,21) in Bigger Position for imcrop()    
     MagBeadCoordinatesXYpixels = BeadPositionXYcenter .* [1, -1];           % Convert the y-coordinates to Cartesian to match previous output.    
@@ -560,8 +567,12 @@ format longg
     close all
     
     fprintf('Magnetic bead displacements are saved as: \n\t %s\n\t %s\n', MagBeadPlotFullFileNameFig, MagBeadPlotFullFileNamePNG)
-
-%     delete(poolobj);                % shut down the parallel core
+%----------end parallel pool
+    try
+       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+    catch
+       delete(gcp('nocreate')) 
+    end
 %% ============ Figure out the 10% of the corners based on the beads detected
 % ----------------- Creating the reference frame from the first frame and
 % saving it and embedding it in MD_EPI
@@ -591,7 +602,32 @@ format longg
     displacementParameters.trackSuccessively =  0;
     displacementParameters.mode = 'accurate';
     % these parameters will be embedded when calling on calculateMovieDisplacementField.m
-        
+
+        % Parallel Pool Start
+    if isempty(gcp('nocreate'))
+        try
+            poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
+%             poolsize = feature('numCores');
+        catch
+            poolsize = poolobj.NumWorkers;
+        end
+        try
+            poolobj = parpool('local', poolsize);
+        catch
+            try 
+                parpool;
+            catch 
+                warning('matlabpool has been removed, and parpool is not working in this instance');
+            end
+        end
+    else
+        try
+           poolsize = poolobj.NumWorkers;
+        catch
+           poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1; ;
+        end
+    end
+    
 %% =============================== 7.0 Determining the Corners COORDINATES BUT NEED TO FIND THE PSF SIGMA EXTERNALLY from the EPI file
     disp('Determining PSF value, Beads to be tracked, and the dimensions of the grid')
     try
@@ -600,7 +636,8 @@ format longg
     catch
         psfSigma = nan;                    
     end
-    if isnan(psfSigma) || psfSigma > MD_EPI.channels_.psfSigma_*3 
+    if isempty(MD_EPI.channels_.psfSigma_), MD_EPI.channels_.psfSigma_ = psfSigma; end
+    if isnan(psfSigma) || logical(psfSigma > MD_EPI.channels_.psfSigma_*3)
         if strcmp(MD_EPI.channels_.imageType_,'Widefield') || MD_EPI.pixelSize_>130
             psfSigma = MD_EPI.channels_.psfSigma_*2; %*2 scale up for widefield.                  % TERRIBLE FOR OUR EPI Experiments. Waddah Moghram on 2019-10-27
         elseif strcmp(MD_EPI.channels_.imageType_,'Confocal')
@@ -894,7 +931,7 @@ format longg
                 optimizer.MaximumIterations = 10000;    
         end
     end
-    %-------------------
+    %-------------------    
     parfor_progress(numel(FramesDoneNumbersDIC));
     parfor CurrentFrame = FramesDoneNumbersDIC  
         DIC_DriftROIsMeanAllFrames(CurrentFrame, :) = cornerMeanDrifts(MD_DIC, CurrentFrame, DriftROI_rect, RefFrameDIC_RectImage, TransformationType, optimizer, metric);                    
@@ -906,7 +943,8 @@ format longg
     parfor_progress(0);
     disp('Drift correction step is complete')
     disp('---------------------------------------------------------------------------------')    
-%% =============================== 9.0 Updating coordinates to account for drift-         
+
+    %% =============================== 9.0 Updating coordinates to account for drift-         
     % Converting pixels to microns, and converting from 2D to 3D
     if sign(MagBeadCoordinatesXYpixels(1,2)) == -1              % y-coordiantes are in cartesian coordinates instead of image coordinates.
         MagBeadCoordinatesXYpixels(:,2) = - MagBeadCoordinatesXYpixels(:,2);            % consider saving the values as positive in the DIC tracking code. ~WIM 2020-01-06
@@ -1118,12 +1156,43 @@ format longg
     end
     close all
 
-%%     save all variables to workspace so that I can continue my analysis
+%% ------------------- save all variables to workspace so that I can continue my analysis
     save(OutputPathNameDIC, '-v7.3')
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
+    %----------end parallel pool
+    try
+       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+    catch
+       delete(gcp('nocreate')) 
+    end
 
 %% %%%%%%%%%%%%%%%%%% Part 2: TFM Calculations. 1. Displacement filtering and drift corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    % Parallel Pool Start
+    if isempty(gcp('nocreate'))
+        try
+            poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
+%             poolsize = feature('numCores');
+        catch
+            poolsize = poolobj.NumWorkers;
+        end
+        try
+            poolobj = parpool('local', poolsize);
+        catch
+            try 
+                parpool;
+            catch 
+                warning('matlabpool has been removed, and parpool is not working in this instance');
+            end
+        end
+    else
+        try
+           poolsize = poolobj.NumWorkers;
+        catch
+           poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
+        end
+    end
+
 %_________________ Calculating the EPI displacement 
     calculateMovieDisplacementField(MD_EPI, displacementParameters)
 %_________________ Correct displacements for spatial outliers
@@ -1726,6 +1795,12 @@ format longg
                      return
             end    
        end
-       close all
-       
-%     end
+       close all       
+    end
+%----------end parallel pool
+    try
+       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+    catch
+       delete(gcp('nocreate')) 
+    end
+    
