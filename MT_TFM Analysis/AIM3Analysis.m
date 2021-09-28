@@ -8,7 +8,7 @@ format longg
 %% _______________________________ Predetermined Variables DIC 
     % Initial Parameters. Make sure you track previously.
     choiceTrackDIC ='Yes';
-    GelType = {'Corning Type I rat-tail collagen.', 'Stock concentration: ~3.0 mg/mL',  'Cat: CB40236. Stock .  LOT: ____.'};
+    GelType = {'Corning Type I rat-tail collagen.', 'Stock concentration: ~3.04 mg/mL',  'Cat: CB40236. Stock .  LOT: ____.'};
    
     IdenticalCornersChoice = 'Yes';             % choose 4 identical corners.
     DCchoice = 'Yes';
@@ -25,7 +25,7 @@ format longg
     TrackingMethodList = {'imfindcircles()', 'imgregtform()'};
 %     TrackingMethodListChoiceIndex = listdlg('ListString', TrackingMethodList, 'SelectionMode', 'single', 'InitialValue', 1, ...
 %         'PromptString', 'Choose the tracking Algorith:', 'ListSize', [200, 100]);
-    TrackingMethodListChoiceIndex = 1;                      % going with imregtform() as our standard
+    TrackingMethodListChoiceIndex = 2;                      % going with imregtform() as our standard
 %     if isempty(TrackingMethodListChoiceIndex), TrackingMethodListChoiceIndex = 1; end
     TrackingMethod = TrackingMethodList{TrackingMethodListChoiceIndex}; 
     controlMode =  'Controlled Force';
@@ -63,7 +63,7 @@ format longg
     TransientRegParamMethod = 'ON for Transients';
     SaveOutput = true;  
 
-%% _______________________________ Use GPU if it is present
+% _______________________________ Use GPU if it is present
     nGPU = gpuDeviceCount;
     if nGPU > 0
         useGPU = true;
@@ -76,13 +76,13 @@ format longg
     disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analysis DIC related plots --------------------------')
     
 %% Add bioformats path programmatically
-try
-     BioformatsPath = '.\bioformats';    % relative path of project
-     addpath(genpath(BioformatsPath));        % include subfolders
-catch
-    BioformatsPath = uigetdir(pwd, 'Select the Bioformats folder');
-    addpath(genpath(BioformatsPath));        % include subfolders
-end
+    try
+         BioformatsPath = '.\bioformats';    % relative path of project
+         addpath(genpath(BioformatsPath));        % include subfolders
+    catch
+        BioformatsPath = uigetdir(pwd, 'Select the Bioformats folder');
+        addpath(genpath(BioformatsPath));        % include subfolders
+    end
 %% =============================== 3.0 Select the DIC image file that has the tracking output to do the analysis & choose the analysis path =======================    
     switch choiceOpenND2DIC    
         case 'Yes'
@@ -282,6 +282,25 @@ end
 %     
 %     AcquisitionDateEPI = [MonthNameEPI, ' ', AcquisitionDateEPIStr{2}, ', ' AcquisitionDateEPIStr{3}]; 
 %     MD_EPI.acquisitionDate_ = NotesWordsEPI{6};
+%% Parallel Pool Start
+    poolobj = gcp('nocreate'); % If no pool, do not create new one.
+    if isempty(poolobj)
+        %                 poolsize = feature('numCores');
+        poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
+    else
+        poolsize = poolobj.NumWorkers;
+    end
+    if isempty(gcp('nocreate'))
+        try
+            parpool('local', poolsize);
+        catch
+            try 
+                parpool;
+            catch 
+                warning('matlabpool has been removed, and parpool is not working in this instance');
+            end
+        end
+    end
 
 %% =============================== 5.0 Tracking Magnetic Bead (4.5 micron Tosylactivated)
     disp('_________________ Starting tracking of the magnetic bead')
@@ -316,7 +335,7 @@ end
     if useGPU, RefFrameDIC = gpuArray(RefFrameDIC); end
     RefFrameDICAdjust = imadjust(RefFrameDIC, stretchlim(RefFrameDIC,[0, 1]));  
     
-    TrackingMethod = 'imgregtform()';
+    TrackingMethod = 'imfindcircles()';
     switch TrackingMethod
         case 'imfindcircles()'                 %% Quicker, but noisier.
             commandwindow;
@@ -338,11 +357,11 @@ end
                         imSize = size(MaskROI);
                     else
                         [imDimX, imDimY] = find(RefFrameDICAdjust);
-                        imSize = size(MaskROI);
+                        imSize = size(RefFrameDICAdjust);
                     end
                     
-                    SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
-                    BeadROI_CroppedRectangle = [imDimX(1), imDimY(1)] + [round((imSize / 2) - SideLengths ./2), SideLengths];
+                    SideLengths =  [1, 1] * round((20 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
+                    BeadROI_CroppedRectangle = [[imDimX(1), imDimY(1)] + round((imSize / 2) - SideLengths ./2), SideLengths];
                     [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
 %                 case 'No'
 %                     BeadROI = RefFrameImageAdjust;
@@ -367,9 +386,9 @@ end
             BeadPositionXYCenterPixels  = nan(numel(FramesDoneNumbersDIC), 2);
             reverseString = ''; 
 %             
-            figMagBeadTracked = figure('color', 'w');
-            figMagBeadTrackedAxes = gca;
-            axis image
+%             figMagBeadTracked = figure('color', 'w');
+%             figMagBeadTrackedAxes = gca;
+%             axis image
             
             %___ needs to be upgraded to use parallel processing and invoking 'MagBeadTrackedPosition_imtFindCircles.m'
             disp('---------------------------------------------------------------------------------')
@@ -386,112 +405,85 @@ end
             
             BeadPositionXYcenter = BeadROI_CroppedRectangle(1:2) + BeadPositionXYCenterPixels + largerROIPositionPixels; 
             
-        case 'imgregtform()'                            %% Slower, but more accurate.
-            TrackingModeList = {'multimodal','monomodal'};
-%             TrackingModeListChoiceIndex = listdlg('ListString', TrackingModeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
-%                 'PromptString', 'Choose the tracking mode:', 'ListSize', [200, 100]); 
-%             if isempty(TrackingModeListChoiceIndex), TrackingModeListChoiceIndex = 1; end
-            TrackingModeListChoiceIndex = 2;                       
-            TrackingMode = TrackingModeList{TrackingModeListChoiceIndex}; 
-
-            [optimizer, metric] = imregconfig(TrackingMode);
-            if isgpuarray(metric), metric = double(gather(metric));end
-            
-            TransformationTypeList = {'translation', 'rigid', 'similarity', 'affine'};
-%             TransformationTypeListChoiceIndex = listdlg('listString', TransformationTypeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
-%                'PromptString', 'Choose Displacement Mode:', 'ListSize', [200, 100]);
-%             if isempty(TransformationTypeListChoiceIndex), TransformationTypeListChoiceIndex = 1; end
-            TrackingModeListChoiceIndex = 1;
-            TransformationType = TransformationTypeList{TrackingModeListChoiceIndex};
-
-            switch TrackingMode
-                case 'monomodal'
-                    switch TransformationType
-                        case 'translation'
-                            optimizer.MinimumStepLength = 1e-7;
-                            optimizer.MaximumStepLength = 3.125e-5;
-                            optimizer.MaximumIterations = 10000;    
-                    end
-            end
-
-            RefFrameNum = 1;
-            if useGPU, RefFrameDIC = gpuArray(RefFrameDIC); end
-            RefFrameDICAdjust = imadjust(RefFrameDIC, stretchlim(RefFrameDIC,[0, 1]));
-
-            figHandle = figure('color', 'w');
-            figAxesHandle = gca;
-            colormap(GrayColorMap);
-            imagesc(figAxesHandle, 1, 1, RefFrameDICAdjust);
-            hold on
-            set(figAxesHandle, 'FontWeight', 'bold','LineWidth',1, 'XMinorTick', 'on', 'YMinorTick', 'on', 'TickDir', 'out', 'Box', 'on')    
-            xlabel('X (pixels)'), ylabel('Y (pixels)')
-            axis image
-%             title({'Draw a rectangle to select an ROI.', 'Zoom and adjust as needed to select a tight box'})
-%             BeadROIrectHandle = imrect(figAxesHandle);              % Can also be a needle tip
-%             addNewPositionCallback(BeadROIrectHandle,@(p) title({strcat('ROI Position [X,Y,W,H]=', char(32), mat2str(p,3), char(32), 'pixels'), 'Double-Click on Last ROI when finished with adjusting all ROIs'})); 
-%             ConstraintFunction = makeConstrainToRectFcn('imrect',get(figAxesHandle,'XLim'),get(figAxesHandle,'YLim'));
-%             setPositionConstraintFcn(BeadROIrectHandle,ConstraintFunction);
-%             CroppedRectangle = wait(BeadROIrectHandle);                                     % Freeze MATLAB command until the figure is double-clicked, then it is resumed. Returns whole pixels instead of fractions
-            imSize = size(RefFrameDICAdjust);
-%             close(figHandle)    
-            SideLengths =  [1, 1] * round((24 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
-            BeadROI_CroppedRectangle = [round((imSize / 2) - SideLengths ./2), SideLengths];
-            [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
-
-%             pause(2)
-%             fig2 = imshow(BeadROI_DIC, 'InitialMagnification', 400);
-%             figure(fig2.Parent.Parent)
-%             BeadROIcenterPixels = ginput(1);
-%             close(fig2.Parent.Parent)
+%         case 'imgregtform()'                            %% Slower, but more accurate.
+%             TrackingModeList = {'multimodal','monomodal'};
+% %             TrackingModeListChoiceIndex = listdlg('ListString', TrackingModeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
+% %                 'PromptString', 'Choose the tracking mode:', 'ListSize', [200, 100]); 
+% %             if isempty(TrackingModeListChoiceIndex), TrackingModeListChoiceIndex = 1; end
+%             TrackingModeListChoiceIndex = 2;                       
+%             TrackingMode = TrackingModeList{TrackingModeListChoiceIndex}; 
 % 
-            BeadROIcenterPixels = SideLengths / 2;
-
-            figHandleROI = figure('color', 'w');
-            figAxesHandleROI = gca;
-            colormap(GrayColorMap);
-            imagesc(figAxesHandleROI,imadjust(BeadROI_DIC, []))
-            hold on
-            set(figAxesHandleROI, 'FontWeight', 'bold','LineWidth',1, 'XMinorTick', 'on', 'YMinorTick', 'on', 'TickDir', 'out', 'Box', 'on') 
-            xlabel('X (pixels)'), ylabel('Y (pixels)')
-            xlabel('X (pixels)'), ylabel('Y (pixels)')
-            title('4X ROI to be tracked')            
-            axis image
-            [centers, BeadRadius, ~] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.7, 'Sensitivity', 0.95);   %'Sensitivity', 0.8
-                
-            viscircles(centers, BeadRadius, 'EdgeColor','r');
-            [ClosestBeadDist, BeadNodeID] = min(vecnorm(BeadROIcenterPixels - centers, 2, 2));
-            BeadROIcenterPixels = centers(BeadNodeID, :);
-            plot(BeadROIcenterPixels(:,1),BeadROIcenterPixels(:,2), 'r.', 'MarkerSize', 15)           % does not work when the needle is attached, or maube the lighting?
-            LocationScale = SideLengths - [3,3];                  % bottom right corner
-            ScaleLength_DIC =   round((max(SideLengths) * ScaleMicronPerPixel_DIC)/5, 1, 'significant');     
-            scalebar(figAxesHandleROI,'ScaleLength', ScaleLength_DIC, 'ScaleLengthRatio', ScaleMicronPerPixel_DIC, 'color', [0,0,0]', ...
-                'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
-            MagBeadTrackingROIsFullFileNameFig = fullfile(MagBeadOutputPath, 'BeadTrackingROI_DIC.fig');
-            MagBeadTrackingROIsFullFileNamePNG = fullfile(MagBeadOutputPath, 'BeadTrackingROI_DIC.png');    
-            savefig(figHandleROI, MagBeadTrackingROIsFullFileNameFig, 'compact')
-            saveas(figHandleROI, MagBeadTrackingROIsFullFileNamePNG, 'png')
-            close(figHandleROI)
-
-            clear BeadPositionXYCornerPixels 
-%             refImg = imref2d(size(BeadROI_DIC));
-
-            BeadPositionXYCornerPixels = nan(numel(FramesDoneNumbersDIC), 2);
-            disp('---------------------------------------------------------------------------------')
-            disp('Tracking the displacement of the magnetic bead. No Drift correction yet')
-            parfor_progress(numel(FramesDoneNumbersDIC));
-            parfor CurrentDIC_Frame_Numbers = FramesDoneNumbersDIC                
-                switch TransformationType
-                    case 'translation'
-                        BeadPositionXYCornerPixels(CurrentDIC_Frame_Numbers,:) = MagBeadTrackedPosition_imRegtform(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_DIC, BeadROI_CroppedRectangle, ...
-                            TransformationType, optimizer, metric, 0);
-                    case 'rigid'
-
-                end
-                parfor_progress;
-            end        
-            parfor_progress(0);
-            disp('Tracking the displacement of the magnetic bead complete')
-            BeadPositionXYcenter = BeadPositionXYCornerPixels + BeadROIcenterPixels + largerROIPositionPixels; 
+%             [optimizer, metric] = imregconfig(TrackingMode);
+% 
+%             TransformationTypeList = {'translation', 'rigid', 'similarity', 'affine'};
+% %             TransformationTypeListChoiceIndex = listdlg('listString', TransformationTypeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
+% %                'PromptString', 'Choose Displacement Mode:', 'ListSize', [200, 100]);
+% %             if isempty(TransformationTypeListChoiceIndex), TransformationTypeListChoiceIndex = 1; end
+%             TrackingModeListChoiceIndex = 1;
+%             TransformationType = TransformationTypeList{TrackingModeListChoiceIndex};
+% 
+%             switch TrackingMode
+%                 case 'monomodal'
+%                     switch TransformationType
+%                         case 'translation'
+%                             optimizer.MinimumStepLength = 1e-7;
+%                             optimizer.MaximumStepLength = 3.125e-5;
+%                             optimizer.MaximumIterations = 10000;    
+%                     end
+%             end
+% 
+%             RefFrameNum = 1;
+%             if useGPU, RefFrameDIC = gpuArray(RefFrameDIC); end
+%             RefFrameDICAdjust = imadjust(RefFrameDIC, stretchlim(RefFrameDIC,[0, 1]));
+% 
+%             figHandle = figure('color', 'w');
+%             figAxesHandle = gca;
+%             colormap(GrayColorMap);
+%             imagesc(figAxesHandle, 1, 1, RefFrameDICAdjust);
+%             hold on
+%             set(figAxesHandle, 'FontWeight', 'bold','LineWidth',1, 'XMinorTick', 'on', 'YMinorTick', 'on', 'TickDir', 'out', 'Box', 'on')    
+%             xlabel('X (pixels)'), ylabel('Y (pixels)')
+%             axis image
+% %             title({'Draw a rectangle to select an ROI.', 'Zoom and adjust as needed to select a tight box'})
+% %             BeadROIrectHandle = imrect(figAxesHandle);              % Can also be a needle tip
+% %             addNewPositionCallback(BeadROIrectHandle,@(p) title({strcat('ROI Position [X,Y,W,H]=', char(32), mat2str(p,3), char(32), 'pixels'), 'Double-Click on Last ROI when finished with adjusting all ROIs'})); 
+% %             ConstraintFunction = makeConstrainToRectFcn('imrect',get(figAxesHandle,'XLim'),get(figAxesHandle,'YLim'));
+% %             setPositionConstraintFcn(BeadROIrectHandle,ConstraintFunction);
+% %             CroppedRectangle = wait(BeadROIrectHandle);                                     % Freeze MATLAB command until the figure is double-clicked, then it is resumed. Returns whole pixels instead of fractions
+%             imSize = size(RefFrameDICAdjust);
+%             close(figHandle)    
+%             SideLengths =  [1, 1] * round((20 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
+%             BeadROI_CroppedRectangle = [round((imSize / 2) - SideLengths ./2), SideLengths];
+%             [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
+% 
+% %             pause(2)
+% %             fig2 = imshow(BeadROI_DIC, 'InitialMagnification', 400);
+% %             figure(fig2.Parent.Parent)
+% %             BeadROIcenterPixels = ginput(1);
+% %             close(fig2.Parent.Parent)
+% % 
+%             BeadROIcenterPixels = SideLengths / 2;
+% 
+%             clear BeadPositionXYCornerPixels 
+% %             refImg = imref2d(size(BeadROI_DIC));
+% 
+%             BeadPositionXYCornerPixels = nan(numel(FramesDoneNumbersDIC), 2);
+%             disp('---------------------------------------------------------------------------------')
+%             disp('Tracking the displacement of the magnetic bead. No Drift correction yet')
+%             parfor_progress(numel(FramesDoneNumbersDIC));
+%             parfor CurrentDIC_Frame_Numbers = FramesDoneNumbersDIC                
+%                 switch TransformationType
+%                     case 'translation'
+%                         BeadPositionXYCornerPixels(CurrentDIC_Frame_Numbers,:) = MagBeadTrackedPosition_imRegtform(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_DIC, BeadROI_CroppedRectangle, ...
+%                             TransformationType, optimizer, metric, 0);
+%                     case 'rigid'
+% 
+%                 end
+%                 parfor_progress;
+%             end        
+%             parfor_progress(0);
+%             disp('Tracking the displacement of the magnetic bead complete')
+%             BeadPositionXYcenter = BeadPositionXYCornerPixels + BeadROIcenterPixels + largerROIPositionPixels; 
         otherwise
             return
     end    
@@ -569,7 +561,7 @@ end
     
     fprintf('Magnetic bead displacements are saved as: \n\t %s\n\t %s\n', MagBeadPlotFullFileNameFig, MagBeadPlotFullFileNamePNG)
 
-
+%     delete(poolobj);                % shut down the parallel core
 %% ============ Figure out the 10% of the corners based on the beads detected
 % ----------------- Creating the reference frame from the first frame and
 % saving it and embedding it in MD_EPI
@@ -768,9 +760,6 @@ end
     fprintf('psfSigma = %0.3f, Microsphere count = %d\n', ...
         psfSigma, size(localbeads, 1))
     fprintf('Corners of square and even-numbered grid are at [%0.3g, %0.3g , %0.3g, %0.3g] pixels\n', gridXmin, gridYmin, gridXmax, gridYmax)
-    
-    
-    
  
 %% =============================== 8.0 Correct displacements for drift based on displacement in 4 corner ROIs
 %_____________  Tracking the Drift Velocity in the DIC Video       
@@ -881,36 +870,33 @@ end
     disp('---------------------------------------------------------------------------------')
     disp('Correcting for drift displacement of the magnetic bead.')          
     fprintf('Starting drift correction step based on %d%% per side area\n', CornerPercentage * 100)
-    parfor_progress(numel(FramesDoneNumbersDIC));
     
+%-------------- imregtform parameters -----------
+    TrackingModeList = {'multimodal','monomodal'};
+%     TrackingModeListChoiceIndex = listdlg('ListString', TrackingModeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
+%     'PromptString', 'Choose the tracking mode:', 'ListSize', [200, 100]); 
+    TrackingModeListChoiceIndex = 2;                       
+    TrackingMode = TrackingModeList{TrackingModeListChoiceIndex}; 
+    [optimizer, metric] = imregconfig(TrackingMode);
+    if isgpuarray(metric), metric = double(gather(metric));end            
+    TransformationTypeList = {'translation', 'rigid', 'similarity', 'affine'};
+    %             TransformationTypeListChoiceIndex = listdlg('listString', TransformationTypeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
+    %                'PromptString', 'Choose Displacement Mode:', 'ListSize', [200, 100]);
+    %             if isempty(TransformationTypeListChoiceIndex), TransformationTypeListChoiceIndex = 1; end
+    TrackingModeListChoiceIndex = 1;
+    TransformationType = TransformationTypeList{TrackingModeListChoiceIndex};
+    switch TrackingMode
+        case 'monomodal'
+        switch TransformationType
+            case 'translation'
+                optimizer.MinimumStepLength = 1e-7;
+                optimizer.MaximumStepLength = 3.125e-5;
+                optimizer.MaximumIterations = 10000;    
+        end
+    end
+    %-------------------
+    parfor_progress(numel(FramesDoneNumbersDIC));
     parfor CurrentFrame = FramesDoneNumbersDIC  
-           TrackingModeList = {'multimodal','monomodal'};
-%             TrackingModeListChoiceIndex = listdlg('ListString', TrackingModeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
-%                 'PromptString', 'Choose the tracking mode:', 'ListSize', [200, 100]); 
-%      
-            TrackingModeListChoiceIndex = 2;                       
-            TrackingMode = TrackingModeList{TrackingModeListChoiceIndex}; 
-
-            [optimizer, metric] = imregconfig(TrackingMode);
-            if isgpuarray(metric), metric = double(gather(metric));end
-            
-            TransformationTypeList = {'translation', 'rigid', 'similarity', 'affine'};
-%             TransformationTypeListChoiceIndex = listdlg('listString', TransformationTypeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
-%                'PromptString', 'Choose Displacement Mode:', 'ListSize', [200, 100]);
-%             if isempty(TransformationTypeListChoiceIndex), TransformationTypeListChoiceIndex = 1; end
-            TrackingModeListChoiceIndex = 1;
-            TransformationType = TransformationTypeList{TrackingModeListChoiceIndex};
-
-            switch TrackingMode
-                case 'monomodal'
-                    switch TransformationType
-                        case 'translation'
-                            optimizer.MinimumStepLength = 1e-7;
-                            optimizer.MaximumStepLength = 3.125e-5;
-                            optimizer.MaximumIterations = 10000;    
-                    end
-            end
-
         DIC_DriftROIsMeanAllFrames(CurrentFrame, :) = cornerMeanDrifts(MD_DIC, CurrentFrame, DriftROI_rect, RefFrameDIC_RectImage, TransformationType, optimizer, metric);                    
 %         if ShowOutput
 %             fprintf('Drift Correction for Frame %d/%d: [\tD_x = %0.4g pix, \t\t D_y = %0.4g pix, \t\t D_net = %0.4g] pix.\n',  CurrentFrame, VeryLastFrame, DIC_DriftROIsMeanAllFrames(CurrentFrame, :)); 
@@ -1124,6 +1110,7 @@ end
             %}
             MagBeadCoordinatesMicronXYZ = MagBeadDisplacementMicronXYZ;
             NeedleTipRelativeCoordinatesXYZmicrons = [0,0,0];
+            if isgpuarray(MagBeadCoordinatesMicronXYZ), MagBeadCoordinatesMicronXYZ = gather(MagBeadCoordinatesMicronXYZ); end
             [MT_Force_xyz_N, MT_Force_xy_N, WorkBeadJ_Half_Cycle, WorkCycleFirstFrame, WorkCycleLastFrame, CompiledMT_Results] = CalculateForceMT(MagBeadCoordinatesMicronXYZ, ...
                 NeedleTipRelativeCoordinatesXYZmicrons, ScaleMicronPerPixel_DIC, ...
                 NeedleInclinationAngleDegrees, FirstFrame_DIC, LastFrame_DIC, TimeStampsRT_Abs_DIC, CleanSensorDataDIC, SensorDataFullFilenameDIC, ...
