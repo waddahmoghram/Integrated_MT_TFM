@@ -47,7 +47,7 @@ ip.addRequired('imageIDs', @isvector);
 ip.addOptional('cache', false ,@isscalar);
 homeDir = char(java.lang.System.getProperty('user.home'));
 omeroDir = fullfile(homeDir, 'omero');
-ip.addParamValue('path', omeroDir, @ischar);
+ip.addParameter('path', omeroDir, @ischar);
 ip.parse(imageIDs, varargin{:});
 
 % Initialize movie array

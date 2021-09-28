@@ -37,9 +37,9 @@ classdef  BioFormatsReader < Reader
             ip = inputParser();
             ip.addRequired('id', @ischar);
             ip.addOptional('series', 0, @(x) validateattributes(x, {'numeric'}, {'scalar'}));
-            ip.addParamValue('reader', [], @(x) isa(x, 'loci.formats.IFormatReader'));
+            ip.addParameter('reader', [], @(x) isa(x, 'loci.formats.IFormatReader'));
             % Directory for memo file
-            ip.addParamValue('directory',bfGetMemoDirectory(), @ischar);
+            ip.addParameter('directory',bfGetMemoDirectory(), @ischar);
             ip.parse(varargin{:});
             
             % Initialize Bio-Formats and log4j

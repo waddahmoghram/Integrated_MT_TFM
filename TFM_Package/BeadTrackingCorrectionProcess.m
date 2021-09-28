@@ -72,7 +72,7 @@ classdef BeadTrackingCorrectionProcess < StageDriftCorrectionProcess
                 % Use dedicated draw method for plotting flow histograms
                 ip = inputParser;
                 ip.addRequired('obj');
-                ip.addParamValue('output',outputList(2).var,@(x) all(ismember(x,{outputList.var})));
+                ip.addParameter('output',outputList(2).var,@(x) all(ismember(x,{outputList.var})));
                 ip.KeepUnmatched = true;
                 ip.parse(obj,varargin{:})
                 

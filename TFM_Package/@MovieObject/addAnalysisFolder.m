@@ -32,7 +32,7 @@ ip.addRequired('currentAnalysisRoot',@ischar);
 ip.addRequired('newAnalysisRoot',@ischar);
 ip.addOptional('oldRawDataRoot','',@ischar);
 ip.addOptional('newRawDataRoot','',@ischar);
-ip.addParamValue('recursive',true,@islogical);
+ip.addParameter('recursive',true,@islogical);
 ip.parse(MLorMD,currentAnalysisRoot,newAnalysisRoot,varargin{:});
 oldRawDataRoot=ip.Results.oldRawDataRoot;
 newRawDataRoot=ip.Results.newRawDataRoot;

@@ -67,10 +67,10 @@ function fa = writeFileAnnotation(session, filePath, varargin)
 ip = inputParser;
 ip.addRequired('session');
 ip.addRequired('filePath', @(x) exist(x, 'file') == 2);
-ip.addParamValue('mimetype', '', @ischar);
-ip.addParamValue('namespace', '', @ischar);
-ip.addParamValue('description', '', @ischar);
-ip.addParamValue('group', [], @(x) isscalar(x) && isnumeric(x));
+ip.addParameter('mimetype', '', @ischar);
+ip.addParameter('namespace', '', @ischar);
+ip.addParameter('description', '', @ischar);
+ip.addParameter('group', [], @(x) isscalar(x) && isnumeric(x));
 ip.parse(session, filePath, varargin{:});
 
 % Create original file

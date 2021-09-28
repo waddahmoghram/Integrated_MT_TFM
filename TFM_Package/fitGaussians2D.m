@@ -69,11 +69,11 @@ ip.addRequired('A');
 ip.addRequired('sigma');
 ip.addRequired('c');
 ip.addOptional('mode', 'xyAc', @ischar);
-ip.addParamValue('Alpha', 0.05, @isscalar);
-ip.addParamValue('AlphaT', 0.05, @isscalar);
-ip.addParamValue('Mask', [], @islogical);
-ip.addParamValue('ConfRadius', []);
-ip.addParamValue('WindowSize', []);
+ip.addParameter('Alpha', 0.05, @isscalar);
+ip.addParameter('AlphaT', 0.05, @isscalar);
+ip.addParameter('Mask', [], @islogical);
+ip.addParameter('ConfRadius', []);
+ip.addParameter('WindowSize', []);
 ip.parse(img, x, y, A, sigma, c, varargin{:});
 
 np = length(x);

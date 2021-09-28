@@ -38,8 +38,8 @@ ip.CaseSensitive = false;
 ip.addOptional('h', gca, @(x) all(arrayfun(@ishandle, x)));
 ip.addOptional('XFormat', [], @(x) isempty(x) || ischar(x));
 ip.addOptional('YFormat', [], @(x) isempty(x) || ischar(x));
-ip.addParamValue('FormatXY', [true true], @(x) islogical(x) && numel(x)==2);
-ip.addParamValue('MaxDigits', 2, @isscalar);
+ip.addParameter('FormatXY', [true true], @(x) islogical(x) && numel(x)==2);
+ip.addParameter('MaxDigits', 2, @isscalar);
 ip.parse(varargin{:});
 h = ip.Results.h;
 

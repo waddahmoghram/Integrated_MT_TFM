@@ -57,7 +57,7 @@ isLoadedFA = @(x) isa(x, 'omero.model.FileAnnotationI') && x.isLoaded();
 ip = inputParser;
 ip.addRequired('fileAnnotation', @(x) isLoadedFA(x) || isscalar(x));
 ip.addRequired('path', @ischar);
-ip.addParamValue('group', [], @(x) isscalar(x) && isnumeric(x));
+ip.addParameter('group', [], @(x) isscalar(x) && isnumeric(x));
 ip.parse(fileAnnotation, path);
 
 context = java.util.HashMap;

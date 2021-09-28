@@ -76,7 +76,7 @@ ip.addRequired('hObject',@ishandle);
 ip.addRequired('eventdata',@(x) isstruct(x) || isempty(x));
 ip.addRequired('handles',@isstruct);
 ip.addOptional('MD',[],@(x) isa(x,'MovieData'));
-ip.addParamValue('mainFig', -1, @ishandle);
+ip.addParameter('mainFig', -1, @ishandle);
 ip.parse(hObject,eventdata,handles,varargin{:})
 
 % Store input

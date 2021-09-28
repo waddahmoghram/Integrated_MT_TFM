@@ -87,10 +87,10 @@ ip.CaseSensitive=false;
 ip.addRequired('hObject',@ishandle);
 ip.addRequired('eventdata',@(x) isstruct(x) || isempty(x));
 ip.addRequired('handles',@isstruct);
-ip.addParamValue('text','',@ischar);
-ip.addParamValue('extendedText','',@ischar);
-ip.addParamValue('name','',@ischar);
-ip.addParamValue('title','',@ischar);
+ip.addParameter('text','',@ischar);
+ip.addParameter('extendedText','',@ischar);
+ip.addParameter('name','',@ischar);
+ip.addParameter('title','',@ischar);
 ip.parse(hObject,eventdata,handles,varargin{:});
 
 % Apply input

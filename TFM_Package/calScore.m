@@ -34,12 +34,12 @@ function [score,blockIsTooSmall,vP,vF] = calScore(kym,centerI,corL,vP,vF,varargi
 
     %------------ Check additional parameters
     ip =inputParser;
-    ip.addParamValue('bAreaThreshold',0.5*corL^2,@isscalar);
-    ip.addParamValue('kymMask',[],@islogical)
-    ip.addParamValue('Continuous',false,@islogical)
-    ip.addParamValue('CDWS',false,@islogical)
-    ip.addParamValue('kymAvgImg',zeros(size(kym)),@isnumeric)
-    ip.addParamValue('mode','xcorr',@(x) ismember(x,{'xcorr','difference'}));
+    ip.addParameter('bAreaThreshold',0.5*corL^2,@isscalar);
+    ip.addParameter('kymMask',[],@islogical)
+    ip.addParameter('Continuous',false,@islogical)
+    ip.addParameter('CDWS',false,@islogical)
+    ip.addParameter('kymAvgImg',zeros(size(kym)),@isnumeric)
+    ip.addParameter('mode','xcorr',@(x) ismember(x,{'xcorr','difference'}));
     ip.parse(varargin{:});
     bAreaThreshold=ip.Results.bAreaThreshold;
     kymMask=ip.Results.kymMask;

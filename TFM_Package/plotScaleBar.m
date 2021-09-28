@@ -44,12 +44,12 @@ ip = inputParser;
 ip.CaseSensitive = false;
 ip.addRequired('width', @isscalar); % same units as axes
 ip.addOptional('height', width/10, @isscalar); % height of the scale bar
-ip.addParamValue('Handle', gca, @ishandle)
-ip.addParamValue('Location', 'southwest', @(x) any(strcmpi(x, {'northeast', 'southeast', 'southwest', 'northwest'})));
-ip.addParamValue('Label', [], @(x) ischar(x) || isempty(x));
-ip.addParamValue('FontName', 'Helvetica', @ischar);
-ip.addParamValue('FontSize', [], @isscalar);
-ip.addParamValue('Color', [1 1 1], @(x) isvector(x) && numel(x)==3);
+ip.addParameter('Handle', gca, @ishandle)
+ip.addParameter('Location', 'southwest', @(x) any(strcmpi(x, {'northeast', 'southeast', 'southwest', 'northwest'})));
+ip.addParameter('Label', [], @(x) ischar(x) || isempty(x));
+ip.addParameter('FontName', 'Helvetica', @ischar);
+ip.addParameter('FontSize', [], @isscalar);
+ip.addParameter('Color', [1 1 1], @(x) isvector(x) && numel(x)==3);
 
 ip.parse(width, varargin{:});
 label = ip.Results.Label;

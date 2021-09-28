@@ -345,7 +345,7 @@ classdef Channel < matlab.mixin.SetGet & matlab.mixin.Copyable
             ip.addRequired('obj', @(x) isa(x,'Channel') || numel(x)<=3);
             ip.addRequired('iFrame', @isscalar);
             ip.addOptional('iZ', 1, @isscalar);
-            ip.addParamValue('hAxes', gca, @ishandle);
+            ip.addParameter('hAxes', gca, @ishandle);
             ip.KeepUnmatched = true;
             ip.parse(obj, iFrame, varargin{:})
             iZ = ip.Results.iZ;

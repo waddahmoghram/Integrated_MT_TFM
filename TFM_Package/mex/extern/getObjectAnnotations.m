@@ -100,11 +100,11 @@ ip = inputParser;
 ip.addRequired('annotationType', @(x) ischar(x) && ismember(x, {annotations.name}));
 ip.addRequired('parentType', @(x) ischar(x) && ismember(x, {objects.name}));
 ip.addRequired('ids', @(x) isvector(x) || isempty(x));
-ip.addParamValue('include', [], @(x) iscellstr(x) || ischar(x));
-ip.addParamValue('exclude', [], @(x) iscellstr(x) || ischar(x));
-ip.addParamValue('flatten', true, @(x) isscalar(x) && (x || ~x));
-ip.addParamValue('owner', defaultownerid, @isscalar);
-ip.addParamValue('group', [], @(x) isscalar(x) && isnumeric(x));
+ip.addParameter('include', [], @(x) iscellstr(x) || ischar(x));
+ip.addParameter('exclude', [], @(x) iscellstr(x) || ischar(x));
+ip.addParameter('flatten', true, @(x) isscalar(x) && (x || ~x));
+ip.addParameter('owner', defaultownerid, @isscalar);
+ip.addParameter('group', [], @(x) isscalar(x) && isnumeric(x));
 ip.KeepUnmatched = true;
 ip.parse(annotationType, parentType, ids, varargin{:});
 

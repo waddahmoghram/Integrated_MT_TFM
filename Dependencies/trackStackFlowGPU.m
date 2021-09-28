@@ -103,7 +103,7 @@ function [v, corLength, sigtValues] = trackStackFlow(stack, points, minCorL, var
     ip.addParameter('minFeatureSize',11,@isscalar);
     ip.addParameter('mode','fast',@(x) ismember(x,{'fast','accurate','CCWS','CDWS'})); %This is about interpolation method
     ip.addParameter('scoreCalculation','xcorr',@(x) ismember(x,{'xcorr','difference'}));
-    % ip.addParamValue('usePIVSuite',false,@islogical);
+    % ip.addParameter('usePIVSuite',false,@islogical);
     ip.parse(stack,points,minCorL,varargin{:});
     %-----------------------------------------
     maxCorL=ip.Results.maxCorL;

@@ -46,8 +46,8 @@ ip.addRequired('NA', @isscalar);
 ip.addRequired('M', @isscalar);
 ip.addRequired('pixelSize', @isscalar);
 ip.addRequired('lambda', @(x) all(cellfun(@(i) ischar(i) || isscalar(i),x)));
-ip.addParamValue('Display', false, @islogical);
-ip.addParamValue('Mode', 'epi', @(x) any(strcmpi(x, {'epi', 'tirf', 'confocal'})));
+ip.addParameter('Display', false, @islogical);
+ip.addParameter('Mode', 'epi', @(x) any(strcmpi(x, {'epi', 'tirf', 'confocal'})));
 ip.parse(NA, M, pixelSize, lambda, varargin{:});
 
 idx = find(cellfun(@ischar, lambda));

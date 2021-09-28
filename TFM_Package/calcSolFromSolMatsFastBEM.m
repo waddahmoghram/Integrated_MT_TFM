@@ -45,7 +45,7 @@ function [pos_f, force, sol_coef]=calcSolFromSolMatsFastBEM(M, sol_mats, x, y, u
     useLcurve = ip.Results.useLcurve;    
 
     % ip =inputParser;
-    % ip.addParamValue('paxImg',[],@ismatrix);
+    % ip.addParameter('paxImg',[],@ismatrix);
     % paxImage = ip.Results.paxImg;
     if nargin <11
         paxImage =[];

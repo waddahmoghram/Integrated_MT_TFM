@@ -43,7 +43,7 @@ function MD = omeroCacheImport(session,imageID,varargin)
 ip=inputParser;
 ip.addRequired('session',@MovieObject.isOmeroSession);
 ip.addRequired('imageID',@isscalar);
-ip.addParamValue('outputDirectory', '', @ischar);
+ip.addParameter('outputDirectory', '', @ischar);
 ip.parse(session, imageID, varargin{:});
 
 % Ensure the outputDirectory is defined

@@ -83,9 +83,9 @@ ip = inputParser;
 ip.addRequired('I', @isnumeric);
 ip.addRequired('outputPath', @ischar);
 ip.addOptional('dimensionOrder', 'XYZCT', @(x) ismember(x, getDimensionOrders()));
-ip.addParamValue('metadata', [], @(x) isa(x, 'loci.formats.ome.OMEXMLMetadata'));
-ip.addParamValue('Compression', '',  @(x) ismember(x, getCompressionTypes()));
-ip.addParamValue('BigTiff', false , @islogical);
+ip.addParameter('metadata', [], @(x) isa(x, 'loci.formats.ome.OMEXMLMetadata'));
+ip.addParameter('Compression', '',  @(x) ismember(x, getCompressionTypes()));
+ip.addParameter('BigTiff', false , @islogical);
 ip.parse(varargin{:});
 
 % Create metadata

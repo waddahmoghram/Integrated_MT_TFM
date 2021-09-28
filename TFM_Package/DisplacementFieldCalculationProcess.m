@@ -118,7 +118,7 @@ classdef DisplacementFieldCalculationProcess < ImageAnalysisProcess
                 ip.addRequired('obj',@(x) isa(x,'Process'));
 %                 ip.addRequired('iChan',@isnumeric);
                 ip.addRequired('iFrame',@isnumeric);
-                ip.addParamValue('output',outputList(2).var,...
+                ip.addParameter('output',outputList(2).var,...
                     @(x) any(cellfun(@(y) isequal(x,y),{outputList.var})));
                 ip.KeepUnmatched = true;
                 ip.parse(obj,varargin{1:end})
@@ -129,7 +129,7 @@ classdef DisplacementFieldCalculationProcess < ImageAnalysisProcess
                 ip = inputParser;
                 ip.addRequired('obj',@(x) isa(x,'Process'));
                 ip.addRequired('iFrame',@isnumeric);
-                ip.addParamValue('output',outputList(1).var,@(x) any(cellfun(@(y) isequal(x,y),{outputList.var})));
+                ip.addParameter('output',outputList(1).var,@(x) any(cellfun(@(y) isequal(x,y),{outputList.var})));
                 ip.KeepUnmatched = true;
                 ip.parse(obj,iFrame,varargin{:})
                 data=obj.loadChannelOutput(iFrame,'output',ip.Results.output);

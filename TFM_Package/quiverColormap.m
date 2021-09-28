@@ -53,8 +53,8 @@ function h= quiverColormap(x,y,u,v,varargin)
 
 % Parse input parameters
 ip=inputParser;
-ip.addParamValue('Colormap',jet,@(x) isnumeric(x) && size(x,2)==3);
-ip.addParamValue('CLim',[],@(x) isvector(x) || isempty(x));
+ip.addParameter('Colormap',jet,@(x) isnumeric(x) && size(x,2)==3);
+ip.addParameter('CLim',[],@(x) isvector(x) || isempty(x));
 ip.KeepUnmatched=true;
 ip.parse(varargin{:});
 
@@ -111,7 +111,7 @@ end
 % well but not the colormap. I think the colorbar should be implemented 
 % upstream of this function.
 
-% ip.addParamValue('Colorbar','on',@(x) ismember(x,{'on','off'}));
+% ip.addParameter('Colorbar','on',@(x) ismember(x,{'on','off'}));
 % if ~strcmp(ip.Results.Colorbar,'on'), hCbar=[]; return; end
 % % Re-format the colorbar
 % hCbar=colorbar;

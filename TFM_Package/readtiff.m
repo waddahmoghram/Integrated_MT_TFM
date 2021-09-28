@@ -45,7 +45,7 @@ ip.KeepUnmatched = true;
 ip.addRequired('filepath');
 ip.addOptional('range', []);
 ip.addOptional('info', [], @isstruct);
-ip.addParamValue('ShowWaitbar', false, @islogical);
+ip.addParameter('ShowWaitbar', false, @islogical);
 ip.parse(filepath, varargin{:});
 info = ip.Results.info;
 range = ip.Results.range;

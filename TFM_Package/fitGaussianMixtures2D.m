@@ -63,10 +63,10 @@ ip.addRequired('y');
 ip.addRequired('A');
 ip.addRequired('sigma');
 ip.addRequired('c');
-ip.addParamValue('Alpha', 0.05, @isscalar);
-ip.addParamValue('AlphaT', 0.05, @isscalar);
-ip.addParamValue('Mask', [], @islogical);
-ip.addParamValue('maxM', 5, @isscalar);
+ip.addParameter('Alpha', 0.05, @isscalar);
+ip.addParameter('AlphaT', 0.05, @isscalar);
+ip.addParameter('Mask', [], @islogical);
+ip.addParameter('maxM', 5, @isscalar);
 ip.parse(img, x, y, A, sigma, c, varargin{:});
 
 np = length(x);

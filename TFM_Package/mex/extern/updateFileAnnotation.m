@@ -66,9 +66,9 @@ ip = inputParser;
 ip.addRequired('session');
 ip.addRequired('fileAnnotation', @(x) isa(x, 'omero.model.FileAnnotationI'));
 ip.addRequired('filePath', @(x) exist(x, 'file') == 2);
-ip.addParamValue('namespace', '', @ischar);
-ip.addParamValue('description', '', @ischar);
-ip.addParamValue('group', [], @(x) isscalar(x) && isnumeric(x));
+ip.addParameter('namespace', '', @ischar);
+ip.addParameter('description', '', @ischar);
+ip.addParameter('group', [], @(x) isscalar(x) && isnumeric(x));
 ip.parse(session, fileAnnotation, filePath, varargin{:});
 
 context = java.util.HashMap;

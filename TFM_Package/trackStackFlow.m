@@ -86,13 +86,13 @@ ip.addRequired('stack',@(x) isnumeric(x) && size(x,3)>=2);
 ip.addRequired('points',@(x) isnumeric(x) && size(x,2)==2);
 ip.addRequired('minCorL',@isscalar);
 ip.addOptional('maxCorL',minCorL,@isscalar);
-ip.addParamValue('maxSpd',40,@isscalar);
-ip.addParamValue('bgMask',true(size(stack)),@(x) isequal(size(x),size(stack)));
-ip.addParamValue('bgAvgImg', zeros(size(stack)),@isnumeric);
-ip.addParamValue('minFeatureSize',11,@isscalar);
-ip.addParamValue('mode','fast',@(x) ismember(x,{'fast','accurate','CCWS','CDWS'})); %This is about interpolation method
-ip.addParamValue('scoreCalculation','xcorr',@(x) ismember(x,{'xcorr','difference'}));
-% ip.addParamValue('usePIVSuite',false,@islogical);
+ip.addParameter('maxSpd',40,@isscalar);
+ip.addParameter('bgMask',true(size(stack)),@(x) isequal(size(x),size(stack)));
+ip.addParameter('bgAvgImg', zeros(size(stack)),@isnumeric);
+ip.addParameter('minFeatureSize',11,@isscalar);
+ip.addParameter('mode','fast',@(x) ismember(x,{'fast','accurate','CCWS','CDWS'})); %This is about interpolation method
+ip.addParameter('scoreCalculation','xcorr',@(x) ismember(x,{'xcorr','difference'}));
+% ip.addParameter('usePIVSuite',false,@islogical);
 ip.parse(stack,points,minCorL,varargin{:});
 maxCorL=ip.Results.maxCorL;
 maxSpd=ip.Results.maxSpd;

@@ -104,9 +104,9 @@ else
 end
 ip = inputParser;
 ip.addOptional('parameters', defaultParameters, @(x) isa(x, 'omero.sys.ParametersI'));
-ip.addParamValue('owner', defaultOwner, @(x) isscalar(x) && isnumeric(x));
-ip.addParamValue('context', defaultContext, @(x) isa(x, 'java.util.HashMap'));
-ip.addParamValue('group', [], @(x) isscalar(x) && isnumeric(x));
+ip.addParameter('owner', defaultOwner, @(x) isscalar(x) && isnumeric(x));
+ip.addParameter('context', defaultContext, @(x) isa(x, 'java.util.HashMap'));
+ip.addParameter('group', [], @(x) isscalar(x) && isnumeric(x));
 ip.parse(varargin{:});
 
 % Use getImages function if retrieving images

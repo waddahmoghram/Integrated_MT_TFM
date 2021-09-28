@@ -88,7 +88,7 @@ ip.addRequired('eventdata',@(x) isstruct(x) || isempty(x));
 ip.addRequired('handles',@isstruct);
 ip.addRequired('process',@(x) all(cellfun(@(y) isa(y,'Process'),x)));
 ip.addRequired('package',@(x) isa(x,'Package'));
-ip.addParamValue('mainFig',-1,@ishandle);
+ip.addParameter('mainFig',-1,@ishandle);
 ip.parse(hObject,eventdata,handles,varargin{:})
 
 % Store input
