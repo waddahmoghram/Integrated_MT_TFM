@@ -277,7 +277,6 @@ format longg
     MD_EPI.channels_.imageType_ = 'Widefield';
     MD_EPI.channels_.sanityCheck                            % evaluate PSF based on Emission Wavelength
  
-
 %     AcquisitionDateEPIStr = split(NotesWordsEPI{6}, '/');
 %     AcquisitionTimeStr = split(NotesWordsEPI{8}, ':');
 %     MonthNameEPI = month(datetime(1, str2num(AcquisitionDateEPIStr{1}),1), 'name');
