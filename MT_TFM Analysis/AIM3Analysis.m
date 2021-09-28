@@ -332,7 +332,7 @@ format longg
     RefFrameNum = 1;
     RefFrameDIC = MD_DIC.channels_.loadImage(RefFrameNum);
     
-    if useGPU, RefFrameDIC = gpuArray(RefFrameDIC); end
+%     if useGPU, RefFrameDIC = gpuArray(RefFrameDIC); end
     RefFrameDICAdjust = imadjust(RefFrameDIC, stretchlim(RefFrameDIC,[0, 1]));  
     
     TrackingMethod = 'imfindcircles()';
@@ -360,9 +360,9 @@ format longg
                         imSize = size(RefFrameDICAdjust);
                     end
                     
-                    SideLengths =  [1, 1] * round((20 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
+                    SideLengths =  [1, 1] * round((20 / ScaleMicronPerPixel_DIC));        % ??12 ??m to pixels
                     BeadROI_CroppedRectangle = [[imDimX(1), imDimY(1)] + round((imSize / 2) - SideLengths ./2), SideLengths];
-                    [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
+                    [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, gather(BeadROI_CroppedRectangle));
 %                 case 'No'
 %                     BeadROI = RefFrameImageAdjust;
 %                     BeadROIrect = [1,1, size(BeadROI, 2), size(BeadROI, 1)];        % width is columns, and height is rows.
@@ -452,7 +452,7 @@ format longg
 % %             CroppedRectangle = wait(BeadROIrectHandle);                                     % Freeze MATLAB command until the figure is double-clicked, then it is resumed. Returns whole pixels instead of fractions
 %             imSize = size(RefFrameDICAdjust);
 %             close(figHandle)    
-%             SideLengths =  [1, 1] * round((20 / ScaleMicronPerPixel_DIC));        % ±12 µm to pixels
+%             SideLengths =  [1, 1] * round((20 / ScaleMicronPerPixel_DIC));        % ??12 ??m to pixels
 %             BeadROI_CroppedRectangle = [round((imSize / 2) - SideLengths ./2), SideLengths];
 %             [BeadROI_DIC, BeadROI_CroppedRectangle] = imcrop(RefFrameDICAdjust, BeadROI_CroppedRectangle);
 % 
@@ -1100,7 +1100,7 @@ format longg
             catch
                 NeedleInclinationAngleDegrees = input('What is the needle inclination angle (in degrees)? ');
             end
-            fprintf('Inclination Angle of the needle is %.0f%s. \n', NeedleInclinationAngleDegrees, char(0x00B0));
+%             fprintf('Inclination Angle of the needle is %.0f%s. \n', NeedleInclinationAngleDegrees, char(0x00B0));
             %________
             
             %{
@@ -1185,8 +1185,8 @@ format longg
 %         %{
 %         initial guess based on this paper.
 %         Y. Yang, L. M. Leone, and L. J. Kaufman,
-%            “Elastic Moduli of Collagen Gels Can Be Predicted from Two-Dimensional Confocal Microscopy,�? 
-%             Biophys. J., vol. 97, no. 7, pp. 2051–2060, Oct. 2009.
+%            ???Elastic Moduli of Collagen Gels Can Be Predicted from Two-Dimensional Confocal Microscopy,???? 
+%             Biophys. J., vol. 97, no. 7, pp. 2051???2060, Oct. 2009.
 %         %}
 %     tolerancepower = 2;
 %     tolerance = 10^(tolerancepower);            % number of significant figures beyond decimal to estimate Young's elastic modulus.
