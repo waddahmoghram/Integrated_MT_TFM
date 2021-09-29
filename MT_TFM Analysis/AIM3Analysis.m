@@ -1,9 +1,7 @@
 %{
         +++++++++++++++++++ AIM 3: ANALYSIS CODE *******************
-    v.2021-09-02 Written by Waddah Moghram, PhD Candidate in Biomedical 
-        1. DIC Portion is final
-        2. EPI Portion is final
-        3. Combined analysis in progress
+    v.2021-08-02 Written by Waddah Moghram on 2019-09-09
+        1. Combined VideoanalysisDIC.m, VideoAnalysisEPI.m
 
 %}    
 format longg
