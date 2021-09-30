@@ -6,75 +6,74 @@
 %}    
 format longg
 %% _______________________________ Predetermined Variables DIC 
-    % Initial Parameters. Make sure you track previously.
-    choiceTrackDIC ='Yes';
-    GelType = {'Corning Type I rat-tail collagen.', 'Stock concentration: ~3.04 mg/mL',  'Cat: CB40236. Stock .  LOT: ____.'};
-   
-    IdenticalCornersChoice = 'Yes';             % choose 4 identical corners.
-    DCchoice = 'Yes';
-    PlotsFontName = 'XITS';
-    RendererMode = 'painters';
-    TrackingReadyDIC = false;
-    CornerPercentageDefault = 0.10;             % added on 2020-05-26 by WIM. Consider updating to allow the user to change it.
-    MagX_DIC = 30;                        % 20X object * 1.5 eyepiece zoom 
-    MagX_EPI = 30;                        % 20X object * 1.5 eyepiece zoom 
-    AnalysisPathChoice = 'No';    
-    BeadNodeID = 1;
-    AnalysisPath = [];
-        
-    TrackingMethodList = {'imfindcircles()', 'imgregtform()'};
+% Initial Parameters. Make sure you track previously.
+choiceTrackDIC ='Yes';
+GelType = {'Corning Type I rat-tail collagen.', 'Stock concentration: ~3.04 mg/mL',  'Cat: CB40236. Stock .  LOT: ____.'};
+
+IdenticalCornersChoice = 'Yes';             % choose 4 identical corners.
+DCchoice = 'Yes';
+PlotsFontName = 'XITS';
+RendererMode = 'painters';
+TrackingReadyDIC = false;
+CornerPercentageDefault = 0.10;             % added on 2020-05-26 by WIM. Consider updating to allow the user to change it.
+MagX_DIC = 30;                        % 20X object * 1.5 eyepiece zoom 
+MagX_EPI = 30;                        % 20X object * 1.5 eyepiece zoom 
+AnalysisPathChoice = 'No';    
+BeadNodeID = 1;
+AnalysisPath = [];
+    
+TrackingMethodList = {'imfindcircles()', 'imgregtform()'};
 %     TrackingMethodListChoiceIndex = listdlg('ListString', TrackingMethodList, 'SelectionMode', 'single', 'InitialValue', 1, ...
 %         'PromptString', 'Choose the tracking Algorith:', 'ListSize', [200, 100]);
-    TrackingMethodListChoiceIndex = 2;                      % going with imregtform() as our standard
+TrackingMethodListChoiceIndex = 2;                      % going with imregtform() as our standard
 %     if isempty(TrackingMethodListChoiceIndex), TrackingMethodListChoiceIndex = 1; end
-    TrackingMethod = TrackingMethodList{TrackingMethodListChoiceIndex}; 
-    controlMode =  'Controlled Force';
-    choiceOpenND2DIC = 'Yes';
-    SmallerROIChoice = 'Yes';    
-    DIC_ROI_Microns_PerSide = 5;            % 5 microns on each side. Assuming that is the maximum DIC displacement   
-    DCchoiceStr = 'Drift Corrected';
-    FrameDisplMeanChoice = 'No';
- 
-    RendererMode = 'painters';
-    
-    YoungModulusOptimizedCycle = 2;     % seconds cycle
-    YoungModulusOptimizedTimeSec = 0.5;  % 1/2 second near the end
+TrackingMethod = TrackingMethodList{TrackingMethodListChoiceIndex}; 
+controlMode =  'Controlled Force';
+choiceOpenND2DIC = 'Yes';
+SmallerROIChoice = 'Yes';    
+DIC_ROI_Microns_PerSide = 5;            % 5 microns on each side. Assuming that is the maximum DIC displacement   
+DCchoiceStr = 'Drift Corrected';
+FrameDisplMeanChoice = 'No';
+
+RendererMode = 'painters';
+
+YoungModulusOptimizedCycle = 2;     % seconds cycle
+YoungModulusOptimizedTimeSec = 0.5;  % 1/2 second near the end
 
 % _______________________________ EPI Predetermined Variables
-    EdgeErode = 1;                                      % do not change to 0. Update 2020-01-29
-    gridMagnification = 1;
-    ForceIntegrationMethod = 'Summed';
-    TractionStressMethod = 'FTTC';   
-    GridtypeChoiceStr = 'Even Grid';
+EdgeErode = 1;                                      % do not change to 0. Update 2020-01-29
+gridMagnification = 1;
+ForceIntegrationMethod = 'Summed';
+TractionStressMethod = 'FTTC';   
+GridtypeChoiceStr = 'Even Grid';
 
-    PoissonRatio = 0.4;                 % Assumed based on other papers
+PoissonRatio = 0.4;                 % Assumed based on other papers
+
+reg_cornerChoiceStr = 'Optimized Bayesian L2 (BL2)'; 
+InterpolationMethod = 'griddata';                   % vs. InterpolationMethod = 'scatteredinterpolant';
     
-    reg_cornerChoiceStr = 'Optimized Bayesian L2 (BL2)'; 
-    InterpolationMethod = 'griddata';                   % vs. InterpolationMethod = 'scatteredinterpolant';
-        
-    HanWindowChoice = 'Yes';
-    PaddingChoiceStr= 'Padded with zeros only';
+HanWindowChoice = 'Yes';
+PaddingChoiceStr= 'Padded with zeros only';
     
-    ShowOutput = true;
-    SpatialFilterChoiceStr = 'Wiener 2D';    
-    WienerWindowSize = [3, 3];         % 3x3 pixels
-    CornerPercentage = 0.1;
-    AnalysisPathEPI = [];
-    TransientRegParamMethod = 'ON for Transients';
-    SaveOutput = true;  
+ShowOutput = true;
+SpatialFilterChoiceStr = 'Wiener 2D';    
+WienerWindowSize = [3, 3];         % 3x3 pixels
+CornerPercentage = 0.1;
+AnalysisPathEPI = [];
+TransientRegParamMethod = 'ON for Transients';
+SaveOutput = true;  
 
 % _______________________________ Use GPU if it is present
-    nGPU = gpuDeviceCount;
-    if nGPU > 0
-        useGPU = true;
-    else
-        useGPU = false;
-    end
+nGPU = gpuDeviceCount;
+if nGPU > 0
+    useGPU = true;
+else
+    useGPU = false;
+end
     
 %% =============================== 1.0 Tracking DIC Add the particle tracking folder to the path if it is not already "... Image Bead Tracking DIC Analysis" =======================
-    commandwindow;
-    disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analysis DIC related plots --------------------------')
-    
+commandwindow;
+disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analysis DIC related plots --------------------------')
 %% Add bioformats path programmatically
     try
          BioformatsPath = '.\bioformats';    % relative path of project
@@ -117,7 +116,6 @@ format longg
         otherwise
             error('Could not open *.nd2 file');
     end
-    
     
     % -----------------  Open the EPI file 
     choiceOpenND2EPI = 'Yes';
@@ -567,12 +565,38 @@ format longg
     close all
     
     fprintf('Magnetic bead displacements are saved as: \n\t %s\n\t %s\n', MagBeadPlotFullFileNameFig, MagBeadPlotFullFileNamePNG)
-%----------end parallel pool
+%% ----------end parallel pool & start a new one
+try
+   delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+catch
+   delete(gcp('nocreate')) 
+end
+
+% Parallel Pool Start
+if isempty(gcp('nocreate'))
     try
-       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+        poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
+%             poolsize = feature('numCores');
     catch
-       delete(gcp('nocreate')) 
+        poolsize = poolobj.NumWorkers;
     end
+    try
+        poolobj = parpool('local', poolsize);
+    catch
+        try 
+            parpool;
+        catch 
+            warning('matlabpool has been removed, and parpool is not working in this instance');
+        end
+    end
+else
+    try
+       poolsize = poolobj.NumWorkers;
+    catch
+       poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
+    end
+end
+
 %% ============ Figure out the 10% of the corners based on the beads detected
 % ----------------- Creating the reference frame from the first frame and
 % saving it and embedding it in MD_EPI
@@ -603,31 +627,6 @@ format longg
     displacementParameters.mode = 'accurate';
     % these parameters will be embedded when calling on calculateMovieDisplacementField.m
 
-        % Parallel Pool Start
-    if isempty(gcp('nocreate'))
-        try
-            poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
-%             poolsize = feature('numCores');
-        catch
-            poolsize = poolobj.NumWorkers;
-        end
-        try
-            poolobj = parpool('local', poolsize);
-        catch
-            try 
-                parpool;
-            catch 
-                warning('matlabpool has been removed, and parpool is not working in this instance');
-            end
-        end
-    else
-        try
-           poolsize = poolobj.NumWorkers;
-        catch
-           poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1; ;
-        end
-    end
-    
 %% =============================== 7.0 Determining the Corners COORDINATES BUT NEED TO FIND THE PSF SIGMA EXTERNALLY from the EPI file
     disp('Determining PSF value, Beads to be tracked, and the dimensions of the grid')
     try
@@ -792,8 +791,7 @@ format longg
     gridYmin = min(unique(reg_grid(:,:,2)));
     gridYmax = max(unique(reg_grid(:,:,2)));    
     
-    % At this point you can correct for displacement drift in DIC modes.
-     
+    % At this point you can correct for displacement drift in DIC modes.     
     fprintf('psfSigma = %0.3f, Microsphere count = %d\n', ...
         psfSigma, size(localbeads, 1))
     fprintf('Corners of square and even-numbered grid are at [%0.3g, %0.3g , %0.3g, %0.3g] pixels\n', gridXmin, gridYmin, gridXmax, gridYmax)
@@ -1039,7 +1037,7 @@ format longg
             GelPolymerizationTempC = sprintf('Room Temperature (%0.1f%sC)', round(HeaderDataDIC(5,1), 1, 'decimals'), char(176));
     end
 
-    fprintf('%s\n', GelType{:})
+    fprintf('%s\n', GelType{1})
     fprintf('Gel concentration chosen is %.3f mg/mL. \n', GelConcentrationMgMl);
     save(MagBeadTrackedDisplacementsFullFileName, 'GelConcentrationMgMl', 'thickness_um','GelConcentrationMgMlStr', 'GelType',...
             'GelPolymerizationTempC', 'BeadMaxNetDisplMicronDriftCorrected', 'BeadMaxNetDisplMicronDriftCorrected', 'BeadMaxNetDisplFrameDriftCorrected',...
@@ -1156,23 +1154,22 @@ format longg
     end
     close all
 
-%% ------------------- save all variables to workspace so that I can continue my analysis
+    % ------------------- save all variables to workspace so that I can continue my analysis
     save(OutputPathNameDIC, '-v7.3')
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
-    %----------end parallel pool
+    %% ----------end parallel pool & start a new one
     try
        delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
     catch
        delete(gcp('nocreate')) 
     end
-
-%% %%%%%%%%%%%%%%%%%% Part 2: TFM Calculations. 1. Displacement filtering and drift corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
     % Parallel Pool Start
     if isempty(gcp('nocreate'))
         try
             poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
-%             poolsize = feature('numCores');
+    %             poolsize = feature('numCores');
         catch
             poolsize = poolobj.NumWorkers;
         end
@@ -1192,6 +1189,8 @@ format longg
            poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
         end
     end
+
+%% %%%%%%%%%%%%%%%%%% Part 2: TFM Calculations. 1. Displacement filtering and drift corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %_________________ Calculating the EPI displacement 
     calculateMovieDisplacementField(MD_EPI, displacementParameters)
@@ -1250,7 +1249,7 @@ format longg
     CalculateRegParamMethod = 'ON Cycles mean(log10())';
     reg_cornerChoiceStr = 'Optimized Bayesian L2 (BL2)'; 
 
-    YoungModulusInitialGuess = 5 * GelConcentrationMgMl ^ 2.1 * 7;         % offset by 15. Local E is much stiffer than bulk one
+    YoungModulusInitialGuess = 5 * GelConcentrationMgMl ^ 2.1 * 10;         % offset by 10. Local E is much stiffer than bulk one
         %{
         initial guess based on this paper.
         Y. Yang, L. M. Leone, and L. J. Kaufman,
@@ -1258,7 +1257,7 @@ format longg
             Biophys. J., vol. 97, no. 7, pp. 2051–2060, Oct. 2009.
         %}
     tolerancepower = 2;
-    tolerance = 10^(tolerancepower);            % number of significant figures beyond decimal to estimate Young's elastic modulus.
+    tolerance = 10^(-tolerancepower);            % number of significant figures beyond decimal point to estimate Young's elastic modulus.
          
     
     % Choose control mode (controlled force vs. controlled displacement).  
@@ -1300,7 +1299,7 @@ format longg
     FirstFrame = find(FramesDoneBoolean, 1);
     LastFrame = find(FramesDoneBoolean, 1, 'last');
     
-    FramesDoneBoolean = FirstFrame:LastFrame;
+    FramesDoneNumbers = FirstFrame:LastFrame;
  
 %     TimeStampsStart = max(TimeStampsRT_Abs_DIC(1), TimeStampsRT_Abs_EPI(1));
 %     TimeStampsEnd = min(TimeStampsRT_Abs_DIC(end), TimeStampsRT_Abs_EPI(end));    
@@ -1352,7 +1351,7 @@ format longg
     
     FramesRegParamNumbers = FramesOptimizedNumbers;
     
-    options = optimset('Display', 'iter', 'TolFun', tolerance);    % 'TolX', tolerance   will do the significant figures for the Forces, not the elastic modulus
+    options = optimset('Display', 'iter', 'TolFun', tolerance);    % 'TolX', tolerance   will do the significant figures for the Forces, not the elastic modulus 'TolFun'
     disp('______________________________________________________________________')
     fprintf('Optimzation output will be saved under:\n\t%s\n', ModulusPathName);
     disp('Evaluating Optimized Young Modulus...in progress.')
@@ -1364,9 +1363,10 @@ format longg
         gridMagnification, EdgeErode, CornerPercentage, FramesRegParamNumbers, ...
         SpatialFilterChoiceStr, GridtypeChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
         ConversionMicrontoMeters, ConversionMicronSqtoMetersSq, ShowOutput, CalculateRegParamMethod), YoungModulusInitialGuess, options); 
-    
-    fprintf('Time elapsed: *** %0.4f sec *** to to calculate the elastic modulus to  *** %d sig. fig.***\n', toc(starttime), tolerancepower)
-    
+
+    forceFieldParameters.YoungModulusPa = YoungModulusPaOptimum;
+
+    fprintf('Time elapsed: *** %0.4f sec *** to to calculate the elastic modulus to  *** %d decimal places***.\tYoung''s Elastic Modulus = %0.3f Pa.\n', toc(starttime), tolerancepower, YoungModulusPaOptimum)
 
     TractionForcePath = fullfile(displFieldPath, '..', 'forceField');
     try
@@ -1375,14 +1375,66 @@ format longg
         % folder already found
     end
 
+    sprintf('Re-Evaluating displacement & traction stress vector fields & energy density scalar field with raw %s parameters...[in progress].\n', reg_cornerChoiceStr)
 %     NoiseROIsCombined = [];             % if it is not given, the NoiseROIs will be evaluated for each frame based on the interpolated grid.
-    [pos_grid, displFieldNoFilteredGrid, displFieldFilteredGrid, forceField, energyDensityField, ForceN, TractionEnergyJ, ...
-        reg_corner_raw, forceFieldParameters, CornerPercentage] = ...
-        TFM_MasterSolver(displField, NoiseROIsCombined, forceFieldParameters, reg_corner, ...
-        gridMagnification, EdgeErode, PaddingChoiceStr, SpatialFilterChoiceStr, HanWindowChoice, ...
-        GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
-        WienerWindowSize, ScaleMicronPerPixel_EPI, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
- 
+
+    forceField(numel(FramesDoneNumbers)) = struct('pos',[],'vec',[]);
+    energyDensityField = struct('pos',[],'vec',[]);
+    ForceN = nan(numel(FramesDoneNumbers), 3);
+    TractionEnergyJ = nan(numel(FramesDoneNumbers), 1);
+    reg_corner_raw = nan(numel(FramesDoneNumbers), 1);
+
+    parfor_progress(numel(FramesDoneNumbers));
+    parfor CurrentFrameDoneNumber = FramesDoneNumbers   
+        [~, ~, ~, forceField_TMP, energyDensityField_TMP, ForceN_TMP, TractionEnergyJ_TMP, reg_corner_raw_TMP, ~, ~] = ...
+                TFM_MasterSolver(displField(CurrentFrameDoneNumber), NoiseROIsCombined(CurrentFrameDoneNumber), forceFieldParameters, reg_corner, ...
+                gridMagnification, EdgeErode, PaddingChoiceStr, SpatialFilterChoiceStr, HanWindowChoice, ...
+                GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
+                WienerWindowSize, ScaleMicronPerPixel_EPI, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
+
+        forceField(CurrentFrameDoneNumber) = forceField_TMP
+        energyDensityField(CurrentFrameDoneNumber) = energyDensityField_TMP;
+        ForceN(CurrentFrameDoneNumber, :) = ForceN_TMP;
+        TractionEnergyJ(CurrentFrameDoneNumber) = TractionEnergyJ_TMP;
+        reg_corner_raw(CurrentFrameDoneNumber) = reg_corner_raw_TMP;
+
+        parfor_progress;
+    end
+    parfor_progress(0);
+    sprintf('Re-Evaluating displacement & traction stress vector fields & energy density scalar field with raw %s parameters...[Completed].\n', reg_cornerChoiceStr)
+
+  %% ----------end parallel pool & start a new one
+    try
+       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+    catch
+       delete(gcp('nocreate')) 
+    end
+    
+    % Parallel Pool Start
+    if isempty(gcp('nocreate'))
+        try
+            poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
+    %             poolsize = feature('numCores');
+        catch
+            poolsize = poolobj.NumWorkers;
+        end
+        try
+            poolobj = parpool('local', poolsize);
+        catch
+            try 
+                parpool;
+            catch 
+                warning('matlabpool has been removed, and parpool is not working in this instance');
+            end
+        end
+    else
+        try
+           poolsize = poolobj.NumWorkers;
+        catch
+           poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
+        end
+    end
+
 %% =============================== PLOTTING Raw regularization parameters
 %     dlgQuestion = ({'File Format(s) for images?'});
     listStr = {'PNG', 'FIG', 'EPS'};
@@ -1400,7 +1452,7 @@ format longg
     xLabelTime = 'Time [s]';
     
     try
-        titleStr1_1 = sprintf('%.0f %sm-thick, %g mg/mL %s gel', forceFieldParameters.thickness_nm/ 1000, char(181),forceFieldParameters.GelConcentrationMgMl, forceFieldParameters.GelType{:});
+        titleStr1_1 = sprintf('%.0f %sm-thick, %g mg/mL %s gel', forceFieldParameters.thickness_nm/ 1000, char(181),forceFieldParameters.GelConcentrationMgMl, forceFieldParameters.GelType{1});
         titleStr1_2 = sprintf('Young Modulus = %g Pa. Poisson Ratio = %.2g', forceFieldParameters.YoungModulusPa, forceFieldParameters.PoissonRatio);
         titleStr1 = {titleStr1_1, titleStr1_2};
     catch
@@ -1518,6 +1570,7 @@ format longg
                  return
         end    
     end
+    fprintf('Raw %s parameters are saved under:\n\t%s\n', reg_cornerChoiceStr, TractionForcePath)
     close all
 
 %% =============================== Step #8 Average those Regularization Parameters or Not?
@@ -1525,276 +1578,286 @@ format longg
 %     dlgTitle = 'Regularization parameters method?';
 %     CalculateRegParamMethod = questdlg(dlgQuestion, dlgTitle, 'Yes', 'No', 'Yes'); 
 
-    CalculateRegParamMethod = 'Yes';
-    disp('Averaging regularization parameters by mean(log10())')
+CalculateRegParamMethod = 'Yes';
+disp('Averaging regularization parameters by mean(log10())')
+
+if strcmpi(CalculateRegParamMethod, 'Yes')  
+% Bin the displacement based on flux status for controlled-force experiments, by averaging 10^(mean(log10(reg_corner(cycle ON/OFF)))
+% based on displacement motion status for controlled-displacement experiments.
+
+    [reg_corner_averaged, TransientRegParamMethod] = RegCornerBinAndAverage(reg_corner_raw, FluxON, FluxOFF, FluxTransient, FramesDoneNumbers, TransientRegParamMethod);
+    reg_corner_averagedON = reg_corner_averaged(FluxON(1));
+    if isempty(reg_corner_averagedON), reg_corner_averagedON = nan;end
     
-    if strcmpi(CalculateRegParamMethod, 'Yes')  
-    % Bin the displacement based on flux status for controlled-force experiments, by averaging 10^(mean(log10(reg_corner(cycle ON/OFF)))
-    % based on displacement motion status for controlled-displacement experiments.
+    reg_corner_averagedOFF = reg_corner_averaged(FluxOFF(1));
+    if isempty(reg_corner_averagedOFF), reg_corner_averagedOFF = nan;end
+    
+    % Plot 3. Regularization Parameters_______________________________
+    titleStr3 = {titleStr1_1, titleStr1_2, sprintf('Regularization Method: %s', reg_cornerChoiceStr)};
+ 
+    figHandleRegParams = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
+    set(figHandleRegParams, 'Position', [100, 100, 825, 600])
 
-        [reg_corner_averaged, TransientRegParamMethod] = RegCornerBinAndAverage(reg_corner_raw, FluxON, FluxOFF, FluxTransient, FramesDoneNumbers, TransientRegParamMethod);
-        reg_corner_averagedON = reg_corner_averaged(FluxON(1));
-        if isempty(reg_corner_averagedON), reg_corner_averagedON = nan;end
-        
-        reg_corner_averagedOFF = reg_corner_averaged(FluxOFF(1));
-        if isempty(reg_corner_averagedOFF), reg_corner_averagedOFF = nan;end
-        
-        % Plot 3. Regularization Parameters_______________________________
-        titleStr3 = {titleStr1_1, titleStr1_2, sprintf('Regularization Method: %s', reg_cornerChoiceStr)};
-     
-        figHandleRegParams = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
-        set(figHandleRegParams, 'Position', [100, 100, 825, 600])
-
-        sub1 = subplot(2,1,1);
-        plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_averaged(FramesPlotted), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
-        hold on
-        if strcmpi(CalculateRegParamMethod, 'Yes')
-            plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_raw(FramesPlotted), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
-            legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters','location', 'best')
-        end
-        xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
-        xlabel(sprintf('\\rm %s', xLabelTime));
-        ylabel('Reg. param.');  
-        title(titleStr3, 'interpreter', 'none');
+    sub1 = subplot(2,1,1);
+    plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_averaged(FramesPlotted), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
+    hold on
+    if strcmpi(CalculateRegParamMethod, 'Yes')
+        plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_raw(FramesPlotted), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
+        legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters','location', 'best')
+    end
+    xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
+    xlabel(sprintf('\\rm %s', xLabelTime));
+    ylabel('Reg. param.');  
+    title(titleStr3, 'interpreter', 'none');
+    set(findobj(gcf,'type', 'axes'), ...
+        'FontSize',11, ...
+        'FontName', 'Helvetica', ...
+        'LineWidth',1, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'TickDir', 'out', ...
+        'TitleFontSizeMultiplier', 0.9, ...
+        'TitleFontWeight', 'bold');     % Make axes bold       
+    hold on
+    sub2 = subplot(2,1,2);
+    plot(TimeStampsRT_EPI(FramesPlotted), log10(reg_corner_averaged(FramesPlotted)), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
+    hold on
+    if strcmpi(CalculateRegParamMethod, 'Yes')
+        plot(TimeStampsRT_EPI(FramesPlotted), log10(reg_corner_raw(FramesPlotted)), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
+        legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters', ...
+            'location', 'best')
+    end
+    xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
+    ylabel('\itlog_{10}\rm(Reg. param.)\rm');  
+    xlabel(sprintf('\\rm %s', xLabelTime));
         set(findobj(gcf,'type', 'axes'), ...
-            'FontSize',11, ...
-            'FontName', 'Helvetica', ...
-            'LineWidth',1, ...
-            'XMinorTick', 'on', ...
-            'YMinorTick', 'on', ...
-            'TickDir', 'out', ...
-            'TitleFontSizeMultiplier', 0.9, ...
-            'TitleFontWeight', 'bold');     % Make axes bold       
-        hold on
-        sub2 = subplot(2,1,2);
-        plot(TimeStampsRT_EPI(FramesPlotted), log10(reg_corner_averaged(FramesPlotted)), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
-        hold on
-        if strcmpi(CalculateRegParamMethod, 'Yes')
-            plot(TimeStampsRT_EPI(FramesPlotted), log10(reg_corner_raw(FramesPlotted)), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
-            legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters', ...
-                'location', 'best')
-        end
-        xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
-        ylabel('\itlog_{10}\rm(Reg. param.)\rm');  
-        xlabel(sprintf('\\rm %s', xLabelTime));
-            set(findobj(gcf,'type', 'axes'), ...
-            'FontSize',11, ...
-            'FontName', 'Helvetica', ...
-            'LineWidth',1, ...
-            'XMinorTick', 'on', ...
-            'YMinorTick', 'on', ...
-            'TickDir', 'out', ...
-            'TitleFontSizeMultiplier', 0.9, ...
-            'TitleFontWeight', 'bold');     % Make axes bold        
-            
-    % Saving the plots    
-        for CurrentPlotType = 1:numel(PlotChoice)
-            tmpPlotChoice =  PlotChoice{CurrentPlotType};
-            switch tmpPlotChoice
-                case 'FIG'
-                    if exist(TractionForcePath,'dir') 
-                        AnalysisFileNameFIG7 = sprintf('E_%0.2gPa_Regularization_Parameters.fig', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForceFIG7 = fullfile(TractionForcePath, AnalysisFileNameFIG7);                    
-                        savefig(figHandleRegParams, AnalysisTractionForceFIG7,'compact')    
-                    end
-
-                case 'PNG'                  % PNG SAVE. Consider replacing TIF to PNG.  %                 saveas(figFluxV, figureFileNames{2,1}, 'png');               
-                    if exist(TractionForcePath,'dir')                     
-                        AnalysisFileNamePNG7 = sprintf('E_%0.2gPa_Regularization_Parameters.png', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForcePNG7 = fullfile(TractionForcePath, AnalysisFileNamePNG7);
-                        saveas(figHandleRegParams, AnalysisTractionForcePNG7, 'png');
-                    end
-
-                case 'EPS'
-                    if exist(TractionForcePath,'dir')                     
-                        AnalysisFileNameEPS7 = sprintf('E_%0.2gPa_Regularization_Parameters.eps', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForceEPS7 = fullfile(TractionForcePath, AnalysisFileNameEPS7);                                     
-                        print(figHandleRegParams, AnalysisTractionForceEPS7,'-depsc')
-                    end
-                otherwise
-                     return
-            end
-        end
-        close all
+        'FontSize',11, ...
+        'FontName', 'Helvetica', ...
+        'LineWidth',1, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'TickDir', 'out', ...
+        'TitleFontSizeMultiplier', 0.9, ...
+        'TitleFontWeight', 'bold');     % Make axes bold        
         
+% Saving the plots    
+    for CurrentPlotType = 1:numel(PlotChoice)
+        tmpPlotChoice =  PlotChoice{CurrentPlotType};
+        switch tmpPlotChoice
+            case 'FIG'
+                if exist(TractionForcePath,'dir') 
+                    AnalysisFileNameFIG7 = sprintf('E_%0.2gPa_Regularization_Parameters.fig', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForceFIG7 = fullfile(TractionForcePath, AnalysisFileNameFIG7);                    
+                    savefig(figHandleRegParams, AnalysisTractionForceFIG7,'compact')    
+                end
+
+            case 'PNG'                  % PNG SAVE. Consider replacing TIF to PNG.  %                 saveas(figFluxV, figureFileNames{2,1}, 'png');               
+                if exist(TractionForcePath,'dir')                     
+                    AnalysisFileNamePNG7 = sprintf('E_%0.2gPa_Regularization_Parameters.png', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForcePNG7 = fullfile(TractionForcePath, AnalysisFileNamePNG7);
+                    saveas(figHandleRegParams, AnalysisTractionForcePNG7, 'png');
+                end
+
+            case 'EPS'
+                if exist(TractionForcePath,'dir')                     
+                    AnalysisFileNameEPS7 = sprintf('E_%0.2gPa_Regularization_Parameters.eps', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForceEPS7 = fullfile(TractionForcePath, AnalysisFileNameEPS7);                                     
+                    print(figHandleRegParams, AnalysisTractionForceEPS7,'-depsc')
+                end
+            otherwise
+                 return
+        end
+    end
+    close all
+    
 %% Step #9 Second round of finding all but regularization parameter using TFM_MasterSolver. 
-        [pos_grid, displFieldNoFilteredGrid, displFieldFilteredGrid, forceField, energyDensityField, ForceN, TractionEnergyJ, ~, ~, ~] = ...
-            TFM_MasterSolver(displField, NoiseROIsCombined, forceFieldParameters, reg_corner_averaged, ...
-            gridMagnification, EdgeErode, PaddingChoiceStr, SpatialFilterChoiceStr, HanWindowChoice, ...
-            GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
-            WienerWindowSize, ScaleMicronPerPixel_EPI, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
-      
+    parfor_progress(numel(FramesDoneNumbers));
+    parfor CurrentFrameDoneNumber = FramesDoneNumbers   
+        [~, ~, ~, forceField_TMP, energyDensityField_TMP, ForceN_TMP, TractionEnergyJ_TMP, reg_corner_raw_TMP, ~, ~] = ...
+                TFM_MasterSolver(displField(CurrentFrameDoneNumber), NoiseROIsCombined(CurrentFrameDoneNumber), forceFieldParameters, reg_corner_averaged, ...
+                gridMagnification, EdgeErode, PaddingChoiceStr, SpatialFilterChoiceStr, HanWindowChoice, ...
+                GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
+                WienerWindowSize, ScaleMicronPerPixel_EPI, ShowOutput, FirstFrame, LastFrame, CornerPercentage);
+        forceField(CurrentFrameDoneNumber) = forceField_TMP
+        energyDensityField(CurrentFrameDoneNumber) = energyDensityField_TMP;
+        ForceN(CurrentFrameDoneNumber, :) = ForceN_TMP;
+        TractionEnergyJ(CurrentFrameDoneNumber) = TractionEnergyJ_TMP;
+        reg_corner_raw(CurrentFrameDoneNumber) = reg_corner_raw_TMP;
 
-        disp('Saving TFM Analysis Output')
-        displField = displFieldNoFilteredGrid; 
-        TimeStamps = TimeStampsRT_Abs_EPI;
-        displFieldNoFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridNoSpatialFilter_Averaged.mat');
-        Notes = 'Units of "displFieldNoFilteredGrid" = pixels. Averaged displacement output. No Spatial Filter, or Han Windowing. (displFieldNoFilteredGrid)';
-        save(displFieldNoFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
-            'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod', 'DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', '-v7.3')
+        parfor_progress;
+    end
+    parfor_progress(0);
+    sprintf('Re-Evaluating displacement & traction stress vector fields & energy density scalar field with raw %s parameters...[Completed].\n', reg_cornerChoiceStr)
 
-        displField = displFieldFilteredGrid;
-        displFieldFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridWithSpatialFilter_Averaged.mat');
-        Notes = 'Units of "displFieldFilteredGrid" = pixels. Averaged displacement output. Wiener2D Spatial Filter, & Han Windowing.';
-        save(displFieldFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
-             'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', ...
-             'SpatialFilterChoiceStr', 'WienerWindowSize', 'HanWindowChoice', '-v7.3')
+    disp('Saving TFM Analysis Output')
+    displField = displFieldNoFilteredGrid; 
+    TimeStamps = TimeStampsRT_Abs_EPI;
+    displFieldNoFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridNoSpatialFilter_Averaged.mat');
+    Notes = 'Units of "displFieldNoFilteredGrid" = pixels. Averaged displacement output. No Spatial Filter, or Han Windowing. (displFieldNoFilteredGrid)';
+    save(displFieldNoFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
+        'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod', 'DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', '-v7.3')
 
-         
-        sprintf('E_%0.2gPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa);
+    displField = displFieldFilteredGrid;
+    displFieldFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridWithSpatialFilter_Averaged.mat');
+    Notes = 'Units of "displFieldFilteredGrid" = pixels. Averaged displacement output. Wiener2D Spatial Filter, & Han Windowing.';
+    save(displFieldFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
+         'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', ...
+         'SpatialFilterChoiceStr', 'WienerWindowSize', 'HanWindowChoice', '-v7.3')
+
+     
+    sprintf('E_%0.2gPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa);
 %-----------         
-        forceFieldFullFileName = fullfile(TractionForcePath, ...
-            sprintf('E_%0.2gPa_TractionField_PlusRegCorner_Averaged.mat', forceFieldParameters.YoungModulusPa));   
-        Notes = 'Units of "forceField" = Pa. Actually traction stress, or T. Regularization parameters included.';
-        save(forceFieldFullFileName, 'MD_EPI', 'forceField', 'TimeStamps', 'CornerPercentage','Notes', ...
-            'TransientRegParamMethod', 'FluxON', 'FluxOFF', 'FluxTransient', 'reg_corner_averaged', ...
-            'reg_cornerChoiceStr', 'TractionStressMethod', 'PaddingChoiceStr', 'HanWindowChoice', 'forceFieldParameters', 'CalculateRegParamMethod', '-v7.3')
+    forceFieldFullFileName = fullfile(TractionForcePath, ...
+        sprintf('E_%0.2gPa_TractionField_PlusRegCorner_Averaged.mat', forceFieldParameters.YoungModulusPa));   
+    Notes = 'Units of "forceField" = Pa. Actually traction stress, or T. Regularization parameters included.';
+    save(forceFieldFullFileName, 'MD_EPI', 'forceField', 'TimeStamps', 'CornerPercentage','Notes', ...
+        'TransientRegParamMethod', 'FluxON', 'FluxOFF', 'FluxTransient', 'reg_corner_averaged', ...
+        'reg_cornerChoiceStr', 'TractionStressMethod', 'PaddingChoiceStr', 'HanWindowChoice', 'forceFieldParameters', 'CalculateRegParamMethod', '-v7.3')
 
-        TractionForceFullFileName = fullfile(TractionForcePath, sprintf('E_%0.2gPa_TractionForce_Averaged.mat', forceFieldParameters.YoungModulusPa));   
-        Notes = 'Units of "Force, or Traction Force over the entire area, or F" = N. [x,y,norm]';
-        save(TractionForceFullFileName, 'MD_EPI', 'ForceN', 'TimeStamps','Notes', 'ForceIntegrationMethod', '-v7.3')
+    TractionForceFullFileName = fullfile(TractionForcePath, sprintf('E_%0.2gPa_TractionForce_Averaged.mat', forceFieldParameters.YoungModulusPa));   
+    Notes = 'Units of "Force, or Traction Force over the entire area, or F" = N. [x,y,norm]';
+    save(TractionForceFullFileName, 'MD_EPI', 'ForceN', 'TimeStamps','Notes', 'ForceIntegrationMethod', '-v7.3')
 
-        Notes = 'Units of "energyField, or Storage Elastic Energy Density, or Sigma" = J/m^2. ';
-        energyDensityFullFileName = fullfile(TractionForcePath, ...
-            sprintf('E_%0.2gPa_EnergyDensity_Averaged.mat', forceFieldParameters.YoungModulusPa));
-        save(energyDensityFullFileName, 'MD_EPI', 'energyDensityField', 'TimeStamps', 'Notes','-v7.3')
+    Notes = 'Units of "energyField, or Storage Elastic Energy Density, or Sigma" = J/m^2. ';
+    energyDensityFullFileName = fullfile(TractionForcePath, ...
+        sprintf('E_%0.2gPa_EnergyDensity_Averaged.mat', forceFieldParameters.YoungModulusPa));
+    save(energyDensityFullFileName, 'MD_EPI', 'energyDensityField', 'TimeStamps', 'Notes','-v7.3')
 
-        Notes = 'Units of "ElasticTractionEnergy, or or U" = J. ';
-        TractionEnergyFullFileName = fullfile(TractionForcePath, ...
-            sprintf('E_%0.2gPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa));    
-        save(TractionEnergyFullFileName, 'MD_EPI', 'TractionEnergyJ', 'TimeStamps', 'Notes', '-v7.3')
-        disp('TFM Analysis Output saved!')
+    Notes = 'Units of "ElasticTractionEnergy, or or U" = J. ';
+    TractionEnergyFullFileName = fullfile(TractionForcePath, ...
+        sprintf('E_%0.2gPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa));    
+    save(TractionEnergyFullFileName, 'MD_EPI', 'TractionEnergyJ', 'TimeStamps', 'Notes', '-v7.3')
+    disp('TFM Analysis Output saved!')
         
     %% Step #9 Plot the second round right here         
-        titleStr4 = {titleStr1_1, titleStr1_2, 'Regularization parameters are binned and averaged (ON vs. OFF)'};    
-        
-        ConversionNtoNN = 1e9;  
-        ConversionJtoFemtoJ = 1e15;
+    titleStr4 = {titleStr1_1, titleStr1_2, 'Regularization parameters are binned and averaged (ON vs. OFF)'};    
+    
+    ConversionNtoNN = 1e9;  
+    ConversionJtoFemtoJ = 1e15;
 
-        FramesPlotted(FramesDoneNumbers) = ~isnan(ForceN(FramesDoneNumbers));
-        LastFramePlotted = FramesDoneNumbers(end);
-        PlotsFontName = 'Helvatica-Narrow';
-        xLabelTime = 'Time [s]';
+    FramesPlotted(FramesDoneNumbers) = ~isnan(ForceN(FramesDoneNumbers));
+    LastFramePlotted = FramesDoneNumbers(end);
+    PlotsFontName = 'Helvatica-Narrow';
+    xLabelTime = 'Time [s]';
 
-        %_________ Plot 1: 
-        showPlot = 'on';
-        figHandleAllTraction = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
-        set(figHandleAllTraction, 'Position', [275, 435, 825, 775])
-        pause(0.1)          % give some time so that the figure loads well    
-        subplot(3,1,1)
-        plot(TimeStampsRT_EPI(FramesPlotted), ConversionNtoNN * ForceN(FramesPlotted, 3), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
-        xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
-        title(titleStr4, 'interpreter', 'none');
-        set(findobj(gcf,'type', 'axes'), ...
-            'FontSize',11, ...
-            'FontName', 'Helvetica', ...
-            'LineWidth',1, ...
-            'XMinorTick', 'on', ...
-            'YMinorTick', 'on', ...
-            'TickDir', 'out', ...
-            'TitleFontSizeMultiplier', 0.9, ...
-            'TitleFontWeight', 'bold');     % Make axes bold
-        ylabel('\bf|\itF\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName);    
-        hold on    
-        subplot(3,1,2)
-        plot(TimeStampsRT_EPI(FramesPlotted), ConversionNtoNN * ForceN(FramesPlotted, 1), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
-        xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
-        set(findobj(gcf,'type', 'axes'), ...
-            'FontSize',11, ...
-            'FontName', 'Helvetica', ...
-            'LineWidth',1, ...
-            'XMinorTick', 'on', ...
-            'YMinorTick', 'on', ...
-            'TickDir', 'out', ...
-            'TitleFontSizeMultiplier', 0.9, ...
-            'TitleFontWeight', 'bold');     % Make axes bold    
-        ylabel('\bf\itF_{x}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
-        % Flip to Cartesian Coordinates in the Plot (Negative pointing downwards). Add a negative Sign before plot. 
-        subplot(3,1,3)
-        plot(TimeStampsRT_EPI(FramesPlotted), - ConversionNtoNN * ForceN(FramesPlotted, 2), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)       % Flip the y-coordinates to Cartesian
-        xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
-        set(findobj(gcf,'type', 'axes'), ...
-            'FontSize',11, ...
-            'FontName', 'Helvetica', ...
-            'LineWidth',1, ...
-            'XMinorTick', 'on', ...
-            'YMinorTick', 'on', ...
-            'TickDir', 'out', ...
-            'TitleFontSizeMultiplier', 0.9, ...
-            'TitleFontWeight', 'bold');     % Make axes bold  
-        xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
-        set(xlabelHandle, 'FontName', PlotsFontName)
-        ylabel('\bf\itF_{y}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
-    % 2.__________________
-        figHandleEnergy = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
-        set(figHandleEnergy, 'Position', [275, 435, 825, 375])
-        plot(TimeStampsRT_EPI(FramesPlotted), TractionEnergyJ(FramesPlotted) * ConversionJtoFemtoJ, 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
-        xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
-        title(titleStr4, 'interpreter', 'none');
-        set(findobj(gcf,'type', 'axes'), ...
-            'FontSize',11, ...
-            'FontName', 'Helvetica', ...
-            'LineWidth',1, ...
-            'XMinorTick', 'on', ...
-            'YMinorTick', 'on', ...
-            'TickDir', 'out', ...
-            'TitleFontSizeMultiplier', 0.9, ...
-            'TitleFontWeight', 'bold');     % Make axes bold  
-        xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
-        set(xlabelHandle, 'FontName', PlotsFontName)
-        ylabel('\itU\rm(\itt\rm) [fJ]', 'FontName', PlotsFontName);
+    %_________ Plot 1: 
+    showPlot = 'on';
+    figHandleAllTraction = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
+    set(figHandleAllTraction, 'Position', [275, 435, 825, 775])
+    pause(0.1)          % give some time so that the figure loads well    
+    subplot(3,1,1)
+    plot(TimeStampsRT_EPI(FramesPlotted), ConversionNtoNN * ForceN(FramesPlotted, 3), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
+    xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
+    title(titleStr4, 'interpreter', 'none');
+    set(findobj(gcf,'type', 'axes'), ...
+        'FontSize',11, ...
+        'FontName', 'Helvetica', ...
+        'LineWidth',1, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'TickDir', 'out', ...
+        'TitleFontSizeMultiplier', 0.9, ...
+        'TitleFontWeight', 'bold');     % Make axes bold
+    ylabel('\bf|\itF\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName);    
+    hold on    
+    subplot(3,1,2)
+    plot(TimeStampsRT_EPI(FramesPlotted), ConversionNtoNN * ForceN(FramesPlotted, 1), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
+    xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
+    set(findobj(gcf,'type', 'axes'), ...
+        'FontSize',11, ...
+        'FontName', 'Helvetica', ...
+        'LineWidth',1, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'TickDir', 'out', ...
+        'TitleFontSizeMultiplier', 0.9, ...
+        'TitleFontWeight', 'bold');     % Make axes bold    
+    ylabel('\bf\itF_{x}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
+    % Flip to Cartesian Coordinates in the Plot (Negative pointing downwards). Add a negative Sign before plot. 
+    subplot(3,1,3)
+    plot(TimeStampsRT_EPI(FramesPlotted), - ConversionNtoNN * ForceN(FramesPlotted, 2), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)       % Flip the y-coordinates to Cartesian
+    xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
+    set(findobj(gcf,'type', 'axes'), ...
+        'FontSize',11, ...
+        'FontName', 'Helvetica', ...
+        'LineWidth',1, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'TickDir', 'out', ...
+        'TitleFontSizeMultiplier', 0.9, ...
+        'TitleFontWeight', 'bold');     % Make axes bold  
+    xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
+    set(xlabelHandle, 'FontName', PlotsFontName)
+    ylabel('\bf\itF_{y}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
+% 2.__________________
+    figHandleEnergy = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
+    set(figHandleEnergy, 'Position', [275, 435, 825, 375])
+    plot(TimeStampsRT_EPI(FramesPlotted), TractionEnergyJ(FramesPlotted) * ConversionJtoFemtoJ, 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
+    xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
+    title(titleStr4, 'interpreter', 'none');
+    set(findobj(gcf,'type', 'axes'), ...
+        'FontSize',11, ...
+        'FontName', 'Helvetica', ...
+        'LineWidth',1, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'TickDir', 'out', ...
+        'TitleFontSizeMultiplier', 0.9, ...
+        'TitleFontWeight', 'bold');     % Make axes bold  
+    xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
+    set(xlabelHandle, 'FontName', PlotsFontName)
+    ylabel('\itU\rm(\itt\rm) [fJ]', 'FontName', PlotsFontName);
 % 
 %         disp('**___to continue, type "dbcont" or press "F5", or click "Continue" under "Editor" Menu___**')
 %         keyboard
 
-    % Saving the plots
-       for CurrentPlotType = 1:numel(PlotChoice)
-            tmpPlotChoice =  PlotChoice{CurrentPlotType};
-            switch tmpPlotChoice
-                case 'FIG'
-                    if exist(TractionForcePath,'dir') 
-                        
-                        AnalysisFileNameFIG1 = sprintf('E_%0.2gPa_TractionForce_Averaged.fig', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForceFIG1 = fullfile(TractionForcePath, AnalysisFileNameFIG1);                    
-                        savefig(figHandleAllTraction, AnalysisTractionForceFIG1,'compact')    
+% Saving the plots
+   for CurrentPlotType = 1:numel(PlotChoice)
+        tmpPlotChoice =  PlotChoice{CurrentPlotType};
+        switch tmpPlotChoice
+            case 'FIG'
+                if exist(TractionForcePath,'dir') 
+                    
+                    AnalysisFileNameFIG1 = sprintf('E_%0.2gPa_TractionForce_Averaged.fig', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForceFIG1 = fullfile(TractionForcePath, AnalysisFileNameFIG1);                    
+                    savefig(figHandleAllTraction, AnalysisTractionForceFIG1,'compact')    
 
-                        AnalysisFileNameFIG3 = sprintf('E_%0.2gPa_TractionEnergy_Averaged.fig', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForceFIG3 = fullfile(TractionForcePath, AnalysisFileNameFIG3);                    
-                        savefig(figHandleEnergy, AnalysisTractionForceFIG3,'compact')                    
+                    AnalysisFileNameFIG3 = sprintf('E_%0.2gPa_TractionEnergy_Averaged.fig', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForceFIG3 = fullfile(TractionForcePath, AnalysisFileNameFIG3);                    
+                    savefig(figHandleEnergy, AnalysisTractionForceFIG3,'compact')                    
 
-                    end
+                end
 
-                case 'PNG'                  % PNG SAVE. Consider replacing TIF to PNG.  %                 saveas(figFluxV, figureFileNames{2,1}, 'png');               
-                    if exist(TractionForcePath,'dir') 
-                        AnalysisFileNamePNG1 = sprintf('E_%0.2gPa_TractionForce_Averaged.png', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForcePNG1 = fullfile(TractionForcePath, AnalysisFileNamePNG1);
-                        saveas(figHandleAllTraction, AnalysisTractionForcePNG1, 'png');
+            case 'PNG'                  % PNG SAVE. Consider replacing TIF to PNG.  %                 saveas(figFluxV, figureFileNames{2,1}, 'png');               
+                if exist(TractionForcePath,'dir') 
+                    AnalysisFileNamePNG1 = sprintf('E_%0.2gPa_TractionForce_Averaged.png', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForcePNG1 = fullfile(TractionForcePath, AnalysisFileNamePNG1);
+                    saveas(figHandleAllTraction, AnalysisTractionForcePNG1, 'png');
 
-                        AnalysisFileNamePNG3 = sprintf('E_%0.2gPa_TractionEnergy_Averaged.png', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForcePNG3 = fullfile(TractionForcePath, AnalysisFileNamePNG3);
-                        saveas(figHandleEnergy, AnalysisTractionForcePNG3, 'png');                    
-                    end
+                    AnalysisFileNamePNG3 = sprintf('E_%0.2gPa_TractionEnergy_Averaged.png', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForcePNG3 = fullfile(TractionForcePath, AnalysisFileNamePNG3);
+                    saveas(figHandleEnergy, AnalysisTractionForcePNG3, 'png');                    
+                end
 
-                case 'EPS'
-                    if exist(TractionForcePath,'dir') 
-                        AnalysisFileNameEPS1 = sprintf('E_%0.2gPa_TractionForce_Averaged.eps', forceFieldParameters.YoungModulusPa);
-                        AnalysisTractionForceEPS1 = fullfile(TractionForcePath, AnalysisFileNameEPS1);                                     
-                        print(figHandleAllTraction, AnalysisTractionForceEPS1,'-depsc')
+            case 'EPS'
+                if exist(TractionForcePath,'dir') 
+                    AnalysisFileNameEPS1 = sprintf('E_%0.2gPa_TractionForce_Averaged.eps', forceFieldParameters.YoungModulusPa);
+                    AnalysisTractionForceEPS1 = fullfile(TractionForcePath, AnalysisFileNameEPS1);                                     
+                    print(figHandleAllTraction, AnalysisTractionForceEPS1,'-depsc')
 
-                        AnalysisFileNameEPS3 = sprintf('E_%0.2gPa_TractionEnergy_Averaged.eps', forceFieldParameters.YoungModulusPa);             
-                        AnalysisTractionForceEPS3 = fullfile(TractionForcePath, AnalysisFileNameEPS3);                                     
-                        print(figHandleEnergy, AnalysisTractionForceEPS3,'-depsc')                                
-                    end
-                otherwise
-                     return
-            end    
-       end
-       close all       
-    end
+                    AnalysisFileNameEPS3 = sprintf('E_%0.2gPa_TractionEnergy_Averaged.eps', forceFieldParameters.YoungModulusPa);             
+                    AnalysisTractionForceEPS3 = fullfile(TractionForcePath, AnalysisFileNameEPS3);                                     
+                    print(figHandleEnergy, AnalysisTractionForceEPS3,'-depsc')                                
+                end
+            otherwise
+                 return
+        end    
+   end
+   close all       
+end
 %----------end parallel pool
-    try
-       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
-    catch
-       delete(gcp('nocreate')) 
-    end
-    
+try
+   delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+catch
+   delete(gcp('nocreate')) 
+end

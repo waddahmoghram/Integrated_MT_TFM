@@ -65,6 +65,7 @@ function [RMSE_Newtons, forceField , MT_Force_xy_N, grid_mat, TractionForce, reg
     grid_mat = [];
     reg_cornerChoiceStr = 'Optimized Bayesian L2 (BL2)';
     forceFieldParameters.YoungModulus = YoungModulusPa;
+    forceFieldParameters.YoungModulusPa = YoungModulusPa;
     forceFieldParameters.PoissonRatio = PoissonRatio;
     TransientRegParamMethod = 'ON for Transients';          % although it does not matter since that is taken care of outside.
     
@@ -78,7 +79,7 @@ function [RMSE_Newtons, forceField , MT_Force_xy_N, grid_mat, TractionForce, reg
     forceField(numel(displFieldNotFiltered)) = struct('pos','','vec','','par','');
  
     %___________________
-    if ~exist('TractionForce', 'var') || ~exist('TractionForceX', 'var') || ~exist('TractionForceY', 'var') 
+    if ~exist('TractionForceNet', 'var') || ~exist('TractionForceX', 'var') || ~exist('TractionForceY', 'var') 
         TractionForceX = NaN(numel(FramesOptimizedNumbers),1);
         TractionForceY = NaN(numel(FramesOptimizedNumbers),1);
         TractionForceNet = NaN(numel(FramesOptimizedNumbers),1);
@@ -165,10 +166,10 @@ function [RMSE_Newtons, forceField , MT_Force_xy_N, grid_mat, TractionForce, reg
             GridtypeChoiceStr, reg_cornerChoiceStr, InterpolationMethod, TractionStressMethod, ForceIntegrationMethod, ...
             WienerWindowSize, ScaleMicronPerPixel, ShowOutput, 1, 1, CornerPercentage);       
 
-%   Loading the respective traction file variables            
-        TractionForceX(CurrentFrame) = Force(:,1);
-        TractionForceY(CurrentFrame) = Force(:,2);
-        TractionForceNet(CurrentFrame) = Force(:,3);
+    %   Loading the respective traction file variables            
+            TractionForceX(CurrentFrame) = Force(:,1);
+            TractionForceY(CurrentFrame) = Force(:,2);
+            TractionForceNet(CurrentFrame) = Force(:,3);
     end
 
 %     disp('Calculating Traction Stresses using FTTC & the Optimized regularization parameter (BL2)...complete...');
@@ -185,5 +186,5 @@ function [RMSE_Newtons, forceField , MT_Force_xy_N, grid_mat, TractionForce, reg
     fprintf('\tCurrent Net Mean TFM Forces (F) = %0.16f N.\n', mean(TractionForceNet,  'omitnan'))
     fprintf('\tCurrent Young Modulus (E) = %0.16g Pa.\n', YoungModulusPa) 
     fprintf('======= Time Elapsed for one round of estimate *** %0.4f sec *** =======\n', toc(starttime))
-  end
+end
       

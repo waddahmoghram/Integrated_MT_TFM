@@ -663,9 +663,7 @@ function [pos_grid, displFieldNoFilteredGrid, displFieldFilteredGrid, forceField
             displFieldFilteredGrid = [];
             forceField = [];
             energyDensityField = [];
-            TractionEnergyJ = [];
-            
-            
+            TractionEnergyJ = [];            
         end
         
     end
