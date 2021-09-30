@@ -1373,13 +1373,45 @@ end
 
     fprintf('Time elapsed: *** %0.4f sec *** to to calculate the elastic modulus to  *** %d decimal places***.\tYoung''s Elastic Modulus = %0.3f Pa.\n', toc(starttime), tolerancepower, YoungModulusPaOptimum)
 
+  %% ----------end parallel pool & start a new one
+    try
+       delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
+    catch
+       delete(gcp('nocreate')) 
+    end
+    
+    % Parallel Pool Start
+    if isempty(gcp('nocreate'))
+        try
+            poolsize = str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;          % Modified by Waddah Moghram on 12/10/2018 and is better to get all cores.
+    %             poolsize = feature('numCores');
+        catch
+            poolsize = poolobj.NumWorkers;
+        end
+        try
+            poolobj = parpool('local', poolsize);
+        catch
+            try 
+                parpool;
+            catch 
+                warning('matlabpool has been removed, and parpool is not working in this instance');
+            end
+        end
+    else
+        try
+           poolsize = poolobj.NumWorkers;
+        catch
+           poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
+        end
+    end
+
+%%
     TractionForcePath = fullfile(displFieldPath, '..', 'forceField');
     try
         mkdir(TractionForcePath)
     catch
         % folder already found
     end
-
     sprintf('Re-Evaluating displacement & traction stress vector fields & energy density scalar field with raw %s parameters...[in progress].\n', reg_cornerChoiceStr)
 %     NoiseROIsCombined = [];             % if it is not given, the NoiseROIs will be evaluated for each frame based on the interpolated grid.
 
@@ -1694,41 +1726,37 @@ if strcmpi(CalculateRegParamMethod, 'Yes')
     parfor_progress(0);
     sprintf('Re-Evaluating displacement & traction stress vector fields & energy density scalar field with raw %s parameters...[Completed].\n', reg_cornerChoiceStr)
 
+  %% ----------end parallel pool & start a new one
+    try
+       delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
+    catch
+       delete(gcp('nocreate')) 
+    end
+    
+%%
     disp('Saving TFM Analysis Output')
-    displField = displFieldNoFilteredGrid; 
-    TimeStamps = TimeStampsRT_Abs_EPI;
-    displFieldNoFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridNoSpatialFilter_Averaged.mat');
-    Notes = 'Units of "displFieldNoFilteredGrid" = pixels. Averaged displacement output. No Spatial Filter, or Han Windowing. (displFieldNoFilteredGrid)';
-    save(displFieldNoFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
-        'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod', 'DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', '-v7.3')
-
-    displField = displFieldFilteredGrid;
-    displFieldFilteredGridFullFileName = fullfile(displFieldPath, 'displField_GridWithSpatialFilter_Averaged.mat');
-    Notes = 'Units of "displFieldFilteredGrid" = pixels. Averaged displacement output. Wiener2D Spatial Filter, & Han Windowing.';
-    save(displFieldFilteredGridFullFileName, 'MD_EPI', 'displField', 'TimeStamps','Notes', 'TimeFilterChoiceStr', ...
-         'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI', ...
-         'SpatialFilterChoiceStr', 'WienerWindowSize', 'HanWindowChoice', '-v7.3')
-
-     
-    sprintf('E_%0.2gPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa);
+    clear Notes
+    Notes{1} = 'Units of "displField" = pixels. Averaged displacement output. Wiener2D Spatial Filter, & Han Windowing.';
 %-----------         
     forceFieldFullFileName = fullfile(TractionForcePath, ...
         sprintf('E_%0.2gPa_TractionField_PlusRegCorner_Averaged.mat', forceFieldParameters.YoungModulusPa));   
-    Notes = 'Units of "forceField" = Pa. Actually traction stress, or T. Regularization parameters included.';
-    save(forceFieldFullFileName, 'MD_EPI', 'forceField', 'TimeStamps', 'CornerPercentage','Notes', ...
+    Notes{2} = 'Units of "forceField" = Pa. Actually traction stress, or T. Regularization parameters included.';
+    save(forceFieldFullFileName, 'MD_EPI', 'displField', 'TimeFilterChoiceStr',  'SpatialFilterChoiceStr', 'WienerWindowSize', ...
+         'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI',   ...
+        'forceField', 'TimeStamps', 'CornerPercentage','Notes', ...
         'TransientRegParamMethod', 'FluxON', 'FluxOFF', 'FluxTransient', 'reg_corner_averaged', ...
         'reg_cornerChoiceStr', 'TractionStressMethod', 'PaddingChoiceStr', 'HanWindowChoice', 'forceFieldParameters', 'CalculateRegParamMethod', '-v7.3')
 
     TractionForceFullFileName = fullfile(TractionForcePath, sprintf('E_%0.2gPa_TractionForce_Averaged.mat', forceFieldParameters.YoungModulusPa));   
-    Notes = 'Units of "Force, or Traction Force over the entire area, or F" = N. [x,y,norm]';
+    Notes{3} = 'Units of "Force, or Traction Force over the entire area, or F" = N. [x,y,norm]';
     save(TractionForceFullFileName, 'MD_EPI', 'ForceN', 'TimeStamps','Notes', 'ForceIntegrationMethod', '-v7.3')
 
-    Notes = 'Units of "energyField, or Storage Elastic Energy Density, or Sigma" = J/m^2. ';
+    Notes{4} = 'Units of "energyField, or Storage Elastic Energy Density, or Sigma" = J/m^2. ';
     energyDensityFullFileName = fullfile(TractionForcePath, ...
         sprintf('E_%0.2gPa_EnergyDensity_Averaged.mat', forceFieldParameters.YoungModulusPa));
     save(energyDensityFullFileName, 'MD_EPI', 'energyDensityField', 'TimeStamps', 'Notes','-v7.3')
 
-    Notes = 'Units of "ElasticTractionEnergy, or or U" = J. ';
+    Notes{5} = 'Units of "ElasticTractionEnergy, or or U" = J. ';
     TractionEnergyFullFileName = fullfile(TractionForcePath, ...
         sprintf('E_%0.2gPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa));    
     save(TractionEnergyFullFileName, 'MD_EPI', 'TractionEnergyJ', 'TimeStamps', 'Notes', '-v7.3')
@@ -1859,10 +1887,4 @@ if strcmpi(CalculateRegParamMethod, 'Yes')
         end    
    end
    close all       
-end
-%----------end parallel pool
-try
-   delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
-catch
-   delete(gcp('nocreate')) 
 end

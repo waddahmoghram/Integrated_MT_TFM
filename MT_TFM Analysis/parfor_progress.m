@@ -40,7 +40,7 @@ if nargin < 1
 end
 
 percent = 0;
-w = 50; % Width of progress bar
+w = 100; % Width of progress bar
 
 if N > 0
     f = fopen('parfor_progress.txt', 'w');
