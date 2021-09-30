@@ -494,7 +494,7 @@ disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analys
             parfor_progress(0);
             disp('Tracking the displacement of the magnetic bead complete')
             BeadPositionXYcenter = BeadPositionXYCornerPixels + BeadROIcenterPixels + largerROIPositionPixels; 
-        otherwise
+        otherwiseTrackingMethod
             return
     end    
 % % % % % %     
@@ -525,13 +525,13 @@ disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analys
 
     MagBeadTrackedDisplacementsFullFileName = fullfile(MagBeadOutputPath, 'MagBeadTrackedDisplacements.mat');
     save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', ...
-        'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
+        'BeadTrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
         'RefFrameNum', 'MagnificationTimesStr_DIC', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
 % % % % %     save(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels', 'MagBeadCoordinatesXYNetpixels', 'BeadNodeID', 'BeadROI_DIC', ...
-% % % % %         'TrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
+% % % % %         'BeadTrackingMethod', 'BeadPositionXYcenter', 'BeadPositionXYdisplMicron', 'FramesDoneNumbersDIC', 'TimeStampsRT_Abs_DIC',...
 % % % % %         'RefFrameNum', 'MagnificationTimesStr_DIC', 'ScaleMicronPerPixel_DIC', 'largerROIPositionPixels', 'BeadMaxNetDisplMicron', 'BeadMaxNetDisplFrame', '-v7.3')
 
-    switch TrackingMethod
+    switch BeadTrackingMethod
         case 'imfindcircles()'
             save(MagBeadTrackedDisplacementsFullFileName,'BeadRadius', '-append')
         case 'imgregtform()'
@@ -558,7 +558,7 @@ disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analys
     set(xlabelHandle, 'FontName', PlotsFontName);
     ylabelHandle = ylabel('\bf|\it\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm [\mum]');
     set(ylabelHandle, 'FontName', PlotsFontName);    
-    titleTrackStr = sprintf('Tracking Method: %s | Maximum Displacement = %0.3f %sm', TrackingMethod, BeadMaxNetDisplMicron, char(181));
+    titleTrackStr = sprintf('Bead Tracking Method: %s | Maximum Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181));
     title({titleTrackStr, ...
         sprintf('%s.%s\n', ND2FileNameDIC, ND2FileExtensionDIC)}, 'FontWeight', 'bold', 'interpreter', 'none')
     legend('No Drift-Correction')
@@ -572,7 +572,7 @@ disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analys
     fprintf('Magnetic bead displacements are saved as: \n\t %s\n\t %s\n', MagBeadPlotFullFileNameFig, MagBeadPlotFullFileNamePNG)
 %% ----------end parallel pool & start a new one
 try
-   delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+   delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
 catch
    delete(gcp('nocreate')) 
 end
@@ -986,7 +986,7 @@ end
     
 %% finding max drift-corrected displacement
     [BeadMaxNetDisplMicronDriftCorrected, BeadMaxNetDisplFrameDriftCorrected]  = max(MagBeadDisplacementMicronXYZBigDeltaCorrected(FramesDoneNumbersDIC));
-     titleTrackStr = sprintf('Tracking Method: %s. with Drift-Correction | Maximum Displacement = %0.3f %sm', TrackingMethod, BeadMaxNetDisplMicronDriftCorrected, char(181));
+     titleTrackStr = sprintf('Bead Tracking Method: %s. with Drift-Correction | Maximum Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicronDriftCorrected, char(181));
 
 %% =============================== 
     try
@@ -1165,7 +1165,7 @@ end
 
     %% ----------end parallel pool & start a new one
     try
-       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+       delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
     catch
        delete(gcp('nocreate')) 
     end
@@ -1410,7 +1410,7 @@ end
 
   %% ----------end parallel pool & start a new one
     try
-       delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+       delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
     catch
        delete(gcp('nocreate')) 
     end
@@ -1862,7 +1862,7 @@ if strcmpi(CalculateRegParamMethod, 'Yes')
 end
 %----------end parallel pool
 try
-   delete(poolobj);                % shut down the parallel core to floush RAM and GPU memory
+   delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
 catch
    delete(gcp('nocreate')) 
 end
