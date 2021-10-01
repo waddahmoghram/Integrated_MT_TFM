@@ -381,7 +381,15 @@ disp('-------------------------- Running "VideoAnalysisDIC.m" to generate analys
             
             figMagBeadROI = imshow(BeadROI_DIC, 'InitialMagnification', 400);
             figure(figMagBeadROI.Parent.Parent)
-            [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.7, 'Sensitivity', 0.95);   %'Sensitivity', 0.8
+            try
+                [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.7, 'Sensitivity', 0.95);
+            catch
+                try
+                    [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'bright', 'Method', 'PhaseCode', 'EdgeThreshold', 0.5, 'Sensitivity', 0.50);   %'Sensitivity', 0.8
+                catch
+                    error('imfindcircle could not find the bead. Try tweaking the parameters or use imregtform() to detect the bead.')
+                end
+            end
             hold on
             viscircles(centers, BeadRadius, 'EdgeColor','b');
             plot(centers(:,1),centers(:,2), 'b.')           % does not work when the needle is attached, or maube the lighting?
