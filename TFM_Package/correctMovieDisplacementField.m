@@ -69,9 +69,9 @@ function correctMovieDisplacementField(movieData,varargin)
     mkClrDir(correctionParameters.OutputDirectory);
     
     %% --------------- Initialization ---------------%%
-    if feature('ShowFigureWindows')
-        wtBar = waitbar(0,'Initializing...','Name',displFieldCorrProc.getName());
-    end
+%     if feature('ShowFigureWindows')
+%         wtBar = waitbar(0,'Initializing...','Name',displFieldCorrProc.getName());
+%     end
 
     % Reading various constants
     nFrames = movieData.nFrames_;
@@ -139,27 +139,26 @@ function correctMovieDisplacementField(movieData,varargin)
     FramesTrackedNumbers = find(FramesTrackedTF);
     displField(~FramesTrackedTF) = [];                              % remove frames that were not tracked.
      
-    disp('Detecting and filtering vector field outliers...')
-    logMsg = 'Please wait, detecting and filtering vector field outliers';
-    timeMsg = @(t) ['\nEstimated time remaining: ' num2str(round(t/60)) 'min'];
-    tic;
     useGrid=displParams.useGrid;
-
+    % Perform vector field outlier detection
     % %Parse input, store in parameter structure
     % pd = parseProcessParams(displFieldCalcProc,paramsIn);
 
-    % Perform vector field outlier detection
-    if feature('ShowFigureWindows'), waitbar(0,wtBar,sprintf(logMsg)); end
+%     disp('Detecting and filtering vector field outliers...')
+%     logMsg = 'Please wait, detecting and filtering vector field outliers';
+%     timeMsg = @(t) ['\nEstimated time remaining: ' num2str(round(t/60)) 'min'];
+%     if feature('ShowFigureWindows'), waitbar(0,wtBar,sprintf(logMsg)); end
     if feature('ShowFigureWindows'),parfor_progress(nFrames); end
 
     outlierThreshold = correctionParameters.outlierThreshold;
-    
                               % Remove the empty ones. 
-%     parfor j = 1:nFrames
-    for j = FramesTrackedNumbers
+    tic;    
+    parfor_progress(nFrames);
+    parfor j = 1:nFrames
+%     for j = FramesTrackedNumbers
         % Outlier detection
         dispMat = [displField(j).pos displField(j).vec];
-        fprintf('Correcting Frame #%d\n', j);
+%         fprintf('Correcting Frame #%d\n', j);
         % Take out duplicate points (Sangyoon)
         [dispMat,~,~] = unique(dispMat,'rows'); %dispMat2 = dispMat(idata,:),dispMat = dispMat2(iudata,:)
         displField(j).pos=dispMat(:,1:2);
@@ -199,15 +198,18 @@ function correctMovieDisplacementField(movieData,varargin)
     %             pd.minCorLength,pd.minCorLength,[],true);
     %         displField(j).vec = intDisp(:,4:-1:3) - intDisp(:,2:-1:1);
         end
-%         Update the waitbar
-    if mod(j,5)==1 && feature('ShowFigureWindows')
-        tj=toc;
-        waitbar(j/numel(FramesTrackedNumbers),wtBar,sprintf([logMsg timeMsg(tj*(nFrames-j)/j)]));
+% %         Update the waitbar
+%         if mod(j,5)==1 && feature('ShowFigureWindows')
+%             tj=toc;
+%             waitbar(j/numel(FramesTrackedNumbers),wtBar,sprintf([logMsg timeMsg(tj*(nFrames-j)/j)]));
+%         end
+%         if feature('ShowFigureWindows'), parfor_progress; end
+        parfor_progress;
     end
-%     if feature('ShowFigureWindows'), parfor_progress; end
 %     if feature('ShowFigureWindows'), parfor_progress(0); end
-    end
-    
+    parfor_progress(0);
+
+
     if correctionParameters.fillVectors
         % Now this is the real cool step, to run trackStackFlow with known
         % information of existing displacement in neighbors
@@ -421,15 +423,19 @@ function correctMovieDisplacementField(movieData,varargin)
 %     save(outputFile{2},'dMap','dMapX','dMapY','-v7.3'); % need to be updated for faster loading. SH 20141106
     %
 
-       %% Added by Generated Heat Map to Identify the limits of the heat map without actually generating it yet...by Waddah Moghram 
-    dmax = -1;
-    dmin = Inf;
+    %% Added by Generated Heat Map to Identify the limits of the heat map without actually generating it yet...Last update by Waddah Moghram  on 2021-10-01 to use parfor
+%     dmax = -1;
+%     dmin = Inf;
     band = 0;
-    reg_grid1 = createRegGridFromDisplField(displField,1,1);                                                % 2=2 times fine interpolation
+    reg_grid1 = createRegGridFromDisplField(displField,1,1);
 %     ---------------------------------- 
-    for ii=1:numel(displField)
+    disp('Identifying the limits of the interpolated displacement grid limits over all frames without generating it yet.')
+    disp('Note that these values might be extreme due to noise. Rely more on outlier-cleaned/filtered/drift corrected values')
+    FramesNum = numel(displField);
+    parfor_progress(FramesNum);
+    parfor ii=1:FramesNum
         %Load the saved body heat map.
-        [~,fmat, ~, ~] = interp_vec2grid(displField(ii).pos, displField(ii).vec,[],reg_grid1);            % 1:cluster size
+        [~,fmat, ~, ~] = interp_vec2grid(displField(ii).pos(:,1:2), displField(ii).vec(:,1:2),[],reg_grid1);            % 1:cluster size
         fnorm = (fmat(:,:,1).^2 + fmat(:,:,2).^2).^0.5;
     
         % Boundary cutting - I'll take care of this boundary effect later
@@ -438,16 +444,24 @@ function correctMovieDisplacementField(movieData,varargin)
         fnorm(1:1+round(band/2),:)=[];
         fnorm(:,1:1+round(band/2))=[];
         fnorm_vec = reshape(fnorm,[],1); 
-    
-        dmax = max(dmax,max(fnorm_vec));
-        dmin = min(dmin,min(fnorm_vec));
+  
+        dmaxTMP(ii) = max(max(fnorm_vec));
+        dminTMP(ii) = min(min(fnorm_vec));
+%         dmax = max(dmax,max(fnorm_vec));
+%         dmin = min(dmin,min(fnorm_vec));
+        parfor_progress;
     end
+    parfor_progress(0);
+    dmax = max(dmaxTMP);
+    dmin = min(dminTMP);
 %     ----------------------------------
     %%
     displFieldCorrProc.setTractionMapLimits([dmin dmax])
     dminMicrons = dmin  * (movieData.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
-    dmaxMicrons = dmin  * (movieData.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
+    dmaxMicrons = dmax  * (movieData.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
+    disp(['Estimated displacement minimum = ' num2str(dminMicrons) ' microns.'])
     disp(['Estimated displacement maximum = ' num2str(dmaxMicrons) ' microns.'])
+    
     % displFieldProc.setTractionMapLimitsMicrons([dminMicrons, dmaxMicrons])
     save(outputFile{3}, 'dmin', 'dmax', 'dminMicrons', 'dmaxMicrons', 'AllOutlierIndices', '-append');           % Added 2019-09-23 by WIM. Updated on 2020-09-15   
     movieDataAfter = MovieData;
@@ -456,7 +470,7 @@ function correctMovieDisplacementField(movieData,varargin)
     save(outputFile{5}, 'MD','-v7.3');          
 
     %% Close waitbar
-    if feature('ShowFigureWindows'), close(wtBar); end
+%     if feature('ShowFigureWindows'), close(wtBar); end
 
     disp('============================= Finished correcting displacement field! =======================')
 

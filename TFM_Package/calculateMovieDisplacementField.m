@@ -640,13 +640,17 @@ function calculateMovieDisplacementField(movieData,varargin)
     % save(outputFile{2},'dMap','dMapX','dMapY','-v7.3'); % need to be updated for faster loading. SH 20141106
 % ----------------------------------
     
-    %% Added by Generated Heat Map to Identify the limits of the heat map without actually generating it yet...by Waddah Moghram 
-    dmax = -1;
-    dmin = Inf;
+    %% Added by Generated Heat Map to Identify the limits of the heat map without actually generating it yet...Last update by Waddah Moghram  on 2021-10-01 to use parfor
+%     dmax = -1;
+%     dmin = Inf;
     band = 0;
-    reg_grid1 = createRegGridFromDisplField(displField,2,0);                                                % 2=2 times fine interpolation
+    reg_grid1 = createRegGridFromDisplField(displField,1,1);
 %     ---------------------------------- 
-    for ii=1:numel(displField)
+    disp('Identifying the limits of the interpolated displacement grid limits over all frames without generating it yet.')
+    disp('Note that these values might be extreme due to noise. Rely more on outlier-cleaned/filtered/drift corrected values')
+    FramesNum = numel(displField);
+    parfor_progress(FramesNum);
+    parfor ii=1:FramesNum
         %Load the saved body heat map.
         [~,fmat, ~, ~] = interp_vec2grid(displField(ii).pos(:,1:2), displField(ii).vec(:,1:2),[],reg_grid1);            % 1:cluster size
         fnorm = (fmat(:,:,1).^2 + fmat(:,:,2).^2).^0.5;
@@ -657,10 +661,16 @@ function calculateMovieDisplacementField(movieData,varargin)
         fnorm(1:1+round(band/2),:)=[];
         fnorm(:,1:1+round(band/2))=[];
         fnorm_vec = reshape(fnorm,[],1); 
-    
-        dmax = max(dmax,max(fnorm_vec));
-        dmin = min(dmin,min(fnorm_vec));
+  
+        dmaxTMP(ii) = max(max(fnorm_vec));
+        dminTMP(ii) = min(min(fnorm_vec));
+%         dmax = max(dmax,max(fnorm_vec));
+%         dmin = min(dmin,min(fnorm_vec));
+        parfor_progress;
     end
+    parfor_progress(0);
+    dmax = max(dmaxTMP);
+    dmin = min(dminTMP);
 %     ----------------------------------
     %%
     displFieldProc.setTractionMapLimits([dmin, dmax])
@@ -668,7 +678,7 @@ function calculateMovieDisplacementField(movieData,varargin)
     dmaxMicrons = dmax  * (movieData.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
     disp(['Estimated displacement minimum = ' num2str(dminMicrons) ' microns.'])
     disp(['Estimated displacement maximum = ' num2str(dmaxMicrons) ' microns.'])
-    % displFieldProc.setTractionMapLimitsMicrons([dminMicrons, dmaxMicrons])
+%     displFieldProc.setTractionMapLimitsMicrons([dminMicrons, dmaxMicrons])
     
     save(outputFile{3}, 'dmin', 'dmax', 'dminMicrons', 'dmaxMicrons', '-append');           % Added 2019-09-23 by WIM
     movieDataAfter = movieData;

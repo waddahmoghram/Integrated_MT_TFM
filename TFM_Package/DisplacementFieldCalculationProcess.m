@@ -59,7 +59,6 @@ classdef DisplacementFieldCalculationProcess < ImageAnalysisProcess
         function status = checkChannelOutput(obj,varargin)
             status = logical(exist(obj.outFilePaths_{1},'file'));
         end
-        
         % ================================================================================================= 
         function sanityCheck(obj)
             sanityCheck@ImageAnalysisProcess(obj);
@@ -71,7 +70,6 @@ classdef DisplacementFieldCalculationProcess < ImageAnalysisProcess
                 ['The beads channel does not have a valid '...
                 'standard deviation of the Gaussian point-spread function.']);
         end
-        
         % ================================================================================================= 
         function varargout = loadChannelOutput(obj,varargin)
             outputList = {'displField','dMap'};
