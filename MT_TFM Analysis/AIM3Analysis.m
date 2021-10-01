@@ -1,6 +1,6 @@
 %{
         +++++++++++++++++++ AIM 3: ANALYSIS CODE *******************
-    v.2021-08-02 Written by Waddah Moghram on 2019-09-30. 
+    Updated by Waddah Moghram on 2019-10-01. 
         See github history for more information.
         Repository: https://github.com/waddahmoghram/Integrated_MT_TFM.git
 %}    
@@ -1171,7 +1171,7 @@ end
     save(OutputPathNameDIC, '-v7.3')
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
-    %% ----------end parallel pool & start a new one
+%% ----------end parallel pool & start a new one
     try
        delete(poolobj);                % shut down the parallel core to flush RAM and GPU memory
     catch
