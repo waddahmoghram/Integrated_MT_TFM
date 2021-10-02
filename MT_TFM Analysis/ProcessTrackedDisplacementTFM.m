@@ -17,11 +17,6 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
     InterpolationMethod, ShowOutput, FirstFrame, LastFrame, SaveOutput, controlMode, ScaleMicronPerPixel, CornerPercentage)
 
 %% Keyvariables:
-
-%     InterpolationMethod = '';                   % vs. InterpolationMethod = 'scatteredinterpolant';
-%      = ;
-    AnalysisPath = [];
-    
     %%
     disp('_____________________________________________________________________________________________')
 % 1. Experiment mode: Controlled Force vs. Controlled Displacement?

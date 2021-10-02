@@ -185,6 +185,6 @@ function [RMSE_Newtons, forceField , MT_Force_xy_N, grid_mat, TractionForce, reg
     fprintf('\tCurrent Net Mean MT  Forces (F) = %0.16f N.\n', mean(MT_Force_xy_N, 'omitnan'))
     fprintf('\tCurrent Net Mean TFM Forces (F) = %0.16f N.\n', mean(TractionForceNet,  'omitnan'))
     fprintf('\tCurrent Young Modulus (E) = %0.16g Pa.\n', YoungModulusPa) 
-    fprintf('======= Time Elapsed for one round of estimate *** %0.4f sec *** =======\n', toc(starttime))
+    fprintf('======= Time Elapsed for one round of estimate *** %0.6f sec *** =======\n', toc(starttime))
 end
       

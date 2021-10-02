@@ -136,7 +136,7 @@ function [Force_xyz_N, Force_xy_N, WorkBeadJ_Half_Cycles, WorkCycleFirstFrame, W
 %     TimeStampsFullName = fullfile(TimeStampsPathName,TimeStampsFileName);
 %     TimeStamps = load(TimeStampsFullName);           %Load A textfile that has only the timestamps in one column. Nothing more or less.
 % 
-%     TimeStamps1stFrame = TimeStamps(1:end-1,1);                       %Frame "1"
+%     TimeStamps1stFrame = TimeStamps(1:end-1calculateforce,1);                       %Frame "1"
 %     TimeStamps2ndFrame = TimeStamps(2:end,1);                         %Frame "2" (Stagger the timepoints)
 %     TimeStampsDT = TimeStamps2ndFrame - TimeStamps1stFrame;             % dT = Time difference between subsequent frames. One less timepoint. 
 %     TimeStampsRT_Abs_DIC = cumsum(TimeStampsDT);
@@ -581,7 +581,12 @@ function [Force_xyz_N, Force_xy_N, WorkBeadJ_Half_Cycles, WorkCycleFirstFrame, W
             for jj = CyclesStartFrames(ii):CyclesEndFrames(ii)
                 WorkAllFramesNmSummed(jj) = sum(WorkAllFramesNm(CyclesStartFrames(ii):jj));
             end
-        end    
+        end
+        try
+            WorkAllFramesNmSummed(1,end+1:CompiledDataSize) = 0;
+        catch
+            % all is accounted for
+        end
         CompiledMT_Results.WorkAllFramesNm = WorkAllFramesNm;
         CompiledMT_Results.WorkAllFramesNmSummed = WorkAllFramesNmSummed;
     end

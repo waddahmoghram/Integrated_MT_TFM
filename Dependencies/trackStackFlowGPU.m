@@ -1,4 +1,4 @@
-function [v, corLength, sigtValues] = trackStackFlow(stack, points, minCorL, varargin)
+function [v, corLength, sigtValues] = trackStackFlowGPU(stack, points, minCorL, varargin)
 %trackStackFlow: Calculate the flow velocity from a stack of movie images.
 %{
     SYNOPSIS :
@@ -236,7 +236,7 @@ function [v, corLength, sigtValues] = trackStackFlow(stack, points, minCorL, var
 
     % inqryPoint=2000;
     % for k = inqryPoint
-    if feature('ShowFigureWindows'), parfor_progress(nPoints); end
+   parfor_progress(nPoints)
    parfor k = 1:nPoints
 %      for k = 1:nPoints
         fprintf(1,[strg ' ...'],k);

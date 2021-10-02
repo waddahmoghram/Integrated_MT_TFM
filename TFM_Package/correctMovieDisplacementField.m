@@ -148,7 +148,7 @@ function correctMovieDisplacementField(movieData,varargin)
 %     logMsg = 'Please wait, detecting and filtering vector field outliers';
 %     timeMsg = @(t) ['\nEstimated time remaining: ' num2str(round(t/60)) 'min'];
 %     if feature('ShowFigureWindows'), waitbar(0,wtBar,sprintf(logMsg)); end
-    if feature('ShowFigureWindows'),parfor_progress(nFrames); end
+%     if feature('ShowFigureWindows'),parfor_progress(nFrames); end
 
     outlierThreshold = correctionParameters.outlierThreshold;
                               % Remove the empty ones. 
@@ -208,8 +208,7 @@ function correctMovieDisplacementField(movieData,varargin)
     end
 %     if feature('ShowFigureWindows'), parfor_progress(0); end
     parfor_progress(0);
-
-
+    
     if correctionParameters.fillVectors
         % Now this is the real cool step, to run trackStackFlow with known
         % information of existing displacement in neighbors

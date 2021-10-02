@@ -30,7 +30,7 @@
             meanDIC_DriftROIs(jj,1:2) = tFormMatrix.T(3, 1:2);
             meanDIC_DriftROIs(jj,3) = vecnorm(meanDIC_DriftROIs(jj,1:2), 2, 2);        % displacement  
         end
-        meanDriftFrame = mean(meanDIC_DriftROIs);
+        meanDriftFrame = mean(meanDIC_DriftROIs, 'omitnan');
         meanDriftFrame(1,3) = vecnorm(meanDriftFrame, 2, 2);
         if useGPU
             meanDriftFrame = gather(meanDriftFrame);            
