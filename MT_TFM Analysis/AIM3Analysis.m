@@ -70,7 +70,7 @@ format longg
     displacementParameters.mode = 'accurate';
 
     CorrectionfunParams.doRogReg = 0;               % No rotational adjustments for drift
-    CorrectionfunParams.outlierThreshold = 2;       % ranges from 1 to 5. Lower is more aggressive value.
+    CorrectionfunParams.outlierThreshold = 4;       % ranges from 1 to 5. Lower is more aggressive value.
     CorrectionfunParams.fillVectors = 0;            % eliminated outliers are not retracked with interpolated values from surrounding displacements
 
     GelType = {'Corning Type I rat-tail collagen.', 'Stock concentration: ~3.04 mg/mL',  'Cat: CB40236. Stock .  LOT: ____.'};
@@ -592,7 +592,7 @@ format longg
     set(xlabelHandle, 'FontName', PlotsFontName);
     ylabelHandle = ylabel('\bf|\it\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm [\mum]');
     set(ylabelHandle, 'FontName', PlotsFontName);    
-    titleTrackStr = sprintf('Bead Tracking Method: %s | Maximum Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181));
+    titleTrackStr = sprintf('Tracking Method: %s | Max. Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181));
     title({titleTrackStr, ...
         sprintf('%s.%s\n', ND2FileNameDIC, ND2FileExtensionDIC)}, 'FontWeight', 'bold', 'interpreter', 'none')
     legend('No Drift-Correction', 'Location','best')
@@ -1213,20 +1213,32 @@ format longg
     load(displFieldPath, 'displField')
     fprintf('Outlier-corrected Displacement Field (displField) File is successfully loaded!: \n\t %s\n', displFieldPath);
 %_____Process displacements for drift and correcting for temporal errors.    
-    [~, displField, TimeStampsRT_EPI, displFieldPath, ScaleMicronPerPixel_EPI, FramesDoneNumbersDIC, controlMode, ...
+    [MD_EPI, displField, TimeStampsRT_EPI, displFieldPath, ScaleMicronPerPixel_EPI, FramesDoneNumbersDIC, controlMode, ...
         rect, DriftROIs, DriftROIsCombined, reg_grid, gridSpacing, NoiseROIs, NoiseROIsCombined, TimeFilterChoiceStr, ...
         DriftCorrectionChoiceStr, displacementFileFullName] = ...
             ProcessTrackedDisplacementTFM(MD_EPI, displField, TimeStampsRT_Abs_EPI, displFieldPath, gridMagnification, EdgeErode, GridtypeChoiceStr, ...
-                InterpolationMethod, ShowOutput, FirstFrame_DIC, LastFrame_DIC, SaveOutput, controlMode, ScaleMicronPerPixel_EPI, CornerPercentage);
+                InterpolationMethod, ShowOutput, FirstFrame_DIC, LastFrame_DIC, SaveOutput, controlMode, ScaleMicronPerPixel_EPI, CornerPercentage);   
+        % displField will be read from MD_EPI. Replace [] if you want to write it directly
     % update the last frame since 20 frames are eliminated after using LPEF
     fprintf('Displacement Field (displField) processed: %s & %s.\n', TimeFilterChoiceStr, DriftCorrectionChoiceStr)    
     FirstFrameDIC = FramesDoneNumbersDIC(1);
     LastFrameDIC = FramesDoneNumbersDIC(end);
-    save(displacementFileFullName,  'FramesDoneNumbersDIC', 'FirstFrameDIC', 'LastFrameDIC', '-append')
-    
-    % making and plotting the displacement of the bead of the maximum displacement both from tracking and from interpolated grid value.
-    disp('Tracking the maximum bead displacement from the interpolated/gridded displacement data')
+    save(displacementFileFullName,  'FramesDoneNumbersDIC', 'FirstFrameDIC', 'LastFrameDIC', '-append')    
+    % 
+    disp('Tracking making and plotting the displacement of the microsphere bead of the maximum tracked displacement')
+    [FluoroBeadTrackedMaxDisplacementStruct, figFluoroBeadTrackedMaxDispl] = ExtractBeadMaxDisplacementEPIBeads(MD_EPI, displField, false, TimeStampsRT_EPI, ScaleMicronPerPixel_EPI);
+    FluoroBeadTrackedMaxDisplacementFileName = 'FluoroBeadTrackedMaxDisplacement';
+    FluoroBeadTrackedMaxDisplacementFIG = fullfile(displFieldPath, sprintf('%s.fig', FluoroBeadTrackedMaxDisplacementFileName));
+    FluoroBeadTrackedMaxDisplacementPNG = fullfile(displFieldPath, sprintf('%s.png', FluoroBeadTrackedMaxDisplacementFileName));
+    savefig(figFluoroBeadTrackedMaxDispl, FluoroBeadTrackedMaxDisplacementFIG, 'compact')
+    saveas(figFluoroBeadTrackedMaxDispl, FluoroBeadTrackedMaxDisplacementPNG, 'png')
+    fprintf('Plots saved under:\n\t%s\n\t%s\n', FluoroBeadTrackedMaxDisplacementFIG, FluoroBeadTrackedMaxDisplacementPNG)
+    if CloseFigures, close all; end
 
+    FluoroBeadTrackedMaxDisplacementFullFileName = fullfile(displFieldPath, strcat(FluoroBeadTrackedMaxDisplacementFileName, '.mat'));
+    save(FluoroBeadTrackedMaxDisplacementFullFileName, 'MD_EPI', 'FluoroBeadTrackedMaxDisplacementStruct', 'gridMagnification', 'EdgeErode', 'GridtypeChoiceStr', ...
+                'InterpolationMethod', 'controlMode', 'ScaleMicronPerPixel_EPI', 'CornerPercentage', '-v7.3')
+    
     FramesNumEPI = numel(displField);
     parfor_progress(FramesNumEPI);
     dmaxTMP = nan(FramesNumEPI, 2);
@@ -1250,14 +1262,10 @@ format longg
     % ----------end parallel pool
     delete((gcp('nocreate')))% no parallel pool running
 
-%     dminMicrons = dmin  * (MD_EPI.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
-%     disp(['Estimated displacement minimum = ' num2str(dminMicrons) ' microns.'])
-%     [dmin, dminIdx] = min(dminTMP(:,1));    
     [dmax, dmaxIdx] = max(dmaxTMP(:,1));
     dmaxMicrons = dmax  * (MD_EPI.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
     disp(['Estimated displacement maximum = ' num2str(dmaxMicrons) ' microns.'])
    
-
 %% =============================== FINDING THE OPTIMAL YOUNG'S ELASTIC MODULUS  
     YoungModulusPaInitialGuess = 5 * GelConcentrationMgMl ^ 2.1 * 10;         % offset by 10. Local E is much stiffer than bulk one
         %{
@@ -1374,7 +1382,7 @@ format longg
     try
        parpool.delete                % shut down the parallel core to flush RAM and GPU memory
     catch
-       delete((gcp('nocreate')))% no parallel pool running
+       delete(gcp('nocreate'))% no parallel pool running
     end
 
     fprintf('Time elapsed: *** %0.3f sec *** to calculate the force-based elastic modulus to *** %d decimal places***.\n\tYoung''s Elastic Modulus for Cycle #%d = %0.3f Pa.\n', ...
@@ -1917,42 +1925,49 @@ format longg
         tmpPlotChoice =  PlotChoice{CurrentPlotType};
         switch tmpPlotChoice
             case 'FIG'
-                if exist(TractionForcePath,'dir') 
+                if exist(CombinedAnalysisPath,'dir') 
+                    AnalysisFileNameFIG1 = 'MaxDisplacements_MTvTFM.fig';
+                    AnalysisMaxDisplMTvTFM_FIG1 = fullfile(CombinedAnalysisPath, AnalysisFileNameFIG1);                    
+                    savefig(figHandleMaxDispl_MTvTFM, AnalysisMaxDisplMTvTFM_FIG1,'compact')
+
                     AnalysisFileNameFIG2 = sprintf('E_%0.3fPa_Forces_MTvTFM.fig', forceFieldParameters.YoungModulusPa);
-                    AnalysisForcesMTvTFM_FIG3 = fullfile(TractionForcePath, AnalysisFileNameFIG2);                    
+                    AnalysisForcesMTvTFM_FIG3 = fullfile(CombinedAnalysisPath, AnalysisFileNameFIG2);                    
                     savefig(figHandleForce_MTvTFM, AnalysisForcesMTvTFM_FIG3,'compact')                  
 
                     AnalysisFileNameFIG3 = sprintf('E_%0.3fPa_WorkEnergy_MTvTFM.fig', forceFieldParameters.YoungModulusPa);
-                    AnalysisForcesMTvTFM_FIG3 = fullfile(TractionForcePath, AnalysisFileNameFIG3);                    
+                    AnalysisForcesMTvTFM_FIG3 = fullfile(CombinedAnalysisPath, AnalysisFileNameFIG3);                    
                     savefig(figHandleWorkEnergy_MTvTFM, AnalysisForcesMTvTFM_FIG3,'compact')         
-
-
                 end
 
             case 'PNG'                  % PNG SAVE. Consider replacing TIF to PNG.  %                 saveas(figFluxV, figureFileNames{2,1}, 'png');               
-                if exist(TractionForcePath,'dir') 
+                if exist(CombinedAnalysisPath,'dir')
+                    AnalysisFileNamePNG1 = 'MaxDisplacements_MTvTFM.png';
+                    AnalysisMaxDisplMTvTFMPNG1 = fullfile(CombinedAnalysisPath, AnalysisFileNamePNG1);
+                    saveas(figHandleMaxDispl_MTvTFM, AnalysisMaxDisplMTvTFMPNG1, 'png');
+
                     AnalysisFileNamePNG2 = sprintf('E_%0.3fPa_Forces_MTvTFM.png', forceFieldParameters.YoungModulusPa);
-                    AnalysisForcesMTvTFMPNG2 = fullfile(TractionForcePath, AnalysisFileNamePNG2);
+                    AnalysisForcesMTvTFMPNG2 = fullfile(CombinedAnalysisPath, AnalysisFileNamePNG2);
                     saveas(figHandleForce_MTvTFM, AnalysisForcesMTvTFMPNG2, 'png');
 
                     AnalysisFileNamePNG3 = sprintf('E_%0.3fPa_WorkEnergy_MTvTFM.png', forceFieldParameters.YoungModulusPa);
-                    AnalysisForcesMTvTFMPNG3 = fullfile(TractionForcePath, AnalysisFileNamePNG3);
+                    AnalysisForcesMTvTFMPNG3 = fullfile(CombinedAnalysisPath, AnalysisFileNamePNG3);
                     saveas(figHandleWorkEnergy_MTvTFM, AnalysisForcesMTvTFMPNG3, 'png');
-
-
                 end
 
             case 'EPS'
-                if exist(TractionForcePath,'dir')
+                if exist(CombinedAnalysisPath,'dir')
+                    AnalysisFileNameEPS1 = 'MaxDisplacements_MTvTFM.eps';
+                    AnalysisMaxDispl= fullfile(CombinedAnalysisPath, AnalysisFileNameEPS1);                                     
+                    print(figHandleMaxDispl_MTvTFM, AnalysisMaxDispl,'-depsc') 
+
                     AnalysisFileNameEPS2 = sprintf('E_%0.3fPa_Forces_MTvTFM.eps', forceFieldParameters.YoungModulusPa);             
-                    AnalysisTractionForceEPS2 = fullfile(TractionForcePath, AnalysisFileNameEPS2);                                     
+                    AnalysisTractionForceEPS2 = fullfile(CombinedAnalysisPath, AnalysisFileNameEPS2);                                     
                     print(figHandleForce_MTvTFM, AnalysisTractionForceEPS2,'-depsc')                 
 
 
                     AnalysisFileNameEPS3 = sprintf('E_%0.3fPa_WorkEnergy_MTvTFM.eps', forceFieldParameters.YoungModulusPa);             
-                    AnalysisTractionForceEPS3 = fullfile(TractionForcePath, AnalysisFileNameEPS3);                                     
-                    print(figHandleWorkEnergy_MTvTFM, AnalysisTractionForceEPS3,'-depsc')                
-
+                    AnalysisTractionForceEPS3 = fullfile(CombinedAnalysisPath, AnalysisFileNameEPS3);                                     
+                    print(figHandleWorkEnergy_MTvTFM, AnalysisTractionForceEPS3,'-depsc')
                 end
             otherwise
                  return

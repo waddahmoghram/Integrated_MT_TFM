@@ -308,21 +308,19 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     fprintf('Maximum displacement [disp_x, disp_y] =  [%0.4g, %0.4g] microns==> Net displacement [disp_net] = [%0.4g] microns. \n', MaxDisplNetMicrons)
 
 %%     
-    parfor_progress(numel(FramesDoneNumbers));
     TxRedBeadMaxNetPositionPixels = nan(numel(FramesDoneNumbers), 2);
     TxRedBeadMaxNetDisplacementPixels = nan(numel(FramesDoneNumbers), 3);
     disp('Extracting the displacement of the bead with the maximum displacement...in progress')
+    parfor_progress(numel(FramesDoneNumbers));
     parfor CurrentFrame = FramesDoneNumbers
         TxRedBeadMaxNetPositionPixels(CurrentFrame, :) = displField(CurrentFrame).pos(MaxDisplFieldIndex,:);
         TxRedBeadMaxNetDisplacementPixels(CurrentFrame, :) = displField(CurrentFrame).vec(MaxDisplFieldIndex,:);
         parfor_progress;
     end
     parfor_progress(0);
-    disp('Extracting the displacement of the bead with the maximum displacement...complete')
-    
+    disp('Extracting the displacement of the bead with the maximum displacement...complete')    
     TxRedBeadMaxNetDisplacementMicrons = TxRedBeadMaxNetDisplacementPixels .* ScaleMicronPerPixel;            % convert from micron to nm
- 
-      
+       
     %% ---------------- PLOTS
 %     % From field vectors are not cumulative.
 %     TxRedBeadMaxNetDisplacementPixels(:,3) = vecnorm(TxRedBeadMaxNetDisplacementPixels(:,1:2),2,2);
@@ -344,9 +342,15 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf|\it\Delta\rm_{TxRed}(\itt\rm)\bf|\rm [\mum]', 'FontName', PlotsFontName); 
     
-    title({'Maximum Net EPI Bead Displacement (tracked)',sprintf('Max at (X,Y) = (%0.2f,%0.2f) pix in Frame %d/%d = %0.3f sec',...
+    try
+        CorrectionType =  MD.findProcessTag('DisplacementFieldCorrectionProcess').notes_;
+    catch
+        CorrectionType = '';
+    end
+    DisplType = sprintf('Maximum Net EPI Bead Displacement (tracked). %s', CorrectionType);
+    title({DisplType,sprintf('Max at (X,Y) = (%0.2f,%0.2f) pix in Frame %d/%d = %0.3f sec', ...
         MaxDispl_PosXY_Pixels, MaxDisplFrameNumber, LastFrame, TimeStamps(MaxDisplFrameNumber)), ...
-        sprintf('Max displacement = %0.3f pix = %0.3f %sm', MaxDisplNetPixels(3), MaxDisplNetMicrons(3),char(181))})
+        sprintf('Max displacement = %0.3f pix = %0.3f %sm', MaxDisplNetPixels(3), MaxDisplNetMicrons(3),char(181))}, 'interpreter', 'none')
 
     MaxDisplacementDetails.TimeFrameSeconds = TimeStampsSec;
     MaxDisplacementDetails.TxRedBeadMaxNetPositionPixels = TxRedBeadMaxNetPositionPixels;
@@ -355,6 +359,8 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     MaxDisplacementDetails.MaxDisplFrameNumber = MaxDisplFrameNumber;
     MaxDisplacementDetails.MaxDisplMicronsXYnet = MaxDisplNetMicrons;
     MaxDisplacementDetails.MaxDisplPixelsXYnet = MaxDisplNetPixels;
+    MaxDisplacementDetails.MaxDisplPixelsXYnet = MaxDisplNetPixels;
+    MaxDisplacementDetails.MaxDisplFieldIndex = MaxDisplFieldIndex;
     
         %%
 %     disp('**___to continue saving, type "dbcont" or press "F5", or click "Continue" under "Editor" Menu"___**')

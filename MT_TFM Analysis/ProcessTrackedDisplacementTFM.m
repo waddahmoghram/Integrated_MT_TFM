@@ -10,10 +10,10 @@ Part 1: Displacement Processing. This is the output
     and embed the related timestamps (RT timestamps) for future purposes.
 %}
 
-function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, FramesDoneNumbers, controlMode, ...
+function [movieData, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, FramesDoneNumbers, controlMode, ...
     rect, DriftROIs, DriftROIsCombined, reg_grid, gridSpacing, NoiseROIs, NoiseROIsCombined, TimeFilterChoiceStr, ...
     DriftCorrectionChoiceStr, DisplacementFileFullName] = ...
-    ProcessTrackedDisplacementTFM(MD, displField, TimeStamps, DisplacementFileFullName, gridMagnification, EdgeErode, GridtypeChoiceStr, ...
+    ProcessTrackedDisplacementTFM(movieData, displField, TimeStamps, DisplacementFileFullName, gridMagnification, EdgeErode, GridtypeChoiceStr, ...
     InterpolationMethod, ShowOutput, FirstFrame, LastFrame, SaveOutput, controlMode, ScaleMicronPerPixel, CornerPercentage)
 
 %% Keyvariables:
@@ -54,31 +54,31 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
     end
 
     %% --------  nargin 1, Movie Data (MD) by TFM Package -------------------------------------------------------------------  
-    if ~exist('MD', 'var'), MD = []; end
+    if ~exist('movieData', 'var'), movieData = []; end
     try 
-        isMD = (class(MD) ~= 'MovieData');
+        isMD = (class(movieData) ~= 'MovieData');
     catch 
-        MD = [];
+        movieData = [];
     end   
-    if isempty(MD) || nargin < 1
+    if isempty(movieData) || nargin < 1
         [movieFileName, movieFilePath] = uigetfile('*.mat', 'Open the TFM-Package Movie Data File');
         if movieFileName == 0, return; end
         MovieFileFullName = fullfile(movieFilePath, movieFileName);
         try 
-            load(MovieFileFullName, 'MD')
+            load(MovieFileFullName, 'movieData')
             fprintf('Movie Data (MD) file is: \n\t %s\n', MovieFileFullName);
             disp('------------------------------------------------------------------------------')
         catch 
             errordlg('Could not open the movie data file!')
         end
         try 
-            isMD = (class(MD) ~= 'MovieData');
+            isMD = (class(movieData) ~= 'MovieData');
         catch 
             errordlg('Could not open the movie data file!')
         end
-        movieData = MD;   
+        movieData = movieData;   
     else
-        movieFilePath = MD.getPath;
+        movieFilePath = movieData.getPath;
     end
 
 %% 5. choose the scale (microns/pixels) & image Bits    
@@ -180,6 +180,33 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
     VeryFirstFrame = find(FramesDoneBoolean, 1, 'first');   
     VeryLastFrame =  find(FramesDoneBoolean, 1, 'last');
 
+
+    %%
+     try 
+        ProcessTag =  movieData.findProcessTag('DisplacementFieldCorrectionProcess').tag_;
+    catch
+        try 
+            ProcessTag =  movieData.findProcessTag('DisplacementFieldCalculationProcess').tag_;
+        catch
+            ProcessTag = '';
+            disp('No Completed Displacement Field Calculated!');
+            disp('------------------------------------------------------------------------------')
+        end
+    end
+    if exist('ProcessTag', 'var') 
+        fprintf('Displacement Process Tag is: %s\n', ProcessTag);
+        try
+            DisplacementFileFullName = movieData.findProcessTag(ProcessTag).outFilePaths_{1};
+            if exist(DisplacementFileFullName, 'file')
+                [DisplPathName, ~, ~] = fileparts(DisplacementFileFullName);
+           else
+                DisplacementFileFullName = [];
+            end
+        catch
+            DisplacementFileFullName = [];
+        end
+    end
+
 %% Ask if you want to insert Timestamps
     if ~exist('TimeStamps', 'var'), TimeStamps = []; end
     if isempty(TimeStamps) || nargin < 3
@@ -267,11 +294,13 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
             TimeStamps = TimeStamps - TimeStamps(1);                                    % MAKE THE FIRST FRAME IDENTICALLY ZERO 2020-01-28
         end
         %% Saving this in the Analysis Path along with the timesetamps and movieData       
+       
+
         [DisplPathName, DisplFileName, DisplFileExt] = fileparts(DisplacementFileFullName);
         displacementFileNameRaw = sprintf('%s%s', DisplFileName, DisplFileExt); 
         DisplacementFileFullName = fullfile(DisplPathName, displacementFileNameRaw);
         if SaveOutput
-            save(DisplacementFileFullName, 'displField', 'TimeStamps', 'MD', '-v7.3');
+            save(DisplacementFileFullName, 'displField', 'TimeStamps', 'movieData', '-v7.3');
             try save(DisplacementFileFullName, 'TimeStampChoice', 'FrameRate', '-append'); catch; end
         end
     end
@@ -306,7 +335,7 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
             DisplacementFileFullName = fullfile(DisplPathName, strcat(DisplFileName,  '_LPEF', DisplFileExt));
             
             if SaveOutput
-                save(DisplacementFileFullName, 'displField', 'TimeStamps', 'MD', 'LPEF_FilterParametersStruct', 'TimeFilterChoiceStr', '-v7.3');
+                save(DisplacementFileFullName, 'displField', 'TimeStamps', 'movieData', 'LPEF_FilterParametersStruct', 'TimeFilterChoiceStr', '-v7.3');
                 try save(DisplacementFileFullName, 'TimeStampChoice', 'FrameRate', '-append'); catch; end
                 fprintf('Filtered Displacement Field (displField) File is successfully saved as!: \n\t %s\n', DisplacementFileFullName);
             end
@@ -340,44 +369,70 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
     MaxGrayLevel = 2^(ImageBits + 2);
     minIntensity = MaxGrayLevel;
 
-    reverseString = '';
-    for CurrentFrame = FramesDoneNumbers
-        ProgressMsg = sprintf('\nInspecting Frame %d/%d for maxima and minima.\n', CurrentFrame, FramesDoneNumbers(end));
-        fprintf([reverseString, ProgressMsg]);
-        reverseString = repmat(sprintf('\b'), 1, length(ProgressMsg));
+%     reverseString = '';
+%     for CurrentFrame = FramesDoneNumbers
+%         ProgressMsg = sprintf('\nInspecting Frame %d/%d for maxima and minima.\n', CurrentFrame, FramesDoneNumbers(end));
+%         fprintf([reverseString, ProgressMsg]);
+%         reverseString = repmat(sprintf('\b'), 1, length(ProgressMsg));
+%     
+%         NetDisplacementCurrentFrame = vecnorm(displField(CurrentFrame).vec(:,1:2),2,2);
+%         [tmpMaxDisplacement,tmpMaxDisplacementIndex] =  max(NetDisplacementCurrentFrame);          % maximum item in a column
+% 
+%         if tmpMaxDisplacement > maxDisplacement
+%             maxDisplacement = tmpMaxDisplacement;
+%             maxDisplacementIndex = tmpMaxDisplacementIndex;
+%             MaxDisplFrameNumber = CurrentFrame;
+%         end 
+% %         
+%         try
+%            CurrentImage =  MD.channels_.loadImage(CurrentFrame);        
+%         catch
+%            % continue
+%         end
+%         [tmpMaxItensity,tmpIntensityIndex] = max(CurrentImage(:)) ;          % maximum item in a column
+%         if tmpMaxItensity > maxIntensity
+%             maxIntensity = tmpMaxItensity;
+%             maxIntensityIndex = tmpIntensityIndex;
+%             maxIntensityFrame = CurrentFrame;
+%         end 
+% 
+%         [tmpMinIntensity, tmpMinIntensity] = min(CurrentImage(:)) ;          % maximum item in a column
+%         if tmpMinIntensity < minIntensity
+%             minIntensity = tmpMinIntensity;
+%             minIntensityIndex = tmpMinIntensity;
+%             minIntensityFrame = CurrentFrame;
+%         end 
+%     end                     
     
-        NetDisplacementCurrentFrame = vecnorm(displField(CurrentFrame).vec(:,1:2),2,2);
-        [tmpMaxDisplacement,tmpMaxDisplacementIndex] =  max(NetDisplacementCurrentFrame);          % maximum item in a column
+    FramesNum = numel(displField);
+    dmaxTMP = nan(FramesNum, 1);
+    dmaxTMPindex = nan(FramesNum, 1);
+    dminTMP = nan(FramesNum, 1);
+    dminTMPindex = nan(FramesNum, 1);
 
-        if tmpMaxDisplacement > maxDisplacement
-            maxDisplacement = tmpMaxDisplacement;
-            maxDisplacementIndex = tmpMaxDisplacementIndex;
-            maxDisplacementFrame = CurrentFrame;
-        end 
-%         
-        try
-           CurrentImage =  MD.channels_.loadImage(CurrentFrame);        
-        catch
-           % continue
-        end
-        [tmpMaxItensity,tmpIntensityIndex] = max(CurrentImage(:)) ;          % maximum item in a column
-        if tmpMaxItensity > maxIntensity
-            maxIntensity = tmpMaxItensity;
-            maxIntensityIndex = tmpIntensityIndex;
-            maxIntensityFrame = CurrentFrame;
-        end 
+    disp('Finding the bead with the maximum displacement...in progress')
+    parfor_progress(numel(FramesDoneNumbers));
+    parfor CurrentFrame = FramesDoneNumbers
+        dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
+        displField(CurrentFrame).vec(:,3)  = dnorm_vec;
+        dmaxTMP(CurrentFrame) = max(dnorm_vec);
+        [~, dminIdxTMP] = max(dnorm_vec);
+%         dmaxTMPindex(CurrentFrame) = dminIdxTMP;
 
-        [tmpMinIntensity, tmpMinIntensity] = min(CurrentImage(:)) ;          % maximum item in a column
-        if tmpMinIntensity < minIntensity
-            minIntensity = tmpMinIntensity;
-            minIntensityIndex = tmpMinIntensity;
-            minIntensityFrame = CurrentFrame;
-        end 
-    end                     
-    displFieldPos = displField(maxDisplacementFrame).pos;
-    displFieldVecNotDriftCorrected = displField(maxDisplacementFrame).vec;
+%         dminTMP(CurrentFrame) = min(dnorm_vec);
+%         [~, dminTMPindex] = min(dnorm_vec);
+%         dmaxTMPindex(CurrentFrame) = dminTMPindex;
+
+        parfor_progress;
+    end
+    parfor_progress(0);
+    disp('Finding the bead with the maximum displacement...complete')
+    [~, MaxDisplFrameNumber]  = max(dmaxTMP);
+
+    displFieldPos = displField(MaxDisplFrameNumber).pos;
+    displFieldVecNotDriftCorrected = displField(MaxDisplFrameNumber).vec;
     displFieldVecNotDriftCorrected(:,3) = vecnorm(displFieldVecNotDriftCorrected(:,1:2), 2, 2);
-    clear displFieldVecMean corner_noise displFieldVecDriftCorrected    
+    clear displFieldVecMean corner_noise displFieldVecDriftCorrected
     
 %% Drift-Correction of the displacement field.
     % 2. Drift Correction Mode?
@@ -446,10 +501,10 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
                 end            
             % 4. choose quiver color that is complemenetary to the color LUT            
                 QuiverColor = median(imcomplement(colormapLUT));               % User Complement of the colormap for maximum visibililty of the quiver.
-                ImageSizePixels = MD.imSize_;            
+                ImageSizePixels = movieData.imSize_;            
 
             % 13 =================== Load EPI image and adjust contrast ==================== 
-                ChannelCount = numel(MD.channels_);                                             % updated on 2020-04-15
+                ChannelCount = numel(movieData.channels_);                                             % updated on 2020-04-15
                 ChannelNum = ChannelCount;
                 if ChannelCount ~= 1
                     prompt = {sprintf('Choose the channel to be plotted. [Channel Count = %i]', ChannelCount)};
@@ -464,14 +519,14 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
 %                 GrayLevelsPercentileStr = inputdlg(prompt, 'Enter Percentile Adjustment', [1, 70], GrayLevelsPercentileStr);
 %                 GrayLevelsPercentile = str2num(GrayLevelsPercentileStr{:});        
                 try
-                    curr_Image = MD.channels_(ChannelNum).loadImage(maxDisplacementFrame);
+                    curr_Image = movieData.channels_(ChannelNum).loadImage(MaxDisplFrameNumber);
                     if useGPU, curr_Image = gpuArray(curr_Image); end
                     curr_ImageAdjust = imadjust(curr_Image, stretchlim(curr_Image,GrayLevelsPercentile));       % Make beads contrast more
                 catch
 %                     BioformatsPath = uigetdir([], 'Select directory containing bioformats folder (e.g., TFMpackagefolder)');
                     BioformatsPath = 'Y:\Waddah_Aim3\Codes\MT_TFM Analysis\bioformats';             % for liux, replace "\" with "/" ,,,(strfind(path_unix,'\'))='/';
                     addpath(genpath(BioformatsPath));        % include subfolders
-                    curr_Image = MD.channels_(ChannelNum).loadImage(maxDisplacementFrame);
+                    curr_Image = movieData.channels_(ChannelNum).loadImage(MaxDisplFrameNumber);
                     curr_ImageAdjust = imadjust(curr_Image, stretchlim(curr_Image,GrayLevelsPercentile));       % make beads contrast more.
                 end    
             % =================== 
@@ -508,23 +563,23 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
                 %% Plotting
                 figure(figHandle)
                 [displFieldBeadsDriftCorrected, rect, DriftROIs, DriftROIsCombined, reg_grid, gridSpacing, NoiseROIs, NoiseROIsCombined] = ...
-                    DisplacementDriftCorrectionIdenticalCorners(displField, CornerPercentage, maxDisplacementFrame, gridMagnification, ...
+                    DisplacementDriftCorrectionIdenticalCorners(displField, CornerPercentage, MaxDisplFrameNumber, gridMagnification, ...
                     EdgeErode, GridtypeChoiceStr, InterpolationMethod, 0);
 
                 switch DriftCorrectionChoiceStr
                     case 'Yes'
-                        displFieldVecDriftCorrected(:,1:2) = displFieldBeadsDriftCorrected(maxDisplacementFrame).vec(:,1:2);
+                        displFieldVecDriftCorrected(:,1:2) = displFieldBeadsDriftCorrected(MaxDisplFrameNumber).vec(:,1:2);
                         displFieldVecDriftCorrected(:,3) = vecnorm(displFieldVecDriftCorrected(:,1:2), 2, 2); 
                         displFieldVec = displFieldVecDriftCorrected;
 
                         title(figAxesHandle, {sprintf('%d Corners of ROIs %0.2g%% per side to adjust for drift.', cornerCount, CornerPercentageDefault * 100), ...
-                            sprintf('Frame %d/%d. Numbers of Points = %d', maxDisplacementFrame,FramesDoneNumbers(end), size(DriftROIsCombined(maxDisplacementFrame).pos, 1))});   
+                            sprintf('Frame %d/%d. Numbers of Points = %d', MaxDisplFrameNumber,FramesDoneNumbers(end), size(DriftROIsCombined(MaxDisplFrameNumber).pos, 1))});   
                     case 'No'
                         figHandle.Visible = 'off';
                         CornerPercentage = 0.10;
                         displFieldVec = displFieldVecNotDriftCorrected;
 
-                        title(figAxesHandle, sprintf('Frame %d/%d.', maxDisplacementFrame,FramesDoneNumbers(end))); 
+                        title(figAxesHandle, sprintf('Frame %d/%d.', MaxDisplFrameNumber,FramesDoneNumbers(end))); 
                 end
 
                 % plot the corners onto the figure now.
@@ -550,7 +605,7 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
                         gridYmax = max(displField(FirstFrame).pos(:,2));                        
 %                         [Location(1), Location(2)] = ginputc(1, 'Color', QuiverColor);                        
 %                         Location = [gridXmax, gridYmax];
-                        Location = MD.imSize_ - [3,3];                  % bottom right corner
+                        Location = movieData.imSize_ - [3,3];                  % bottom right corner
 
 %                         prompt = sprintf('Scale Bar Length [%s]:', ScaleBarUnits);
 %                         dlgTitle = 'Scale Bar Length?';
@@ -559,7 +614,7 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
 %                         opts.Interpreter = 'tex';
 %                         ScaleLengthStr = inputdlg(prompt, dlgTitle, dims, defInput, opts);
 %                         ScaleLength = str2double(ScaleLengthStr{:});
-                        ScaleLength =   round((max(MD.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant');
+                        ScaleLength =   round((max(movieData.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant');
 %                         ScaleBarColor = uisetcolor(QuiverColor, 'Select the ScaleBar Color');   % [1,1,0] is the RGB for yellow        
                         ScaleBarColor = QuiverColor;
                         s = scalebar(figAxesHandle,'ScaleLength', ScaleLength, 'ScaleLengthRatio', ScaleMicronPerPixel, 'color', ScaleBarColor, ...
@@ -581,7 +636,8 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
 %                 keyboard
                 
                 % 18 =================== Save drift ROIs figure  ==================== 
-                displacementFileNameDC = sprintf('%s_DC%s', DisplFileName, DisplFileExt); 
+                [~, DisplFileNamePrefix, ~] = fileparts(DisplacementFileFullName);
+                displacementFileNameDC = sprintf('%s_DC%s', DisplFileNamePrefix, DisplFileExt); 
                 DisplacementFileFullName = fullfile(DisplPathName, displacementFileNameDC);
                 
                 if SaveOutput
@@ -606,12 +662,14 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
 
                 displField = displFieldBeadsDriftCorrected;
                 if SaveOutput
-                    save(DisplacementFileFullName, 'displField', 'TimeStamps', 'MD', 'rect', ...
+                    save(DisplacementFileFullName, 'displField', 'TimeStamps', 'movieData', 'rect', ...
                         'CornerPercentage', 'gridMagnification', 'EdgeErode', 'GridtypeChoiceStr', 'InterpolationMethod', ...
                         'DriftROIs', 'DriftROIsCombined', 'reg_grid', 'gridSpacing', 'NoiseROIs', 'NoiseROIsCombined' , 'DriftCorrectionChoiceStr', '-v7.3');    
                     try save(DisplacementFileFullName, 'TimeStampChoice', 'FrameRate', '-append'); catch; end
                     try save(DisplacementFileFullName, 'TimeFilterChoiceStr', '-append'); catch; end
                 end
+                Msg = sprintf('Drift-Corrected Displacement Field (displField) File is successfully saved as!: \n\t %s\n', DisplacementFileFullName);
+                disp(Msg)
     end
     if ~exist('rect', 'var')
         try 
@@ -645,5 +703,7 @@ function [MD, displField, TimeStamps, DisplPathName, ScaleMicronPerPixel, Frames
 %     
     %% saving now
     disp('** Processing displacements is complete!**')
+    [~, FileNameDescription, ~] = fileparts(DisplacementFileFullName);          
+    movieData.findProcessTag(ProcessTag).notes_  = FileNameDescription;
     disp('_____________________________________________________________________________________________')
 end
