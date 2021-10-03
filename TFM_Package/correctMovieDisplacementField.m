@@ -431,6 +431,9 @@ function correctMovieDisplacementField(movieData,varargin)
     disp('Identifying the limits of the interpolated displacement grid limits over all frames without generating it yet.')
     disp('Note that these values might be extreme due to noise. Rely more on outlier-cleaned/filtered/drift corrected values')
     FramesNum = numel(displField);
+    dmaxTMP = nan(FramesNum, 2);
+    dminTMP = nan(FramesNum, 2);
+
     parfor_progress(FramesNum);
     parfor ii=1:FramesNum
         %Load the saved body heat map.
@@ -444,10 +447,9 @@ function correctMovieDisplacementField(movieData,varargin)
         fnorm(:,1:1+round(band/2))=[];
         fnorm_vec = reshape(fnorm,[],1); 
   
-        dmaxTMP(ii) = max(max(fnorm_vec));
-        dminTMP(ii) = min(min(fnorm_vec));
-%         dmax = max(dmax,max(fnorm_vec));
-%         dmin = min(dmin,min(fnorm_vec));
+        dmaxTMP(ii, :) = max(max(fnorm_vec));
+        dminTMP(ii, :) = min(min(fnorm_vec));
+
         parfor_progress;
     end
     parfor_progress(0);

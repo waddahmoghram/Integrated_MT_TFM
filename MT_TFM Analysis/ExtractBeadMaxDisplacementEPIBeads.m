@@ -57,10 +57,13 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
         end         
     end
     %     ImageFileNames = MD.getImageFileNames{1};    
-    try 
-        ScaleMicronPerPixel = MD.pixelSize_ / 1000;
-    catch
-        [ScaleMicronPerPixel, ~, ~] = MagnificationScalesMicronPerPixel([]);
+
+    if nargin < 5
+        try
+            ScaleMicronPerPixel = MD.pixelSize_ / 1000;
+        catch
+            [ScaleMicronPerPixel, ~, ~] = MagnificationScalesMicronPerPixel([]);
+        end
     end
     
     %% --------  nargin 2, displacement field (displField) -------------------------------------------------------------------   
@@ -176,23 +179,27 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     VeryLastFrame = find(FramesDoneBoolean, 1, 'last');
     VeryFirstFrame =  find(FramesDoneBoolean, 1, 'first');    
     
-    prompt = {sprintf('Choose the first frame to plotted. [Default, Frame = %d]', VeryFirstFrame)};
-    dlgTitle = 'First Frame Plotted';
-    FirstFrameStr = inputdlg(prompt, dlgTitle, [1, 90], {num2str(VeryFirstFrame)});
-    if isempty(FirstFrameStr), return; end
-    FirstFrame = str2double(FirstFrameStr{1});          
-    [~, FirstFrameIndex] = min(abs(FramesDoneNumbers - FirstFrame));
-    FirstFrame = FramesDoneNumbers(FirstFrameIndex);
+%     prompt = {sprintf('Choose the first frame to plotted. [Default, Frame = %d]', VeryFirstFrame)};
+%     dlgTitle = 'First Frame Plotted';
+%     FirstFrameStr = inputdlg(prompt, dlgTitle, [1, 90], {num2str(VeryFirstFrame)});
+%     if isempty(FirstFrameStr), return; end
+%     FirstFrame = str2double(FirstFrameStr{1});          
+%     [~, FirstFrameIndex] = min(abs(FramesDoneNumbers - FirstFrame));
+%     FirstFrame = FramesDoneNumbers(FirstFrameIndex);
+
+
+%     prompt = {sprintf('Choose the last frame to plotted. [Default, Frame = %d]', VeryLastFrame)};
+%     dlgTitle = 'Last Frame Plotted';
+%     LastFrameStr = inputdlg(prompt, dlgTitle, [1, 90], {num2str(VeryLastFrame)});
+%     if isempty(LastFrameStr), return; end
+%     LastFrame = str2double(LastFrameStr{1});          
+%     [~, LastFrameIndex] = min(abs(FramesDoneNumbers - LastFrame));
+%     LastFrame = FramesDoneNumbers(LastFrameIndex);
+
+% FramesDoneNumbers = FramesDoneNumbers(FirstFrameIndex:LastFrameIndex);
     
-    prompt = {sprintf('Choose the last frame to plotted. [Default, Frame = %d]', VeryLastFrame)};
-    dlgTitle = 'Last Frame Plotted';
-    LastFrameStr = inputdlg(prompt, dlgTitle, [1, 90], {num2str(VeryLastFrame)});
-    if isempty(LastFrameStr), return; end
-    LastFrame = str2double(LastFrameStr{1});          
-    [~, LastFrameIndex] = min(abs(FramesDoneNumbers - LastFrame));
-    LastFrame = FramesDoneNumbers(LastFrameIndex);
-    
-    FramesDoneNumbers = FramesDoneNumbers(FirstFrameIndex:LastFrameIndex);
+    FirstFrame = VeryFirstFrame;
+    LastFrame = VeryLastFrame;    
         
     if ~exist('TimeStamps', 'var'), TimeStamps = []; end
     if ischar(TimeStamps), if upper(TimeStamps) == 'N', TimeStamps = 0; end; end
@@ -269,74 +276,51 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
 %     TimeStampsSec = TimeStampsSec - TimeStampsSec(1);               % MAKE SURE TIME IS REFERENCE TO T = 0 FOR THE FIRST FRAME
     
     %% Finding maximum bead
-    displFieldNetMaxPointInFrame = -1;
-    reverseString = '';
-    for CurrentFrame = FramesDoneNumbers
-        ProgressMsg = sprintf('Searching Frame #%d/(%d-%d)...\n',CurrentFrame, FramesDoneNumbers(1),FramesDoneNumbers(end));
-        fprintf([reverseString, ProgressMsg]);
-        reverseString = repmat(sprintf('\b'), 1, length(ProgressMsg));
-        
-        NetdisplFieldAllPointsInFrame = vecnorm(displField(CurrentFrame).vec(:,1:2),2,2);
-        [tmpMaxDisplFieldNetInFrame,tmpMaxDisplFieldInFrameIndex] =  max(NetdisplFieldAllPointsInFrame);          % maximum item in a column
-        displField(CurrentFrame).vec(:,3) = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);                
-        
-        if tmpMaxDisplFieldNetInFrame > displFieldNetMaxPointInFrame
-            displFieldNetMaxPointInFrame(CurrentFrame) = tmpMaxDisplFieldNetInFrame;
-            displFieldMaxPosFrame = displField(CurrentFrame).pos; 
-            displFieldMaxVecFrame = displField(CurrentFrame).vec;        
-            displFieldMaxVecFrame(:,3) = displField(CurrentFrame).vec(:,3);
-            
-            displFieldMaxDisplPixelsNet = tmpMaxDisplFieldNetInFrame;                        
-            MaxDisplFieldIndex = tmpMaxDisplFieldInFrameIndex;
-            MaxDisplPixelsXYnet =  displFieldMaxVecFrame(MaxDisplFieldIndex, :);
-            MaxDisplFrameNumber = CurrentFrame;
-            MaxPosPixelsXYnet = displFieldMaxPosFrame(MaxDisplFieldIndex, :);
-        end 
-    end
-    
-    if ~exist('ScaleMicronPerPixel', 'var'), ScaleMicronPerPixel = []; end
-    if isempty(ScaleMicronPerPixel) || nargin < 5
-        try
-            ScaleMicronPerPixel = MD.pixelSize_/1000;           % from Nanometers/pixel to micron/pixel
-        catch
-            % continue
-        end 
-    end
-    
-    if exist('ScaleMicronPerPixel', 'var')
-        dlgQuestion = sprintf('Do you want the scaling found in the movie file (%0.5g micron/pixels)?', ScaleMicronPerPixel);
-        dlgTitle = 'Use Embedded Scale?';
-        ScalingChoice = questdlg(dlgQuestion, dlgTitle, 'Yes', 'No', 'Yes');
-    else
-        ScalingChoice = 'No';
-    end            
-    switch ScalingChoice
-        case 'No'
-            [ScaleMicronPerPixel, ~, MagnificationTimes] = MagnificationScalesMicronPerPixel();    
-        case 'Yes'
-            % Continue
-        otherwise 
-            return
-    end
+%     displFieldNetMaxPointInFrame = -1;
+%     reverseString = '';
+    FramesNum = numel(displField);
+    dmaxTMP = nan(FramesNum, 1);
+    dmaxTMPindex = nan(FramesNum, 1);
 
-    MaxDisplMicronsXYnet =  MaxDisplPixelsXYnet * ScaleMicronPerPixel;
-    fprintf('Maximum displacement = %0.4g pixels at ', displFieldMaxDisplPixelsNet);
-    fprintf('[x,y] = [%g, %g] pixels in Frame #%d, Point Index #%d \n', MaxPosPixelsXYnet, MaxDisplFrameNumber, MaxDisplFieldIndex)
-    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.4g, %0.4g] pixels==> Net displacement [disp_net] = [%0.4g] pixels. \n', MaxDisplPixelsXYnet)
-    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.4g, %0.4g] microns==> Net displacement [disp_net] = [%0.4g] microns. \n', MaxDisplMicronsXYnet)
+    disp('Finding the bead with the maximum displacement...in progress')
+    parfor_progress(numel(FramesDoneNumbers));
+    parfor CurrentFrame = FramesDoneNumbers
+        dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
+        displField(CurrentFrame).vec(:,3)  = dnorm_vec;
+        dmaxTMP(CurrentFrame) = max(dnorm_vec);
+        [~, IdxTMP] = max(dnorm_vec);
+        dmaxTMPindex(CurrentFrame) = IdxTMP;
+        parfor_progress;
+    end
+    parfor_progress(0);
+    disp('Finding the bead with the maximum displacement...complete')
+
+    [~, MaxDisplFrameNumber]  = max(dmaxTMP);
+
+    MaxDisplFieldIndex = dmaxTMPindex(MaxDisplFrameNumber);
+    MaxDispl_PosXY_Pixels =  displField(MaxDisplFrameNumber).pos(MaxDisplFieldIndex,:);
+    MaxDisplNetPixels = displField(MaxDisplFrameNumber).vec(MaxDisplFieldIndex,:);
+    MaxDisplNetMicrons =  MaxDisplNetPixels .* ScaleMicronPerPixel;
+
+    fprintf('Maximum displacement = %0.4g pixels at ', MaxDisplNetPixels(3));
+    fprintf('[x,y] = [%g, %g] pixels in Frame #%d, Point Index #%d \n', MaxDispl_PosXY_Pixels, MaxDisplFrameNumber, MaxDisplFieldIndex)
+    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.4g, %0.4g] pixels==> Net displacement [disp_net] = [%0.4g] pixels. \n', MaxDisplNetPixels)
+    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.4g, %0.4g] microns==> Net displacement [disp_net] = [%0.4g] microns. \n', MaxDisplNetMicrons)
 
 %%     
-    reverseString = '';
-    for CurrentFrame = FramesDoneNumbers
-%         ProgressMsg = sprintf('Tracking Maximum Node at Frame #%d/(%d-%d)...\n',CurrentFrame, FramesDoneNumbers(1),FramesDoneNumbers(end));
-%         fprintf([reverseString, ProgressMsg]);
-%         reverseString = repmat(sprintf('\b'), 1, length(ProgressMsg));
-%         
+    parfor_progress(numel(FramesDoneNumbers));
+    TxRedBeadMaxNetPositionPixels = nan(numel(FramesDoneNumbers), 2);
+    TxRedBeadMaxNetDisplacementPixels = nan(numel(FramesDoneNumbers), 3);
+    disp('Extracting the displacement of the bead with the maximum displacement...in progress')
+    parfor CurrentFrame = FramesDoneNumbers
         TxRedBeadMaxNetPositionPixels(CurrentFrame, :) = displField(CurrentFrame).pos(MaxDisplFieldIndex,:);
         TxRedBeadMaxNetDisplacementPixels(CurrentFrame, :) = displField(CurrentFrame).vec(MaxDisplFieldIndex,:);
+        parfor_progress;
     end
+    parfor_progress(0);
+    disp('Extracting the displacement of the bead with the maximum displacement...complete')
     
-    TxRedBeadMaxNetDisplacementMicrons = TxRedBeadMaxNetDisplacementPixels * ScaleMicronPerPixel;            % convert from micron to nm
+    TxRedBeadMaxNetDisplacementMicrons = TxRedBeadMaxNetDisplacementPixels .* ScaleMicronPerPixel;            % convert from micron to nm
  
       
     %% ---------------- PLOTS
@@ -360,22 +344,21 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf|\it\Delta\rm_{TxRed}(\itt\rm)\bf|\rm [\mum]', 'FontName', PlotsFontName); 
     
-    title({'Maximum Net EPI Bead Displacement (tracked)',sprintf('Max at (X,Y) = (%d,%d) pix in Frame %d/%d = %0.3f sec',...
-        displFieldMaxPosFrame(MaxDisplFieldIndex, 1), displFieldMaxPosFrame(MaxDisplFieldIndex, 2), ...
-        MaxDisplFrameNumber,LastFrame, TimeStamps(MaxDisplFrameNumber)), ...
-        sprintf('Max displacement = %0.4f pix = %0.4f %sm', MaxDisplPixelsXYnet(3), MaxDisplMicronsXYnet(3),char(181))})
+    title({'Maximum Net EPI Bead Displacement (tracked)',sprintf('Max at (X,Y) = (%0.2f,%0.2f) pix in Frame %d/%d = %0.3f sec',...
+        MaxDispl_PosXY_Pixels, MaxDisplFrameNumber, LastFrame, TimeStamps(MaxDisplFrameNumber)), ...
+        sprintf('Max displacement = %0.3f pix = %0.3f %sm', MaxDisplNetPixels(3), MaxDisplNetMicrons(3),char(181))})
 
     MaxDisplacementDetails.TimeFrameSeconds = TimeStampsSec;
     MaxDisplacementDetails.TxRedBeadMaxNetPositionPixels = TxRedBeadMaxNetPositionPixels;
     MaxDisplacementDetails.TxRedBeadMaxNetDisplacementPixels = TxRedBeadMaxNetDisplacementPixels;
     MaxDisplacementDetails.TxRedBeadMaxNetDisplacementMicrons = TxRedBeadMaxNetDisplacementMicrons;
     MaxDisplacementDetails.MaxDisplFrameNumber = MaxDisplFrameNumber;
-    MaxDisplacementDetails.MaxDisplMicronsXYnet = MaxDisplMicronsXYnet;
-    MaxDisplacementDetails.MaxDisplPixelsXYnet = MaxDisplPixelsXYnet;
+    MaxDisplacementDetails.MaxDisplMicronsXYnet = MaxDisplNetMicrons;
+    MaxDisplacementDetails.MaxDisplPixelsXYnet = MaxDisplNetPixels;
     
         %%
-    disp('**___to continue saving, type "dbcont" or press "F5", or click "Continue" under "Editor" Menu"___**')
-    keyboard
+%     disp('**___to continue saving, type "dbcont" or press "F5", or click "Continue" under "Editor" Menu"___**')
+%     keyboard
     
     %%
     if exist('FramesOutputPath', 'var')

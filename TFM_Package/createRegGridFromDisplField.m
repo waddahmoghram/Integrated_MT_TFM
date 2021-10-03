@@ -30,7 +30,7 @@ function [reg_grid, xvec, yvec, gridSpacing] = createRegGridFromDisplField(displ
         v.2020-02-06. Replaced meshgrid then transpose with ndgrid() to reduce confusion. 
             In this format: rows are increasing X coordinates, and columns are increasing Y coordinates.
     %} 
- %% Check if there is a GPU. take advantage of it if is there.
+ %% Check if there is a GPU. take advantage of it if in there.
    nGPU = gpuDeviceCount;
     if nGPU > 0
         useGPU = true;
@@ -73,7 +73,7 @@ function [reg_grid, xvec, yvec, gridSpacing] = createRegGridFromDisplField(displ
         numBeads = length(displFieldPos);
     end
         
-    % Area in pixels squared, and interBeadDist is in microns.
+    % Area in pixels uareuared, and interBeadDist is in microns.
     ImageArea = prod(RightLowerCorner-LeftUpperCorner);
     interBeadDist = sqrt(ImageArea/numBeads);
 

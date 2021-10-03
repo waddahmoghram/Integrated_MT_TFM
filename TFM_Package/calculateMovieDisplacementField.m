@@ -667,8 +667,7 @@ function calculateMovieDisplacementField(movieData,varargin)
   
         dmaxTMP(ii, :) = max(max(fnorm_vec));
         dminTMP(ii, :) = min(min(fnorm_vec));
-%         dmax = max(dmax,max(fnorm_vec));
-%         dmin = min(dmin,min(fnorm_vec));
+
         parfor_progress;
     end
     parfor_progress(0);

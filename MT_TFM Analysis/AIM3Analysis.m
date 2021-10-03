@@ -9,9 +9,9 @@ format longg
 % Initial Parameters. Make sure you track previously.
     choiceTrackDIC ='Yes';
     choiceOpenND2DIC = 'Yes';
-
+    SaveOutput = true;
     showPlots = 'on';
-    ShowOutput = true;
+    ShowOutput = 1;            % trueFramesPlottedDIC
     CloseFigures = true;                      % switch to false if you want to leave them up
     IdenticalCornersChoice = 'Yes';             % choose 4 identical corners.
     DCchoice = 'Yes';
@@ -88,7 +88,7 @@ format longg
     GrayLevelsPercentile = [0.05, 0.999];                        % percentiles of intensity of the microspheres.
 % ----------------------------------------------------------------------------------------------------------------------------
     % Gridding Parameters
-    EdgeErode = 1;                              % do not change to 0. Update 2020-01-29
+    EdgeErode = 1;                              % do not change to 0. Update 2020-01-29  Edge Erode to make it a square grid 
     gridMagnification = 1;                      %% (to go with the original rectangular grid size created to interpolate displField)ForceIntegrationMethod = 'Summed';
     TractionStressMethod = 'FTTC';   
     GridtypeChoiceStr = 'Even Grid';
@@ -544,11 +544,8 @@ format longg
         otherwiseTrackingMethod
             return
     end
-    try
-       poolObj.delete;                % shut down the parallel core to flush RAM and GPU memory
-    catch
-       delete(gcp('nocreate')) 
-    end
+    delete(gcp('nocreate')) 
+    
     % say (20,20) top-left of ROI = (1,1), Therefore, (2,2) in ROI = (20,20) + (2,2) - (1,1) = (21,21) in Bigger Position for imcrop()    
     MagBeadCoordinatesXYpixels = BeadPositionXYcenter .* [1, -1];           % Convert the y-coordinates to Cartesian to match previous output.    
     MagBeadCoordinatesXYNetpixels = BeadPositionXYcenter - BeadPositionXYcenter(1,:);       
@@ -782,9 +779,8 @@ format longg
     indx = beadsMask(sub2ind(size(beadsMask),ceil(beads(:,2)), ceil(beads(:,1))));
     localbeads = beads(indx,:);
     
-%___________ Creating a rectangular grid based on bead locations
-    [reg_grid,~,~,gridSpacing] = createRegGridFromDisplField(localbeads, 2, displacementParameters.noFlowOutwardOnBorder);
-    % Edge Erode to make it a square grid 
+%___________ Creating a rectangular grid based on bead locations 
+    [reg_grid,~,~,gridSpacing] = createRegGridFromDisplField(localbeads, gridMagnification, EdgeErode);
    
     gridXmin = min(unique(reg_grid(:,:,1)));
     gridXmax = max(unique(reg_grid(:,:,1)));
@@ -1234,7 +1230,7 @@ format longg
     FramesNumEPI = numel(displField);
     parfor_progress(FramesNumEPI);
     dmaxTMP = nan(FramesNumEPI, 2);
-
+    band = 0;
     parfor CurrentEPIFrame = 1:FramesNumEPI
         %Load the saved body heat map.
         [~,fmat, ~, ~] = interp_vec2grid(displField(CurrentEPIFrame).pos(:,1:2), displField(CurrentEPIFrame).vec(:,1:2),[],reg_grid);            % 1:cluster size
@@ -1251,19 +1247,16 @@ format longg
         parfor_progress;
     end
     parfor_progress(0);
-    [dmax, dmaxIdx] = max(dmaxTMP(:,1));
-    [dmin, dminIdx] = min(dminTMP(:,1));
-    dminMicrons = dmin  * (MD_EPI.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
-    dmaxMicrons = dmax  * (movieDataMD_EPIpixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
-    disp(['Estimated displacement minimum = ' num2str(dminMicrons) ' microns.'])
-    disp(['Estimated displacement maximum = ' num2str(dmaxMicrons) ' microns.'])
-
     % ----------end parallel pool
-    try
-       parpool.delete                % shut down the parallel core to flush RAM and GPU memory
-    catch
-       delete((gcp('nocreate')))% no parallel pool running
-    end
+    delete((gcp('nocreate')))% no parallel pool running
+
+%     dminMicrons = dmin  * (MD_EPI.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
+%     disp(['Estimated displacement minimum = ' num2str(dminMicrons) ' microns.'])
+%     [dmin, dminIdx] = min(dminTMP(:,1));    
+    [dmax, dmaxIdx] = max(dmaxTMP(:,1));
+    dmaxMicrons = dmax  * (MD_EPI.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
+    disp(['Estimated displacement maximum = ' num2str(dmaxMicrons) ' microns.'])
+   
 
 %% =============================== FINDING THE OPTIMAL YOUNG'S ELASTIC MODULUS  
     YoungModulusPaInitialGuess = 5 * GelConcentrationMgMl ^ 2.1 * 10;         % offset by 10. Local E is much stiffer than bulk one
@@ -1460,11 +1453,7 @@ format longg
     fprintf('Re-Evaluating displacement & traction stress vector fields & energy density scalar field with raw %s parameters...[Completed].\n', reg_cornerChoiceStr)
 
   % ----------end parallel pool & start a new one
-    try
-       poolObj.delete;                % shut down the parallel core to flush RAM and GPU memory
-    catch
-       delete(gcp('nocreate')) 
-    end
+   delete(gcp('nocreate')) 
 
 % =============================== PLOTTING Raw regularization parameters & traction forces/energy
     FramesPlotted(FramesDoneNumbers) = ~isnan(ForceN(FramesDoneNumbers));
@@ -1725,11 +1714,7 @@ format longg
     parfor_progress(0);
     fprintf('Re-Evaluating with raw %s parameters is Completed.\n', reg_cornerChoiceStr)
 % ----------end parallel pool 
-    try
-       poolObj.delete;                % shut down the parallel core to flush RAM and GPU memory
-    catch
-       delete(gcp('nocreate')) 
-    end
+    delete(gcp('nocreate')) 
 %
     disp('Saving TFM Analysis Output')
     clear Notes
@@ -1935,7 +1920,7 @@ format longg
                 if exist(TractionForcePath,'dir') 
                     AnalysisFileNameFIG2 = sprintf('E_%0.3fPa_Forces_MTvTFM.fig', forceFieldParameters.YoungModulusPa);
                     AnalysisForcesMTvTFM_FIG3 = fullfile(TractionForcePath, AnalysisFileNameFIG2);                    
-                    savefig(figHandleF_MTvTFM, AnalysisForcesMTvTFM_FIG3,'compact')                  
+                    savefig(figHandleForce_MTvTFM, AnalysisForcesMTvTFM_FIG3,'compact')                  
 
                     AnalysisFileNameFIG3 = sprintf('E_%0.3fPa_WorkEnergy_MTvTFM.fig', forceFieldParameters.YoungModulusPa);
                     AnalysisForcesMTvTFM_FIG3 = fullfile(TractionForcePath, AnalysisFileNameFIG3);                    
@@ -1948,11 +1933,11 @@ format longg
                 if exist(TractionForcePath,'dir') 
                     AnalysisFileNamePNG2 = sprintf('E_%0.3fPa_Forces_MTvTFM.png', forceFieldParameters.YoungModulusPa);
                     AnalysisForcesMTvTFMPNG2 = fullfile(TractionForcePath, AnalysisFileNamePNG2);
-                    saveas(figHandleAllTraction, AnalysisForcesMTvTFMPNG2, 'png');
+                    saveas(figHandleForce_MTvTFM, AnalysisForcesMTvTFMPNG2, 'png');
 
                     AnalysisFileNamePNG3 = sprintf('E_%0.3fPa_WorkEnergy_MTvTFM.png', forceFieldParameters.YoungModulusPa);
                     AnalysisForcesMTvTFMPNG3 = fullfile(TractionForcePath, AnalysisFileNamePNG3);
-                    saveas(figHandleAllTraction, AnalysisForcesMTvTFMPNG3, 'png');
+                    saveas(figHandleWorkEnergy_MTvTFM, AnalysisForcesMTvTFMPNG3, 'png');
 
 
                 end
@@ -1961,7 +1946,7 @@ format longg
                 if exist(TractionForcePath,'dir')
                     AnalysisFileNameEPS2 = sprintf('E_%0.3fPa_Forces_MTvTFM.eps', forceFieldParameters.YoungModulusPa);             
                     AnalysisTractionForceEPS2 = fullfile(TractionForcePath, AnalysisFileNameEPS2);                                     
-                    print(figHandleF_MTvTFM, AnalysisTractionForceEPS2,'-depsc')                 
+                    print(figHandleForce_MTvTFM, AnalysisTractionForceEPS2,'-depsc')                 
 
 
                     AnalysisFileNameEPS3 = sprintf('E_%0.3fPa_WorkEnergy_MTvTFM.eps', forceFieldParameters.YoungModulusPa);             
