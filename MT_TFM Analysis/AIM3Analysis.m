@@ -598,7 +598,7 @@ format longg
     titleTrackStr = sprintf('Tracking Method: %s | Max. Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181));
     title({titleTrackStr, ...
         sprintf('%s.%s\n', ND2FileNameDIC, ND2FileExtensionDIC)}, 'FontWeight', 'bold', 'interpreter', 'none')
-    legend('No Drift-Correction', 'Location','best')
+    legend('No Drift-Correction', 'Location','eastoutside')
     
     MagBeadPlotFullFileNameFig = fullfile(MagBeadOutputPath, 'MagBeadDisplacementsPlusMax.fig');
     MagBeadPlotFullFileNamePNG = fullfile(MagBeadOutputPath, 'MagBeadDisplacementsPlusMax.png');    
@@ -1085,7 +1085,7 @@ format longg
     title(titleStr)
     xlabel('\rmtime [s]', 'FontName', PlotsFontName)
     ylabel('\bf\it\Delta\rm_{MT}(\itt\rm)\bf\rm [\mum]', 'FontName', PlotsFontName);
-    legend('Drift not corrected', 'Drift corrected', 'location', 'best')
+    legend('Drift not corrected', 'Drift corrected', 'location', 'eastoutside')
    
     ImageHandle1 = getframe(figHandle);
     Image_cdata1 = ImageHandle1.cdata;
@@ -1616,7 +1616,7 @@ format longg
     plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_averaged(FramesPlotted), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
     hold on
     plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_raw(FramesPlotted), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
-    legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters','location', 'best')
+    legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters','location', 'eastoutside')
     xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
     xlabel(sprintf('\\rm %s', xLabelTime));
     ylabel('Reg. param.');  
@@ -1638,7 +1638,7 @@ format longg
     if strcmpi(CalculateRegParamMethod, 'Yes')
         plot(TimeStampsRT_EPI(FramesPlotted), log10(reg_corner_raw(FramesPlotted)), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
         legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters', ...
-            'location', 'best')
+            'location', 'eastoutside')
     end
     xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
     ylabel('\itlog_{10}\rm(Reg. param.)\rm');  
@@ -1725,7 +1725,7 @@ format longg
         parfor_progress(-1,TractionForcePath);
     end
     parfor_progress(0,TractionForcePath);
-    fprintf('Re-Evaluating with raw %s parameters is Completed.\n', reg_cornerChoiceStr)
+    fprintf('Re-Evaluating with averaged %s parameters is Completed.\n', reg_cornerChoiceStr)
 % % ----------end parallel pool 
 %     delete(gcp('nocreate')) 
 % %
@@ -1881,7 +1881,33 @@ format longg
    if CloseFigures, close all; end
 
 %% Superimpose TFM with MT results. Combined MT and TFM results into a single plot.
-    figHandleForce_MTvTFM = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
+    titleEPIstr =  sprintf('Max displ. of maximal microsphere = %0.3f %sm.', FluoroBeadTrackedMaxDisplacementStruct.MaxDisplMicronsXYnet(3), char(181));
+    titleDICstr = sprintf('Max. displ. of mag bead = %0.3f %sm.', BeadMaxNetDisplMicron, char(181));
+    titleStr = {titleStr1_1, titleDICstr, titleEPIstr};
+
+    figHandleMaxDispl_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
+    set(figHandleMaxDispl_MTvTFM, 'Position', [275, 435, 825, 375])
+    plot(TimeStampsRT_Abs_EPI(FramesPlotted), FluoroBeadTrackedMaxDisplacementStruct.TxRedBeadMaxNetDisplacementMicrons(FramesPlotted, 3), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
+    hold on
+    plot(TimeStampsRT_Abs_DIC(FramesPlotted), BeadPositionXYdisplMicron(FramesPlotted,3), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
+    xlim([0, max([TimeStampsRT_Abs_DIC(numel(FramesPlotted)), TimeStampsRT_Abs_EPI(numel(FramesPlotted))])]);
+    title(titleStr, 'interpreter', 'none');
+    set(findobj(gcf,'type', 'axes'), ...
+        'FontSize',12, ...
+        'FontName', 'Helvetica', ...
+        'LineWidth',1, ...
+        'XMinorTick', 'on', ...
+        'YMinorTick', 'on', ...
+        'TickDir', 'out', ...
+        'TitleFontSizeMultiplier', 0.9, ...
+        'TitleFontWeight', 'bold', ...
+        'TickLength', [0.015, 0.030]);     % Make axes bold     
+    xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
+    set(xlabelHandle, 'FontName', PlotsFontName)
+    ylabel('\bf|\it\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm or \bf|\it\Delta\rm_{TxRed}(\itt\rm)\bf|\rm [\mum]', 'FontName', PlotsFontName); 
+    legend('\bf|\it\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm', '\bf|\it\Delta\rm_{TxRed}(\itt\rm)\bf|\rm', 'Location','bestoutside')
+
+    figHandleForce_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleForce_MTvTFM, 'Position', [275, 435, 825, 375])
     plot(TimeStampsRT_Abs_EPI(FramesPlotted), ConversionNtoNN * ForceN(FramesPlotted, 3), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
     hold on
@@ -1901,9 +1927,9 @@ format longg
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf|\itF\rm(\itt\rm)\bf|\rm or \bf|\itF_{MT}\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName); 
-    legend('\bf|\itF\rm(\itt\rm)\bf|\rm', '\bf|\itF_{MT}\rm(\itt\rm)\bf|\rm', 'Location','best')
+    legend('\bf|\itF\rm(\itt\rm)\bf|\rm', '\bf|\itF_{MT}\rm(\itt\rm)\bf|\rm', 'Location','eastoutside'  )
 
-    figHandleWorkEnergy_MTvTFM = figure('visible',showPlot, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
+    figHandleWorkEnergy_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleWorkEnergy_MTvTFM, 'Position', [275, 435, 825, 375])
     plot(TimeStampsRT_Abs_DIC(FramesPlotted), CompiledMT_Results.WorkAllFramesNmSummed(FramesPlotted) .* ConversionNtoNN ./ ConversionMicrontoMeters, 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
     hold on
@@ -1923,7 +1949,7 @@ format longg
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf\itW\rm\it\rm_{MT}(\itt\rm)\bf\rm or \itU\rm(\itt\rm) [nN.\mum or fJ]', 'FontName', PlotsFontName); 
-    legend('\bf\itW\rm\it\rm_{MT}(\itt\rm)\bf\rm', '\itU\rm(\itt\rm)', 'Location','best')               
+    legend('\bf\itW\rm\it\rm_{MT}(\itt\rm)\bf\rm', '\itU\rm(\itt\rm)', 'Location','eastoutside')               
 
 
    for CurrentPlotType = 1:numel(PlotChoice)

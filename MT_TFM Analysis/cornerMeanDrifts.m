@@ -7,12 +7,12 @@
     function meanDriftFrame = cornerMeanDrifts(MD_DIC, CurrentFrame, DriftROI_rect, RefFrameDIC_RectImage, ...
         TransformationType, optimizer, metric)
         cornerCount = 4;
-%         nGPU = gpuDeviceCount;
-%         if nGPU > 0
-%             useGPU = true;
-%         else
+        nGPU = gpuDeviceCount;
+        if nGPU > 0
+            useGPU = true;
+        else
             useGPU = false;
-%         end
+        end
     
         CurrentFrameImage = MD_DIC.channels_.loadImage(CurrentFrame);
         if useGPU, CurrentFrameImage = gpuArray(CurrentFrameImage); end
