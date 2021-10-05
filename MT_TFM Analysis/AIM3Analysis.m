@@ -575,8 +575,11 @@ format longg
     fprintf('DIC Tracking output is saved as: \n\t%s\n', MagBeadTrackedDisplacementsFullFileName);
 
     % ---------------------- Plotting  ----------------------
-    FramesDoneNumbersDIC = 1:min([size(FramesDoneNumbersDIC, 2), size(TimeStampsRT_Abs_DIC, 1)]);
-    
+            % Finding out what the last frame count is 
+    LastFrame_DIC = min([numel(TimeStampsRT_Abs_DIC), numel(BeadPositionXYdisplMicron), VeryLastFrame]);       
+%     FramesDoneNumbersDIC = FirstFrame_DIC:LastFrame_DIC;
+%     FramesDoneNumbersDIC = 1:min([size(FramesDoneNumbersDIC, 2), size(TimeStampsRT_Abs_DIC, 1)]);
+%     
     showPlots = 'on';
     figHandle = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible 
     plot(TimeStampsRT_Abs_DIC(FramesDoneNumbersDIC), BeadPositionXYdisplMicron(FramesDoneNumbersDIC,3), 'b-', 'LineWidth', 1)
