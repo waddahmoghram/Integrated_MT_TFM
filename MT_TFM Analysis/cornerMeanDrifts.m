@@ -7,12 +7,12 @@
     function meanDriftFrame = cornerMeanDrifts(MD_DIC, CurrentFrame, DriftROI_rect, RefFrameDIC_RectImage, ...
         TransformationType, optimizer, metric)
         cornerCount = 4;
-%         nGPU = gpuDeviceCount;
-%         if nGPU > 0
-%             useGPU = true;
-%         else
+        nGPU = gpuDeviceCount;
+        if nGPU > 0
+            useGPU = true;
+        else
             useGPU = false;
-%         end
+        end
     
         CurrentFrameImage = MD_DIC.channels_.loadImage(CurrentFrame);
         if useGPU, CurrentFrameImage = gpuArray(CurrentFrameImage); end
@@ -20,10 +20,8 @@
         
         for jj = 1:cornerCount
             CurrentFrameRectImage{jj} = imcrop(CurrentFrameImageAdjust,  DriftROI_rect(jj, :)); 
-            if isgpuarray(RefFrameDIC_RectImage{jj})
+            if useGPU
                 RefFrameDIC_RectImage{jj} = double(gather(RefFrameDIC_RectImage{jj}));
-            end
-            if isgpuarray(RefFrameDIC_RectImage{jj})
                 CurrentFrameRectImage{jj} = double(gather(CurrentFrameRectImage{jj}));
             end
             tFormMatrix = imregtform(RefFrameDIC_RectImage{jj}, CurrentFrameRectImage{jj} , TransformationType, optimizer, gather(metric));            
