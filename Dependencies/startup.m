@@ -1,4 +1,3 @@
-cd \
 cpuCount = feature('numcores')
 threadCount = str2double(getenv('NUMBER_OF_PROCESSORS'))
 gpuDev = gpuDevice
