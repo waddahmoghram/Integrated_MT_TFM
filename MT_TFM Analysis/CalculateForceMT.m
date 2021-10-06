@@ -433,7 +433,7 @@ function [Force_xyz_N, Force_xy_N, WorkBeadJ_Half_Cycles, WorkCycleFirstFrame, W
             FluxReadingsStatus(ii,2) = 1;
         else
             FluxON(ii) = false;
-            FluxReadingsStatus(ii,2) = 1;
+            FluxReadingsStatus(ii,2) = -1;
         end
         FluxReadingsStatus(ii,3) = AssignedFluxSetpoint;
     end  
