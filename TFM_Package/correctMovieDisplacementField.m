@@ -427,7 +427,7 @@ function correctMovieDisplacementField(movieData,varargin)
 %     dmax = -1;
 %     dmin = Inf;
     band = 0;
-    reg_grid1 = createRegGridFromDisplField(displField,1,1);
+    reg_grid = createRegGridFromDisplField(displField,1,1);
 %     ---------------------------------- 
     disp('Identifying the limits of the interpolated displacement grid limits over all frames without generating it yet.')
     disp('Note that these values might be extreme due to noise. Rely more on outlier-cleaned/filtered/drift corrected values')
@@ -459,7 +459,7 @@ function correctMovieDisplacementField(movieData,varargin)
     [dmin, dminIdx] = min(dminTMP(:,1));
 %     ----------------------------------
     %%
-    displFieldProc.setTractionMapLimits([dmin, dmax])
+    displFieldCorrProc.setTractionMapLimits([dmin, dmax])
     dminMicrons = dmin  * (movieData.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
     dmaxMicrons = dmax  * (movieData.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
     disp(['Estimated displacement minimum = ' num2str(dminMicrons) ' microns.'])
