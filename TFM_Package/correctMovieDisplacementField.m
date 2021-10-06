@@ -434,7 +434,8 @@ function correctMovieDisplacementField(movieData,varargin)
     dmaxTMP = nan(FramesNum, 2);
     dminTMP = nan(FramesNum, 2);
 
-    parfor_progress(FramesNum);
+    parfor_progressPath = movieData.outputDirectory_;
+    parfor_progress(FramesNum, parfor_progressPath);
     parfor ii=1:FramesNum
         %Load the saved body heat map.
         [~,fmat, ~, ~] = interp_vec2grid(displField(ii).pos(:,1:2), displField(ii).vec(:,1:2),[],reg_grid1);            % 1:cluster size
@@ -450,9 +451,9 @@ function correctMovieDisplacementField(movieData,varargin)
         dmaxTMP(ii, :) = max(max(fnorm_vec));
         dminTMP(ii, :) = min(min(fnorm_vec));
 
-        parfor_progress;
+        parfor_progress(-1, parfor_progressPath);
     end
-    parfor_progress(0);
+    parfor_progress(0, parfor_progressPath);
     dmax = max(dmaxTMP);
     dmin = min(dminTMP);
 %     ----------------------------------

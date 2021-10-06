@@ -542,7 +542,7 @@ format longg
             parfor_progress(0, MagBeadOutputPath);
             disp('Tracking the displacement of the magnetic bead complete')
             BeadPositionXYcenter = BeadPositionXYCornerPixels + BeadROIcenterPixels + largerROIPositionPixels; 
-        otherwiseTrackingMethod
+        otherwise
             return
     end
 %     delete(gcp('nocreate')) 
