@@ -1278,7 +1278,7 @@ format longg
         %{
         initial guess based on this paper.
         Y. Yang, L. M. Leone, and L. J. Kaufman,
-           ???Elastic Moduli of Collagen Gels Can Be Predicted from Two-Dimensional Confocal Microscopy" 
+           "Elastic Moduli of Collagen Gels Can Be Predicted from Two-Dimensional Confocal Microscopy" 
             Biophys. J., vol. 97, no. 7, pp. 2051???2060, Oct. 2009.
         %}       
     
@@ -1406,7 +1406,7 @@ format longg
         'YoungModulusPaInitialGuess', 'CornerPercentage', 'ForceIntegrationMethod', 'gridMagnification', 'WorkBeadJ_Half_Cycle', 'YoungModulusOptimizedCycle', ...
         'YoungModulusPaOptimum', 'GridtypeChoiceStr', 'PaddingChoiceStr', 'SpatialFilterChoiceStr', 'WienerWindowSize', 'FramesRegParamNumbers', ...
         'HanWindowChoice', 'options', 'GelType', '-v7.3');
-    disp('Optimzation output saved!');
+    disp('Optimization output saved!');
 
 %% ============================ Re-evaluating traction stresses with the raw regularization parameters.
     TractionForcePath = fullfile(displFieldPath, '..', 'forceField');
@@ -1802,7 +1802,7 @@ format longg
         'TitleFontSizeMultiplier', 0.9, ...
         'TitleFontWeight', 'bold', ...
         'TickLength', [0.015, 0.030]);     % Make axes bold     
-    ylabel('\bf\itF_{x}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
+    ylabel('\bf|\itF_{x}\rm\bf|(\itt\rm) [nN]', 'FontName', PlotsFontName);    
     % Flip to Cartesian Coordinates in the Plot (Negative pointing downwards). Add a negative Sign before plot. 
     subplot(3,1,3)
     plot(TimeStampsRT_EPI(FramesPlotted), - ConversionNtoNN * ForceN(FramesPlotted, 2), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)       % Flip the y-coordinates to Cartesian
@@ -1819,7 +1819,7 @@ format longg
         'TickLength', [0.015, 0.030]);     % Make axes bold     
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
-    ylabel('\bf\itF_{y}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
+    ylabel('\bf|\itF_{y}\rm\b|(\itt\rm) [nN]', 'FontName', PlotsFontName);    
 % 2.__________________
     figHandleEnergy = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleEnergy, 'Position', [275, 435, 825, 375])
@@ -1906,8 +1906,8 @@ format longg
         'TickLength', [0.015, 0.030]);     % Make axes bold     
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
-    ylabel('\bf|\it\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm or \bf|\it\Delta\rm_{TxRed}(\itt\rm)\bf|\rm [\mum]', 'FontName', PlotsFontName); 
-    legend('\bf|\it\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm', '\bf|\it\Delta\rm_{TxRed}(\itt\rm)\bf|\rm', 'Location','bestoutside')
+    ylabel('\bf|\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm or \bf|\Delta\rm_{TxRed}(\itt\rm)\bf|\rm [\mum]', 'FontName', PlotsFontName); 
+    legend('\bf|\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm', '\bf|\Delta\rm_{TxRed}(\itt\rm)\bf|\rm', 'Location','bestoutside')
 
     figHandleForce_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleForce_MTvTFM, 'Position', [275, 435, 825, 375])
@@ -2010,4 +2010,8 @@ format longg
 
 %% Open the analysis path if possible
     % clean up workspace data files to save up space
-    delete(strcat(OutputPathNameDIC, '.mat'))
+    try
+        delete(strcat(OutputPathNameDIC, '.mat'))
+    catch
+        % file already deleted
+    end
