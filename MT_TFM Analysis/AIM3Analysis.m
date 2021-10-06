@@ -545,8 +545,8 @@ format longg
         otherwiseTrackingMethod
             return
     end
-%     delete(gcp('nocreate')) 
-%     
+    delete(gcp('nocreate')) 
+    
     % say (20,20) top-left of ROI = (1,1), Therefore, (2,2) in ROI = (20,20) + (2,2) - (1,1) = (21,21) in Bigger Position for imcrop()    
     MagBeadCoordinatesXYpixels = BeadPositionXYcenter .* [1, -1];           % Convert the y-coordinates to Cartesian to match previous output.    
     MagBeadCoordinatesXYNetpixels = BeadPositionXYcenter - BeadPositionXYcenter(1,:);       
@@ -959,7 +959,7 @@ format longg
 %     try
 %        parpool.delete                % shut down the parallel core to flush RAM and GPU memory
 %     catch
-%        delete((gcp('nocreate')))% no parallel pool running
+       delete((gcp('nocreate')))% no parallel pool running
 %     end
 
     %% =============================== 9.0 Updating coordinates to account for drift-         
@@ -1267,7 +1267,7 @@ format longg
     end
     parfor_progress(0, displFieldPath);
     % ----------end parallel pool
-%     delete((gcp('nocreate')))% no parallel pool running
+    delete((gcp('nocreate')))% no parallel pool running
 
     [dmax, dmaxIdx] = max(dmaxTMP(:,1));
     dmaxMicrons = dmax  * (MD_EPI.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
@@ -1389,7 +1389,7 @@ format longg
 %     try
 %        parpool.delete                % shut down the parallel core to flush RAM and GPU memory
 %     catch
-%        delete(gcp('nocreate'))% no parallel pool running
+       delete(gcp('nocreate'))% no parallel pool running
 %     end
 
     fprintf('Time elapsed: *** %0.3f sec *** to calculate the force-based elastic modulus to *** %d decimal places***.\n\tYoung''s Elastic Modulus for Cycle #%d = %0.3f Pa.\n', ...
@@ -1468,7 +1468,7 @@ format longg
     fprintf('Re-Evaluating displacement & traction stress vector fields & energy density scalar field with raw %s parameters...[Completed].\n', reg_cornerChoiceStr)
 
 %   % ----------end parallel pool & start a new one
-%    delete(gcp('nocreate')) 
+   delete(gcp('nocreate')) 
 % 
 % =============================== PLOTTING Raw regularization parameters & traction forces/energy
     FramesPlotted(FramesDoneNumbers) = ~isnan(ForceN(FramesDoneNumbers));
