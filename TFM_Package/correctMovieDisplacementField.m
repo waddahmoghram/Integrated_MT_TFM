@@ -152,8 +152,9 @@ function correctMovieDisplacementField(movieData,varargin)
 
     outlierThreshold = correctionParameters.outlierThreshold;
                               % Remove the empty ones. 
+    parfor_progressPath = movieData.outputDirectory_;
     tic;    
-    parfor_progress(nFrames);
+    parfor_progress(nFrames, parfor_progressPath);
     parfor j = 1:nFrames
 %     for j = FramesTrackedNumbers
         % Outlier detection
@@ -204,10 +205,10 @@ function correctMovieDisplacementField(movieData,varargin)
 %             waitbar(j/numel(FramesTrackedNumbers),wtBar,sprintf([logMsg timeMsg(tj*(nFrames-j)/j)]));
 %         end
 %         if feature('ShowFigureWindows'), parfor_progress; end
-        parfor_progress;
+        parfor_progress(-1, parfor_progressPath);
     end
 %     if feature('ShowFigureWindows'), parfor_progress(0); end
-    parfor_progress(0);
+    parfor_progress(0, parfor_progressPath);
     
     if correctionParameters.fillVectors
         % Now this is the real cool step, to run trackStackFlow with known

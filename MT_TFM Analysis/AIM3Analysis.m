@@ -1612,13 +1612,13 @@ format longg
     titleStr3 = {titleStr1_1, titleStr1_2, sprintf('Regularization Method: %s', reg_cornerChoiceStr)};
  
     figHandleRegParams = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
-    set(figHandleRegParams, 'Position', [100, 100, 825, 600])
+    set(figHandleRegParams, 'Position', [100, 100, 825, 800])
 
     sub1 = subplot(2,1,1);
     plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_averaged(FramesPlotted), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
     hold on
     plot(TimeStampsRT_EPI(FramesPlotted), reg_corner_raw(FramesPlotted), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
-    legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters','location', 'eastoutside')
+    legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters','location', 'southoutside')
     xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
     xlabel(sprintf('\\rm %s', xLabelTime));
     ylabel('Reg. param.');  
