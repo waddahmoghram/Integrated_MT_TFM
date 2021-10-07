@@ -1170,6 +1170,7 @@ format longg
     end
     if CloseFigures, close all; end
     % ------------------- save all variables to workspace so that I can continue my analysis
+    CleanupWorkspace;
     save(OutputPathNameDIC, '-v7.3')
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
@@ -1819,7 +1820,7 @@ format longg
         'TickLength', [0.015, 0.030]);     % Make axes bold     
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
-    ylabel('\bf|\itF_{y}\rm\b|(\itt\rm) [nN]', 'FontName', PlotsFontName);    
+    ylabel('\bf|\itF_{y}\rm\bf|(\itt\rm) [nN]', 'FontName', PlotsFontName);    
 % 2.__________________
     figHandleEnergy = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleEnergy, 'Position', [275, 435, 825, 375])
@@ -2015,3 +2016,6 @@ format longg
     catch
         % file already deleted
     end
+    CleanupWorkspace
+    WorkspaceFileName = fullfile(CombinedAnalysisPath, 'FinalWorkspace');
+    save(CombinedAnalysisPath, who, '-v7.3')
