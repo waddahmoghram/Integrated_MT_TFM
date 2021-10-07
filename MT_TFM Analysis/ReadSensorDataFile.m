@@ -454,10 +454,14 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
 
             % 2. Plot Current (V) Signal over Time
             figCurrent = figure('color', 'w', 'Renderer', RendererMode);
-            plot(TimeSec, SensorData(:,3), 'b.', 'MarkerSize',2 )
+            if strcmpi(SensorDataColumns{1},'Current AO (V)')
+            plot(TimeSec, SensorData(:,1) *0.4, 'b.', 'MarkerSize',2 ) %% AO Voltage is -10 to 104 to map -4 to 4 Amp
+                title({'Current to the Needle Coils based on AO voltage', strcat(SensorDataFileName, '.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none')
+            else
+                plot(TimeSec, SensorData(:,3), 'b.', 'MarkerSize',2 )
                 title({'Current to the Needle Coils through 1-Amp Resistor', strcat(SensorDataFileName, '.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none')
-%             plot(TimeSec, SensorData(:,1) *0.4, 'b.', 'MarkerSize',2 ) %% AO Voltage is -10 to 104 to map -4 to 4 Amp
-%                 title({'Current to the Needle Coils based on AO voltage', strcat(SensorDataFileName, '.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none')
+            end
+                
             hold on
             plot(TimeSec, zeros(size(TimeSec)), 'r-')
             xlabel('Time [s]', 'FontName', PlotsFontName)

@@ -600,7 +600,7 @@ format longg
     titleTrackStr = sprintf('Tracking Method: %s | Max. Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181));
     title({titleTrackStr, ...
         sprintf('%s.%s\n', ND2FileNameDIC, ND2FileExtensionDIC)}, 'FontWeight', 'bold', 'interpreter', 'none')
-    legend('No Drift-Correction', 'Location','southOutside')
+    legend('No Drift-Correction', 'Location','eastoutside')
     
     MagBeadPlotFullFileNameFig = fullfile(MagBeadOutputPath, 'MagBeadDisplacementsPlusMax.fig');
     MagBeadPlotFullFileNamePNG = fullfile(MagBeadOutputPath, 'MagBeadDisplacementsPlusMax.png');    
@@ -1037,7 +1037,7 @@ format longg
     GelConcentrationMgMlStr = ND2FilePrefix{2};
     GelConcentrationMgMl = sscanf(GelConcentrationMgMlStr, '%f'); 
     GelConcentrationMgMlStr = sprintf('%0.3f mg/mL', GelConcentrationMgMl);
-    GelPolymerizationTempC = ND2FilePrefix{3};
+    GelPolymerizationTempC = ND2FilePrefix(3);
     GelSampleNumber = ND2FileNamePartsDIC{1};
     BeadNumber = ND2FileNamePartsDIC{2};
     RunNumber = ND2FileNamePartsDIC{5};
@@ -1049,7 +1049,7 @@ format longg
             EDCorNOT = true;
     end
 
-    switch GelPolymerizationTempC
+    switch GelPolymerizationTempC{:}
         case '37C'
             GelPolymerizationTempC = sprintf('%d%sC', 37, char(176));
         case 'RT'
@@ -1087,7 +1087,7 @@ format longg
     title(titleStr)
     xlabel('\rmtime [s]', 'FontName', PlotsFontName)
     ylabel('\bf\it\Delta\rm_{MT}(\itt\rm)\bf\rm [\mum]', 'FontName', PlotsFontName);
-    legend('Drift not corrected', 'Drift corrected', 'location', 'southOutside')
+    legend('Drift not corrected', 'Drift corrected', 'location', 'eastoutside')
    
     ImageHandle1 = getframe(figHandle);
     Image_cdata1 = ImageHandle1.cdata;
