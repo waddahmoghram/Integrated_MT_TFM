@@ -304,10 +304,10 @@ function correctMovieDisplacementField(movieData,varargin)
             end
             disp(['Done for frame ' num2str(j) '/' num2str(nFrames) '.'])
             % Update the waitbar
-            if feature('ShowFigureWindows')
-                tj=toc;
-                waitbar(j/nFrames,wtBar,sprintf([logMsg timeMsg(tj*(nFrames-j)/j)]));
-            end
+%             if feature('ShowFigureWindows')
+%                 tj=toc;
+%                 waitbar(j/nFrames,wtBar,sprintf([logMsg timeMsg(tj*(nFrames-j)/j)]));
+%             end
         end
         
         %Filtering again

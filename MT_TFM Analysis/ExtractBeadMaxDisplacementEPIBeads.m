@@ -282,17 +282,20 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     dmaxTMP = nan(FramesNum, 1);
     dmaxTMPindex = nan(FramesNum, 1);
 
+    if ~exist('FramesOutputPath', 'var')
+        [FramesOutputPath, ~ , ~] = fileparts(MD.processes_{end}.outFilePaths_{1});
+    end
     disp('Finding the bead with the maximum displacement...in progress')
-    parfor_progress(numel(FramesDoneNumbers));
+    parfor_progress(numel(FramesDoneNumbers), FramesOutputPath);
     parfor CurrentFrame = FramesDoneNumbers
         dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
         displField(CurrentFrame).vec(:,3)  = dnorm_vec;
         dmaxTMP(CurrentFrame) = max(dnorm_vec);
         [~, IdxTMP] = max(dnorm_vec);
         dmaxTMPindex(CurrentFrame) = IdxTMP;
-        parfor_progress;
+        parfor_progress(-1, FramesOutputPath);
     end
-    parfor_progress(0);
+    parfor_progress(0, FramesOutputPath);
     disp('Finding the bead with the maximum displacement...complete')
 
     [~, MaxDisplFrameNumber]  = max(dmaxTMP);
@@ -311,13 +314,13 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     TxRedBeadMaxNetPositionPixels = nan(numel(FramesDoneNumbers), 2);
     TxRedBeadMaxNetDisplacementPixels = nan(numel(FramesDoneNumbers), 3);
     disp('Extracting the displacement of the bead with the maximum displacement...in progress')
-    parfor_progress(numel(FramesDoneNumbers));
+    parfor_progress(numel(FramesDoneNumbers), FramesOutputPath);
     parfor CurrentFrame = FramesDoneNumbers
         TxRedBeadMaxNetPositionPixels(CurrentFrame, :) = displField(CurrentFrame).pos(MaxDisplFieldIndex,:);
         TxRedBeadMaxNetDisplacementPixels(CurrentFrame, :) = displField(CurrentFrame).vec(MaxDisplFieldIndex,:);
-        parfor_progress;
+        parfor_progress(-1, FramesOutputPath);
     end
-    parfor_progress(0);
+    parfor_progress(0, FramesOutputPath);
     disp('Extracting the displacement of the bead with the maximum displacement...complete')    
     TxRedBeadMaxNetDisplacementMicrons = TxRedBeadMaxNetDisplacementPixels .* ScaleMicronPerPixel;            % convert from micron to nm
        
