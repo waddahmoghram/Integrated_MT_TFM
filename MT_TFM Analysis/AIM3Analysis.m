@@ -2018,4 +2018,4 @@ format longg
     end
     CleanupWorkspace
     WorkspaceFileName = fullfile(CombinedAnalysisPath, 'FinalWorkspace');
-    save(CombinedAnalysisPath, who, '-v7.3')
+    save(CombinedAnalysisPath, '-v7.3')
