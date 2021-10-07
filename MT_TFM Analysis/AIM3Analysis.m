@@ -597,7 +597,7 @@ format longg
     set(xlabelHandle, 'FontName', PlotsFontName);
     ylabelHandle = ylabel('\bf|\it\Delta\rm_{MT}\rm(\itt\rm)\bf|\rm [\mum]');
     set(ylabelHandle, 'FontName', PlotsFontName);    
-    titleTrackStr = sprintf('Tracking Method: %s | Max. Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181));
+    titleTrackStr = sprintf('Tracking Method: %s, Max. Displacement = %0.3f %sm @ %0.2f', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181), FrameRateRT_DIC);
     title({titleTrackStr, ...
         sprintf('%s.%s\n', ND2FileNameDIC, ND2FileExtensionDIC)}, 'FontWeight', 'bold', 'interpreter', 'none')
     legend('No Drift-Correction', 'Location','eastoutside')
@@ -2018,4 +2018,4 @@ format longg
     end
     CleanupWorkspace
     WorkspaceFileName = fullfile(CombinedAnalysisPath, 'FinalWorkspace');
-    save(CombinedAnalysisPath, who, '-v7.3')
+    save(WorkspaceFileName, '-v7.3')

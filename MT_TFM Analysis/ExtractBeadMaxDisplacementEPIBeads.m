@@ -268,6 +268,7 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
         xLabelTime = 'Time [s]';
     else
         xLabelTime = 'Time [s]';            % time stamps is given to the function
+        FrameRate =  1/mean(diff(TimeStamps-TimeStamps(1)));   % first timestamps is off', Start at 0
     end
     
     LastFrameOverall = min([LastFrame, numel(TimeStamps)]);
@@ -353,8 +354,7 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     DisplType = sprintf('Maximum Net EPI Bead Displacement (tracked). %s', CorrectionType);
     title({DisplType,sprintf('Max at (X,Y) = (%0.2f,%0.2f) pix in Frame %d/%d = %0.3f sec', ...
         MaxDispl_PosXY_Pixels, MaxDisplFrameNumber, LastFrame, TimeStamps(MaxDisplFrameNumber)), ...
-        sprintf('Max displacement = %0.3f pix = %0.3f %sm', MaxDisplNetPixels(3), MaxDisplNetMicrons(3),char(181))}, 'interpreter', 'none')
-
+        sprintf('Max displacement = %0.3f pix = %0.3f %sm @ %0.2f FPS', MaxDisplNetPixels(3), MaxDisplNetMicrons(3),char(181), FrameRate)}, 'interpreter', 'none')
     MaxDisplacementDetails.TimeFrameSeconds = TimeStampsSec;
     MaxDisplacementDetails.TxRedBeadMaxNetPositionPixels = TxRedBeadMaxNetPositionPixels;
     MaxDisplacementDetails.TxRedBeadMaxNetDisplacementPixels = TxRedBeadMaxNetDisplacementPixels;
@@ -371,6 +371,7 @@ function [MaxDisplacementDetails, figHandleBeadMaxNetDispl] = ExtractBeadMaxDisp
     
     %%
     if exist('FramesOutputPath', 'var')
+        if ~exist('TimeStampChoice', 'var'), TimeStampChoice = 'Real-time'; end
         outputPlotFileNameFig = fullfile(FramesOutputPath, sprintf('Net Displacement_TxRed_max_beads_%s.fig', TimeStampChoice));
     %     outputPlotFileNameTIF = fullfile(FramesOutputPath,  sprintf('Net Displacement_TxRed_max_beads_%s.tif', TimeStampChoice));
         outputPlotFileNamePNG = fullfile(FramesOutputPath,  sprintf('Net Displacement_TxRed_max_beads_%s.png', TimeStampChoice));

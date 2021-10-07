@@ -13,7 +13,7 @@ for ii = 1:numel(AllVars)
     ParallelObj(ii) = contains(currentStr, 'parallel.');
     gpuArrayObj(ii) = contains(currentStr, 'gpuArray');
     if MatlabObj(ii) || ParallelObj(ii)
-        eval(sprintf('clear %s', AllVars(ii).name))
+        eval(sprintf('clear %s', AllVars(ii).name));
     end
     if gpuArrayObj(ii)
         eval(sprintf('%s = gather(%s)',AllVars(ii).name,AllVars(ii).name));
