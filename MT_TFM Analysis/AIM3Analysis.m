@@ -12,7 +12,7 @@ format longg
     SaveOutput = true;
     showPlots = 'on';
     ShowOutput = 1;            % trueFramesPlottedDIC
-    CloseFigures = true;                      % switch to false if you want to leave them up
+    CloseFigures = false;                      % switch to false if you want to leave them up for viewing
     IdenticalCornersChoice = 'Yes';             % choose 4 identical corners.
     DCchoice = 'Yes';
     RendererMode = 'painters';
@@ -88,7 +88,7 @@ format longg
     GrayLevelsPercentile = [0.05, 0.999];                        % percentiles of intensity of the microspheres.
 % ----------------------------------------------------------------------------------------------------------------------------
     % Gridding Parameters
-    EdgeErode = 1;                              % do not change to 0. Update 2020-01-29  Edge Erode to make it a square grid 
+    EdgeErode = 0;                              % make it square
     gridMagnification = 1;                      %% (to go with the original rectangular grid size created to interpolate displField)ForceIntegrationMethod = 'Summed';
     TractionStressMethod = 'FTTC';   
     GridtypeChoiceStr = 'Even Grid';
@@ -599,8 +599,7 @@ format longg
     set(ylabelHandle, 'FontName', PlotsFontName);    
     titleTrackStr = sprintf('Tracking Method: %s | Max. Displacement = %0.3f %sm', BeadTrackingMethod, BeadMaxNetDisplMicron, char(181));
     title({titleTrackStr, ...
-        sprintf('%s.%s\n', ND2FileNameDIC, ND2FileExtensionDIC)}, 'FontWeight', 'bold', 'interpreter', 'none')
-    legend('No Drift-Correction', 'Location','eastoutside')
+        sprintf('%s.%s', ND2FileNameDIC, ND2FileExtensionDIC), 'No Drift-Correction'}, 'FontWeight', 'bold', 'interpreter', 'none')
     
     MagBeadPlotFullFileNameFig = fullfile(MagBeadOutputPath, 'MagBeadDisplacementsPlusMax.fig');
     MagBeadPlotFullFileNamePNG = fullfile(MagBeadOutputPath, 'MagBeadDisplacementsPlusMax.png');    
@@ -1087,7 +1086,7 @@ format longg
     title(titleStr)
     xlabel('\rmtime [s]', 'FontName', PlotsFontName)
     ylabel('\bf\it\Delta\rm_{MT}(\itt\rm)\bf\rm [\mum]', 'FontName', PlotsFontName);
-    legend('Drift not corrected', 'Drift corrected', 'location', 'eastoutside')
+    legend('Drift not corrected', 'Drift corrected', 'Location', 'southOutside')
    
     ImageHandle1 = getframe(figHandle);
     Image_cdata1 = ImageHandle1.cdata;
@@ -1532,7 +1531,7 @@ format longg
         'TickLength', [0.015, 0.030]);     % Make axes bold       
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
-    ylabel('\bf\itF_{y}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);
+    ylabel('\bf|\itF_{y}\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName);
 % 2.__________________
     figHandleEnergy = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleEnergy, 'Position', [275, 435, 825, 375])
@@ -1640,7 +1639,7 @@ format longg
     if strcmpi(CalculateRegParamMethod, 'Yes')
         plot(TimeStampsRT_EPI(FramesPlotted), log10(reg_corner_raw(FramesPlotted)), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
         legend(sprintf('ON mean = %0.5f.\nOFF mean = %0.5f', reg_corner_averagedON,  reg_corner_averagedOFF), 'Raw Parameters', ...
-            'location', 'eastoutside')
+            'location', 'southOutside')
     end
     xlim([0, TimeStampsRT_EPI(LastFramePlotted)]);
     ylabel('\itlog_{10}\rm(Reg. param.)\rm');  
@@ -1819,7 +1818,7 @@ format longg
         'TickLength', [0.015, 0.030]);     % Make axes bold     
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
-    ylabel('\bf|\itF_{y}\rm\b|(\itt\rm) [nN]', 'FontName', PlotsFontName);    
+    ylabel('\bf|\itF_{y}\rm\bf|(\itt\rm) [nN]', 'FontName', PlotsFontName);    
 % 2.__________________
     figHandleEnergy = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleEnergy, 'Position', [275, 435, 825, 375])
@@ -1929,7 +1928,7 @@ format longg
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf|\itF\rm(\itt\rm)\bf|\rm or \bf|\itF_{MT}\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName); 
-    legend('\bf|\itF\rm(\itt\rm)\bf|\rm', '\bf|\itF_{MT}\rm(\itt\rm)\bf|\rm', 'Location','eastoutside'  )
+    legend('\bf|\itF\rm(\itt\rm)\bf|\rm', '\bf|\itF_{MT}\rm(\itt\rm)\bf|\rm', 'Location','southOutside')
 
     figHandleWorkEnergy_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleWorkEnergy_MTvTFM, 'Position', [275, 435, 825, 375])
@@ -1951,7 +1950,7 @@ format longg
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf\itW\rm\it\rm_{MT}(\itt\rm)\bf\rm or \itU\rm(\itt\rm) [nN.\mum or fJ]', 'FontName', PlotsFontName); 
-    legend('\bf\itW\rm\it\rm_{MT}(\itt\rm)\bf\rm', '\itU\rm(\itt\rm)', 'Location','eastoutside')               
+    legend('\bf\itW\rm\it\rm_{MT}(\itt\rm)\bf\rm', '\itU\rm(\itt\rm)', 'Location','southOutside')               
 
 
    for CurrentPlotType = 1:numel(PlotChoice)
