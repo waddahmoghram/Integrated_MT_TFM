@@ -88,7 +88,7 @@ format longg
     GrayLevelsPercentile = [0.05, 0.999];                        % percentiles of intensity of the microspheres.
 % ----------------------------------------------------------------------------------------------------------------------------
     % Gridding Parameters
-    EdgeErode = 1;                              % do not change to 0. Update 2020-01-29  Edge Erode to make it a square grid 
+    EdgeErode = 0;                              % do not change to 0. Update 2020-01-29  Edge Erode to make it a square grid 
     gridMagnification = 1;                      %% (to go with the original rectangular grid size created to interpolate displField)ForceIntegrationMethod = 'Summed';
     TractionStressMethod = 'FTTC';   
     GridtypeChoiceStr = 'Even Grid';
@@ -190,6 +190,7 @@ format longg
             disp('Opening the EPI ND2 Video File to get path and filename info to be analyzed')
             [ND2fileEPI, ND2pathEPI] = uigetfile(fullfile(ND2pathDIC, '*.nd2'), 'EPI ND2 video file');    
             if ND2fileEPI == 0
+                clear
                 error('No file was selected');
             end
             
@@ -1187,7 +1188,7 @@ format longg
         try
             poolObj = parpool('local', poolsize);
         catch
-            try 
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      try 
                 parpool;
             catch 
                 warning('matlabpool has been removed, and parpool is not working in this instance');
@@ -2017,5 +2018,18 @@ format longg
         % file already deleted
     end
     CleanupWorkspace
-    WorkspaceFileName = fullfile(CombinedAnalysisPath, 'FinalWorkspace');
+    WorkspaceFileName = fullfile(CombinedAnalysisPath, 'FinalWorkspace.mat');    
     save(WorkspaceFileName, '-v7.3')
+    fprintf('Workspace variables are saved as: \n\t %s\n', WorkspaceFileName)
+    
+    if ispc
+        winopen(CombinedAnalysisPath)
+    elseif isunix
+            % using xdg-open to open a file in Linux. Some Linux systems might not have
+            % xdg-open .In that case displaying as error with the file path
+            cmdToExecute = ['xdg-open ' CombinedAnalysisPath];
+            [status, path] = system(cmdToExecute); %#ok<ASGLU>
+    elseif ismac
+        cmdToExecute = ['open ', CombinedAnalysisPath];
+        [status, path] = system(cmdToExecute); %#ok<ASGLU>
+    end
