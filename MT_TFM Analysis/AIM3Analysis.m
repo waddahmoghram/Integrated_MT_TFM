@@ -88,7 +88,7 @@ format longg
     GrayLevelsPercentile = [0.05, 0.999];                        % percentiles of intensity of the microspheres.
 % ----------------------------------------------------------------------------------------------------------------------------
     % Gridding Parameters
-    EdgeErode = 0;                              % do not change to 0. Update 2020-01-29  Edge Erode to make it a square grid 
+    EdgeErode = 0;
     gridMagnification = 1;                      %% (to go with the original rectangular grid size created to interpolate displField)ForceIntegrationMethod = 'Summed';
     TractionStressMethod = 'FTTC';   
     GridtypeChoiceStr = 'Even Grid';

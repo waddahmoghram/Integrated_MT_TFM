@@ -8,13 +8,15 @@ if gpuDeviceCount ~= 0
     gpuDeviceCount
     gpuDev = gpuDevice
 end
-
+patchJobStorageLocation
 localcluster = parcluster('local')
 localcluster.NumThreads = 1
 localcluster.NumWorkers = threadCount
+delete(localcluster.Jobs)
+localcluster.JobStorageLocation
 delete(gcp('nocreate'))
 
-pause(60)
+% pause(60)
 
 localcluster.parpool(threadCount)
 % parpool(threadCount)
