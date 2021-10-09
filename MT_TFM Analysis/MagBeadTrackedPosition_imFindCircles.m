@@ -7,7 +7,7 @@
 % **************************** FUNCTIONS DEFINED IN THE SCRIPT "AIM3Analysis.m"
 
 function [CurrentBeadCenter, CurrentBeadRadius] = MagBeadTrackedPosition_imFindCircles(MD_DIC, CurrentDIC_FrameNumber, BeadROI_CroppedRectangle, ...
-    BeadRadiusRange, ObjectPolarity, Method, EdgeThreshold, Sensitivity)
+    BeadRadiusRange, ObjectPolarity, Method, EdgeThreshold, Sensitivity, Binarize)
 
 %     nGPU = gpuDeviceCount;
 %     if nGPU > 0
@@ -24,6 +24,9 @@ function [CurrentBeadCenter, CurrentBeadRadius] = MagBeadTrackedPosition_imFindC
     if useGPU, CurrentDIC_FrameFullImage = gpuArray(CurrentDIC_FrameFullImage); end
     CurrentDIC_FrameFullImage = imadjust(CurrentDIC_FrameFullImage, stretchlim(CurrentDIC_FrameFullImage,[0, 1]));   
     CurrentDIC_FrameImage = imcrop(CurrentDIC_FrameFullImage, BeadROI_CroppedRectangle);
+    if Binarize
+        CurrentDIC_FrameImage = imbinarize(CurrentDIC_FrameImage);
+    end
     [CurrentBeadCenter, CurrentBeadRadius, ~] = imfindcircles(CurrentDIC_FrameImage, BeadRadiusRange, 'ObjectPolarity' ,ObjectPolarity, 'Method', Method, 'EdgeThreshold', EdgeThreshold, 'Sensitivity', Sensitivity);   % lowered edge from threshold from 0.8 & sensitivity from 0.95 on 2021-06-27
 %     clear CurrentDIC_FrameImage CurrentDIC_FrameFullImage
 end

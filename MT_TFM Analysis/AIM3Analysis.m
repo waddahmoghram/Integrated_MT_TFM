@@ -423,19 +423,26 @@ format longg
 %                     BeadROIrect = [1,1, size(BeadROI, 2), size(BeadROI, 1)];        % width is columns, and height is rows.
             end
             clear imDimY imDimX
+            
+            binarize = false;
+            [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.7, 'Sensitivity', 0.95);
+            if isempty(centers)
+                [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'bright', 'Method', 'PhaseCode', 'EdgeThreshold', 0.5, 'Sensitivity', 0.50);   %'Sensitivity', 0.8
+            end
+            if isempty(centers)
+                BeadROI_DIC = imbinarize(BeadROI_DIC);          % try binarizing if boundaries aren't as clear cut with the methods above
+                [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'bright', 'Method', 'PhaseCode', 'EdgeThreshold', 0.5, 'Sensitivity', 0.50);   %'Sensitivity', 0.8
+                if isempty(centers)
+                    error('imfindcircle could not find the bead. Try tweaking the parameters or use imregtform() to detect the bead.')
+                else
+                    binarize = true;
+                end
+            end
 
             figMagBeadROI = imshow(BeadROI_DIC, 'InitialMagnification', 400);
             figure(figMagBeadROI.Parent.Parent)
-            try
-                [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'dark', 'Method', 'TwoStage', 'EdgeThreshold', 0.7, 'Sensitivity', 0.95);
-            catch
-                try
-                    [centers, BeadRadius, metric] = imfindcircles(BeadROI_DIC, BeadRadiusRange, 'ObjectPolarity' ,'bright', 'Method', 'PhaseCode', 'EdgeThreshold', 0.5, 'Sensitivity', 0.50);   %'Sensitivity', 0.8
-                catch
-                    error('imfindcircle could not find the bead. Try tweaking the parameters or use imregtform() to detect the bead.')
-                end
-            end
             hold on
+            if isempty(centers), error('imfindcircle could not find the bead. Try tweaking the parameters or use imregtform() to detect the bead.'); end
             viscircles(centers, BeadRadius, 'EdgeColor','b');
             plot(centers(:,1),centers(:,2), 'b.')           % does not work when the needle is attached, or maube the lighting?
 %             BeadROIcenterPixels = ginput(1);
@@ -458,7 +465,7 @@ format longg
             parfor_progress(numel(FramesDoneNumbersDIC), MagBeadOutputPath);
             parfor CurrentDIC_Frame_Numbers = FramesDoneNumbersDIC                
                 [CurrentCenter, CurrentRadius] = MagBeadTrackedPosition_imFindCircles(MD_DIC, CurrentDIC_Frame_Numbers, BeadROI_CroppedRectangle, ...
-                    BeadRadiusRange, 'dark', 'TwoStage', 0.4,  0.8);
+                    BeadRadiusRange, 'dark', 'TwoStage', 0.4,  0.8, binarize);
                 BeadRadius(CurrentDIC_Frame_Numbers, :) = CurrentRadius;
                 BeadPositionXYCenterPixels(CurrentDIC_Frame_Numbers, :) = CurrentCenter;
                 parfor_progress(-1,MagBeadOutputPath);
@@ -568,7 +575,7 @@ format longg
     
     switch BeadTrackingMethod
         case 'imfindcircles()'
-            save(MagBeadTrackedDisplacementsFullFileName,'BeadRadius', '-append')
+            save(MagBeadTrackedDisplacementsFullFileName,'BeadRadius','binarize', '-append')
         case 'imgregtform()'
             save(MagBeadTrackedDisplacementsFullFileName, 'optimizer', 'metric', '-append');
     end
