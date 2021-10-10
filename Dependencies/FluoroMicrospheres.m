@@ -1,5 +1,5 @@
-classdef MagBead
-    %MagBead(BeadID)Summary of this class goes here
+classdef FluoroMicrospheres
+    %FluoroMicrospheres(BeadID)Summary of this class goes here
     %   Other options properties are: 
     % Written by Waddah Moghram, PhD Candidate in Biomedical Engineering on 2021-10-07
 
@@ -11,43 +11,45 @@ classdef MagBead
         AttachedProtein
         IncubationTime_hr
         IncubationTemp_C
-        PositionXY_pix
         FrameScale_micronPerPix
+        PositionXY_pix
         % MaxDisplacement_micron
-        Displacement_micron
+        displField
         DisplacementCorrected_micron                                % You can find max by searching for it in here
         ForceMT_N
         WorkMT_J
         TimeStampsRT_sec
         TimeStampsND2_sec
         GelSample
+        MovieData
         Notes
     end
 
     methods
-        function obj = MagBead(varargin)
-            %MagBead Construct an instance of this class
+        function obj = FluoroMicrospheres(varargin)
+            %FluoroMicrospheres Construct an instance of this class
             %   (ID, Type, diametersMicrons)
 
             ip = inputParser();
             ip.addRequired('BeadID', @ischar);
-            ip.addOptional('Diameter_micron', 4.5, @(x) validateattributes(x, {'numeric'}, {'scalar'}));   
-            ip.addOptional('BeadType', 'Dynabeads M-450 Tosylactivated superparamagnetic beads', @ischar);
-            ip.addOptional('BeadChemistry', 'Tosyl group', @ischar);
-            ip.addOptional('AttachedProtein', 'Human plasma fibronectin purified protein. (Millipore Sigma, REF: FC010)', @ischar);  
+            ip.addOptional('Diameter_micron', 0.5, @(x) validateattributes(x, {'numeric'}, {'scalar'}));   
+            ip.addOptional('BeadType', 'FluoSpheres™ carboxylate-modified polystyrene red fluorescent microspheres', @ischar);
+            ip.addOptional('BeadChemistry', 'carboxylate group', @ischar);
+            ip.addOptional('AttachedProtein', '', @ischar);  
             ip.addOptional('IncubationTime_hr', 1, @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
             ip.addOptional('IncubationTemp_C', 37,  @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
             ip.addOptional('PositionXY_pix', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));   % from top-left corner
             ip.addOptional('FrameScale_micronPerPix', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));            
             % ip.addOptional('MaxDisplacement_micron', [], @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
-            ip.addOptional('Displacement_micron', [], @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
+            ip.addOptional('displField', [], @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
             ip.addOptional('DisplacementCorrected_micron', [], @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
             ip.addOptional('ForceMT_N', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('WorkMT_J', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('TimeStampsRT_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('TimeStampsND2_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('GelSample', [], @(x) isa(x, 'GelSample'));
-            ip.addOptional('Notes', '', @ischar);  
+            ip.addOptional('MovieData', 'Human plasma fibronectin', @isa(MovieData);  
+            ip.addOptional('Notes', 'Human plasma fibronectin', @ischar);  
 
             ip.parse(varargin{:});
             
@@ -61,7 +63,7 @@ classdef MagBead
             obj.PositionXY_pix = ip.Results.PositionXY_pix;             % could be for a single point of time or over time
             obj.FrameScale_micronPerPix = ip.Results.FrameScale_micronPerPix;
             % obj.MaxDisplacement_micron = ip.Results.MaxDisplacement_micron;
-            obj.Displacement_micron = ip.Results.Displacement_micron;
+            obj.displField = ip.Results.displField;
             obj.DisplacementCorrected_micron = ip.Results.DisplacementCorrected_micron;
             obj.ForceMT_N = ip.Results.ForceMT_N;
             obj.WorkMT_J = ip.Results.WorkMT_J;
