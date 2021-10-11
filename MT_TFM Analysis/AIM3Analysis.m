@@ -219,7 +219,16 @@ format longg
         otherwise
             error('Could not open *.nd2 file');
     end
-
+%% ----------------------- Print computer name to a text file
+    ComputerName = getenv('computername');
+    Username = getenv('username');
+    ComputerNameDIC = fullfile(OutputPathNameDIC, strcat(ComputerName, '.txt'));
+    ComputerNameEPI = fullfile(OutputPathNameEPI, strcat(ComputerName, '.txt'));
+    ComputerNameDIC_ID = fopen(ComputerNameDIC, 'wt');
+    ComputerNameEPI_ID = fopen(ComputerNameEPI, 'wt'); 
+    fprintf(ComputerNameDIC_ID, 'Computer ID: %s\n', ComputerName);
+    fprintf(ComputerNameDIC_ID, 'Username: %s\n', Username);
+    fprintf(ComputerNameDIC_ID, 'Start time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
 %% ----------------- Read Sensor Data & Clean it up.    
     switch controlMode    
         case 'Controlled Force'            
@@ -473,7 +482,7 @@ format longg
             parfor_progress(0,MagBeadOutputPath);
             BeadPositionXYcenter = BeadROI_CroppedRectangle(1:2) + BeadPositionXYCenterPixels + largerROIPositionPixels; 
 
-        case 'imgregtform()'                            %% Slower, but more accurate.
+        case 'imregtform()'                            %% Slower, but more accurate.
             TrackingModeList = {'multimodal','monomodal'};
 %             TrackingModeListChoiceIndex = listdlg('ListString', TrackingModeList, 'SelectionMode', 'single', 'InitialValue', 1, ...
 %                 'PromptString', 'Choose the tracking mode:', 'ListSize', [200, 100]); 
@@ -650,7 +659,7 @@ format longg
     if isempty(MD_EPI.channels_.psfSigma_), MD_EPI.channels_.psfSigma_ = psfSigma; end
     if isnan(psfSigma) || logical(psfSigma > MD_EPI.channels_.psfSigma_*3)
         if strcmp(MD_EPI.channels_.imageType_,'Widefield') || MD_EPI.pixelSize_>130
-            psfSigma = MD_EPI.channels_.psfSigma_*2; %*2 scale up for widefield.                  % TERRIBLE FOR OUR EPI Experiments. Waddah Moghram on 2019-10-27
+            psfSigma = MD_EPI.channels_.psfSigma_; %*2 scale up for widefield.                  %*2 TERRIBLE FOR OUR EPI Experiments. Waddah Moghram on 2019-10-27
         elseif strcmp(MD_EPI.channels_.imageType_,'Confocal')
             psfSigma = MD_EPI.channels_.psfSigma_*0.79; %*4/7 scale down for  Confocal finer detection SH012913
         elseif strcmp(MD_EPI.channels_.imageType_,'TIRF')
@@ -1180,10 +1189,20 @@ format longg
     % ------------------- save all variables to workspace so that I can continue my analysis
     CleanupWorkspace;
     save(OutputPathNameDIC, '-v7.3')
+    fprintf(ComputerNameDIC_ID, 'Finish time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
+    fclose(ComputerNameDIC_ID)
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
 %% %%%%%%%%%%%%%%%%%% Part 2: TFM Calculations. 1. Displacement filtering and drift corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Start a new parpool    
+    ComputerName = getenv('computername');
+    Username = getenv('username');
+    ComputerNameEPI = fullfile(OutputPathNameEPI, strcat(ComputerName, '.txt'));
+    ComputerNameEPI_ID = fopen(ComputerNameEPI, 'wt'); 
+    fprintf(ComputerNameEPI_ID, 'Computer ID: %s\n', ComputerName);
+    fprintf(ComputerNameEPI_ID, 'Username: %s\n', Username);
+    fprintf(ComputerNameEPI_ID, 'Start time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
+
     % Parallel Pool Start
     if isempty(gcp('nocreate'))
         try
@@ -1281,8 +1300,20 @@ format longg
     [dmax, dmaxIdx] = max(dmaxTMP(:,1));
     dmaxMicrons = dmax  * (MD_EPI.pixelSize_ / 1000);                  % Convert from nanometer to microns. 2019-06-08 WIM
     disp(['Estimated displacement maximum = ' num2str(dmaxMicrons) ' microns.'])
-   
+    fprintf(ComputerNameEPI_ID, 'Finish time: %s\n', DateString = datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
+    fclose(ComputerNameEPI_ID);
 %% =============================== FINDING THE OPTIMAL YOUNG'S ELASTIC MODULUS  
+    CombinedAnalysisPath = fullfile(ND2pathEPI, '..', strcat('Analysis_', AnalysisSuffixDIC, '_&_', AnalysisSuffixEPI));
+    try  mkdir(CombinedAnalysisPath);  catch, end     
+    
+    ComputerName = getenv('computername');
+    Username = getenv('username');
+    ComputerNameCombined = fullfile(CombinedAnalysisPath, strcat(ComputerName, '.txt'));
+    ComputerNameCombinedID = fopen(ComputerNameCombined, 'wt'); 
+    fprintf(ComputerNameCombinedID, 'Computer ID: %s\n', ComputerName);
+    fprintf(ComputerNameCombinedID, 'Username: %s\n', Username);
+    fprintf(ComputerNameCombinedID, 'Start time: %s\n', DateString = datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
+
     YoungModulusPaInitialGuess = 5 * GelConcentrationMgMl ^ 2.1 * 10;         % offset by 10. Local E is much stiffer than bulk one
         %{
         initial guess based on this paper.
@@ -1404,8 +1435,6 @@ format longg
     fprintf('Time elapsed: *** %0.3f sec *** to calculate the force-based elastic modulus to *** %d decimal places***.\n\tYoung''s Elastic Modulus for Cycle #%d = %0.3f Pa.\n', ...
         toc(starttime), tolerancePower, YoungModulusOptimizedCycle, YoungModulusPaOptimum)
 
-    CombinedAnalysisPath = fullfile(ND2pathEPI, '..', strcat('Analysis_', AnalysisSuffixDIC, '_&_', AnalysisSuffixEPI));
-    try  mkdir(CombinedAnalysisPath);  catch, end     
     fprintf('Saving Optimzation output ...in progress\n');
     YoungModulusOptimizationOutput = fullfile(CombinedAnalysisPath, sprintf('ElasticModulusOutput_%0.3fPa.mat', round(YoungModulusPaOptimum, 3, 'decimals')));
     fprintf('Optimzation output will be saved under:\n\t%s\n', YoungModulusOptimizationOutput);
@@ -1890,7 +1919,8 @@ format longg
         end    
    end
    if CloseFigures, close all; end
-
+    fprintf(ComputerNameDIC_ID, 'Finish time: %s\n', DateString = datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
+    fclose(ComputerNameDIC_ID);
 %% Superimpose TFM with MT results. Combined MT and TFM results into a single plot.
     titleEPIstr =  sprintf('Max displ. of maximal microsphere = %0.3f %sm.', FluoroBeadTrackedMaxDisplacementStruct.MaxDisplMicronsXYnet(3), char(181));
     titleDICstr = sprintf('Max. displ. of mag bead = %0.3f %sm.', BeadMaxNetDisplMicron, char(181));
@@ -2028,7 +2058,7 @@ format longg
     WorkspaceFileName = fullfile(CombinedAnalysisPath, 'FinalWorkspace.mat');    
     save(WorkspaceFileName, '-v7.3')
     fprintf('Workspace variables are saved as: \n\t %s\n', WorkspaceFileName)
-    
+    fclose(ComputerNameCombinedID);
     if ispc
         winopen(CombinedAnalysisPath)
     elseif isunix

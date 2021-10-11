@@ -37,10 +37,10 @@ classdef Channel < matlab.mixin.SetGet & matlab.mixin.Copyable
         hcsFlags_  % HCS plate well imaged indicator in cell one,
         %HCS plate site indicator in second cell HCS plate wavelength names
         %in the third cell
+        psfSigma_                   % Standard deviation of the psf
     end
     
     properties(SetAccess=protected)
-        psfSigma_                   % Standard deviation of the psf
         channelPath_                % Channel path (directory containing image(s))
         owner_                      % MovieData object which owns this channel
     end
@@ -368,8 +368,8 @@ classdef Channel < matlab.mixin.SetGet & matlab.mixin.Copyable
         function calculatePSFSigma(obj)
             % Read parameters for psf sigma calculation
             emissionWavelength=obj.emissionWavelength_*1e-9;
-%             numAperture=obj.owner_.numAperture_;
-            numAperture = 0.75;
+            numAperture=obj.owner_.numAperture_;
+%             numAperture = 0.75;
             pixelSize=obj.owner_.pixelSize_*1e-9;
             if isempty(emissionWavelength) || isempty(numAperture) || isempty(pixelSize),
                 return;
