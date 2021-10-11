@@ -48,7 +48,7 @@ classdef FluoroMicrospheres
             ip.addOptional('TimeStampsRT_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('TimeStampsND2_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('GelSample', [], @(x) isa(x, 'GelSample'));
-            ip.addOptional('MovieData', 'Human plasma fibronectin', @isa(MovieData);  
+            ip.addOptional('MovieData', '', @isa(MovieData));  
             ip.addOptional('Notes', 'Human plasma fibronectin', @ischar);  
 
             ip.parse(varargin{:});

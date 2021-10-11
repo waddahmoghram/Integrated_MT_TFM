@@ -34,6 +34,7 @@
             FileNameForce{ii} = [];
             DataForce(ii) = [];
             SameGelAnalysis{ii}.FileNameForce = [];
+            continue
         end
     end
 
@@ -101,10 +102,27 @@
         SameGelAnalysis{ii}.GelPolymerizationTempC = DataDispl{ii}.GelPolymerizationTempC;
         SameGelAnalysis{ii}.GelSampleNumber = DataDispl{ii}.GelSampleNumber;
         SameGelAnalysis{ii}.TimeStampsRT_Abs_DIC = DataDispl{ii}.TimeStampsRT_Abs_DIC;
-        SameGelAnalysis{ii}.ScaleMicronPerPixel = DataDispl{ii}.ScaleMicronPerPixel;
-        SameGelAnalysis{ii}.TrackingMethod = DataDispl{ii}.TrackingMethod;
         SameGelAnalysis{ii}.TrackingMode = DataDispl{ii}.TrackingMode;
-        SameGelAnalysis{ii}.MagnificationTimesStr = DataDispl{ii}.MagnificationTimesStr;
+        try
+           SameGelAnalysis{ii}.MagnificationTimesStr = DataDispl{ii}.MagnificationTimesStr_DIC;
+        catch
+            SameGelAnalysis{ii}.MagnificationTimesStr = DataDispl{ii}.MagnificationTimesStr;
+        end
+        try
+            SameGelAnalysis{ii}.ScaleMicronPerPixel = DataDispl{ii}.ScaleMicronPerPixel_DIC;
+        catch
+            try
+                SameGelAnalysis{ii}.ScaleMicronPerPixel = DataDispl{ii}.ScaleMicronPerPixel;
+            catch
+                SameGelAnalysis{ii}.ScaleMicronPerPixel = ScaleMicronPerPixel(SameGelAnalysis{ii}.MagnificationTimesStr);
+            end            
+        end
+        try
+            SameGelAnalysis{ii}.TrackingMethod = DataDispl{ii}.TrackingMethod;
+        catch
+            SameGelAnalysis{ii}.TrackingMethod = 'Verify Method';
+        end
+
         SameGelAnalysis{ii}.GelType = DataDispl{ii}.GelType;
         SameGelAnalysis{ii}.NumFramesTracked = min(numel(DataDispl{ii}.TimeStampsRT_Abs_DIC), numel(DataDispl{ii}.MagBeadDisplacementMicronXYBigDeltaCorrected)); 
 
@@ -366,8 +384,10 @@
                 PlotColor = 'r'; 
                 PlotLineStyle = '-';                
             end
-            plot(figForceBeadHandle(ii), CurrentBeadStruct.TimeStampsRT_Abs_DIC, ...
-                    CurrentBeadStruct.Force_xy_nN, 'DisplayName', tmpStr, ...
+            CurrentBeadForceStruct = load(CurrentBeadStruct.FileNameForce);
+            FramePlotted = 1:min(size(CurrentBeadStruct.TimeStampsRT_Abs_DIC, 1), size(CurrentBeadForceStruct.Force_xy_nN, 1));
+            plot(figForceBeadHandle(ii), CurrentBeadStruct.TimeStampsRT_Abs_DIC(FramePlotted), ...
+                    CurrentBeadForceStruct.Force_xy_nN(FramePlotted), 'DisplayName', tmpStr, ...
                     'Color', PlotColor, 'LineStyle', PlotLineStyle)
             xlim([SameGelAnalysis{ii}.TimeStampsRT_Abs_DIC(1), SameGelAnalysis{ii}.TimeStampsRT_Abs_DIC(end)])
             hold on
