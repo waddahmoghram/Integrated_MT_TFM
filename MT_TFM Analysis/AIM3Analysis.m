@@ -7,6 +7,7 @@
 format longg
 %% _______________________________ Predetermined Variable values and constants are listed here. 
 % Initial Parameters. Make sure you track previously.
+    
     choiceTrackDIC ='Yes';
     choiceOpenND2DIC = 'Yes';
     SaveOutput = true;
@@ -650,7 +651,7 @@ format longg
     if isempty(MD_EPI.channels_.psfSigma_), MD_EPI.channels_.psfSigma_ = psfSigma; end
     if isnan(psfSigma) || logical(psfSigma > MD_EPI.channels_.psfSigma_*3)
         if strcmp(MD_EPI.channels_.imageType_,'Widefield') || MD_EPI.pixelSize_>130
-            psfSigma = MD_EPI.channels_.psfSigma_*2; %*2 scale up for widefield.                  % TERRIBLE FOR OUR EPI Experiments. Waddah Moghram on 2019-10-27
+            psfSigma = MD_EPI.channels_.psfSigma_; %*2 scale up for widefield.                  % TERRIBLE FOR OUR EPI Experiments. Waddah Moghram on 2019-10-27
         elseif strcmp(MD_EPI.channels_.imageType_,'Confocal')
             psfSigma = MD_EPI.channels_.psfSigma_*0.79; %*4/7 scale down for  Confocal finer detection SH012913
         elseif strcmp(MD_EPI.channels_.imageType_,'TIRF')

@@ -282,7 +282,7 @@ function calculateMovieDisplacementField(movieData,varargin)
                 end
                 if isnan(psfSigma) || psfSigma>movieData.channels_(1).psfSigma_*3 
                     if strcmp(movieData.getChannel(displacementParameters.ChannelIndex(1)).imageType_,'Widefield') || movieData.pixelSize_>130
-                        psfSigma = movieData.channels_(1).psfSigma_*2; %*2 scale up for widefield.                  % TERRIBLE FOR OUR EPI Experiments. Waddah Moghram on 2019-10-27
+                        psfSigma = movieData.channels_(1).psfSigma_; %*2 scale up for widefield.                  % TERRIBLE FOR OUR EPI Experiments. Waddah Moghram on 2019-10-27
                     elseif strcmp(movieData.getChannel(displacementParameters.ChannelIndex(1)).imageType_,'Confocal')
                         psfSigma = movieData.channels_(1).psfSigma_*0.79; %*4/7 scale down for  Confocal finer detection SH012913
                     elseif strcmp(movieData.getChannel(displacementParameters.ChannelIndex(1)).imageType_,'TIRF')
