@@ -6,6 +6,7 @@ classdef GelSample
         GelID_
         GelType_
         GelThickness_
+=======
         GelThickness_micron
         GelDiameter_mm_
         pH_
@@ -15,6 +16,7 @@ classdef GelSample
         RedMicrospheres                         % Class
     end
 
+=======
     properties (Constant)
         GelDefaultDiameter_mm = 18;                     % 18 mm-diameter gels is the default
         GelDefaultDiameGelTypeter_mm = 'Type I rat-tail collagen gel';
