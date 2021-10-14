@@ -14,5 +14,6 @@ localcluster.NumThreads = 1
 localcluster.NumWorkers = threadCount
 delete(localcluster.Jobs)
 localcluster.JobStorageLocation
+localcluster
 delete(gcp('nocreate'));poolObj = localcluster.parpool(threadCount)
 poolObj.IdleTimeout = Inf
