@@ -224,9 +224,7 @@ format longg
     ComputerName = getenv('computername');
     Username = getenv('username');
     ComputerNameDIC = fullfile(OutputPathNameDIC, strcat(ComputerName, '.txt'));
-    ComputerNameEPI = fullfile(OutputPathNameEPI, strcat(ComputerName, '.txt'));
     ComputerNameDIC_ID = fopen(ComputerNameDIC, 'wt');
-    ComputerNameEPI_ID = fopen(ComputerNameEPI, 'wt'); 
     fprintf(ComputerNameDIC_ID, 'Computer ID: %s\n', ComputerName);
     fprintf(ComputerNameDIC_ID, 'Username: %s\n', Username);
     fprintf(ComputerNameDIC_ID, 'Start time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
@@ -1539,7 +1537,7 @@ format longg
         'TitleFontSizeMultiplier', 0.9, ...
         'TitleFontWeight', 'bold', ...
         'TickLength', [0.015, 0.030]);     % Make axes bold     
-    ylabel('\bf|\itF\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName);    
+    ylabel('|\bf\itF\rm(\itt\rm)| [nN]', 'FontName', PlotsFontName);    
     hold on    
     subplot(3,1,2)
     plot(TimeStampsRT_EPI(FramesPlotted), ConversionNtoNN * ForceN(FramesPlotted, 1), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
@@ -1554,7 +1552,7 @@ format longg
         'TitleFontSizeMultiplier', 0.9, ...
         'TitleFontWeight', 'bold', ...
         'TickLength', [0.015, 0.030]);     % Make axes bold     
-    ylabel('\bf\itF_{x}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
+    ylabel('\itF_{x}\rm(\itt\rm) [nN]', 'FontName', PlotsFontName);    
     % Flip to Cartesian Coordinates in the Plot (Negative pointing downwards). Add a negative Sign before plot. 
     subplot(3,1,3)
     plot(TimeStampsRT_EPI(FramesPlotted), - ConversionNtoNN * ForceN(FramesPlotted, 2), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)       % Flip the y-coordinates to Cartesian
@@ -1920,8 +1918,7 @@ format longg
         end    
    end
    if CloseFigures, close all; end
-    fprintf(ComputerNameDIC_ID, 'Finish time: %s\n', DateString = datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
-    fclose(ComputerNameDIC_ID);
+
 %% Superimpose TFM with MT results. Combined MT and TFM results into a single plot.
     titleEPIstr =  sprintf('Max displ. of maximal microsphere = %0.3f %sm.', FluoroBeadTrackedMaxDisplacementStruct.MaxDisplMicronsXYnet(3), char(181));
     titleDICstr = sprintf('Max. displ. of mag bead = %0.3f %sm.', BeadMaxNetDisplMicron, char(181));
@@ -2058,8 +2055,9 @@ format longg
     CleanupWorkspace
     WorkspaceFileName = fullfile(CombinedAnalysisPath, 'FinalWorkspace.mat');    
     save(WorkspaceFileName, '-v7.3')
-    fprintf('Workspace variables are saved as: \n\t %s\n', WorkspaceFileName)
+    fprintf(ComputerNameCombinedID, 'Finish time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
     fclose(ComputerNameCombinedID);
+    fprintf('Workspace variables are saved as: \n\t %s\n', WorkspaceFileName)
     if ispc
         winopen(CombinedAnalysisPath)
     elseif isunix
