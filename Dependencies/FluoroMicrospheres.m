@@ -1,15 +1,16 @@
 classdef FluoroMicrospheres
-    %FluoroMicrospheres(BeadID)Summary of this class goes here
+    %FluoroMicrospheres(microsphereID)Summary of this class goes here
     %   Other options properties are: 
-    % Written by Waddah Moghram, PhD Candidate in Biomedical Engineering on 2021-10-07
-
+    % Written by Waddah Moghram, PhD Candidate in Biomedical Engineering on 2021-10-24
+    
     properties
+        microsphereID
+        GelSample
         Diameter_micron
-        BeadID
         BeadType
         BeadChemistry
         AttachedProtein
-        IncubationTime_hr
+        IncubationTime_min
         IncubationTemp_C
         FrameScale_micronPerPix
         PositionXY_pix
@@ -20,7 +21,6 @@ classdef FluoroMicrospheres
         WorkMT_J
         TimeStampsRT_sec
         TimeStampsND2_sec
-        GelSample
         MovieData
         Notes
     end
@@ -31,12 +31,13 @@ classdef FluoroMicrospheres
             %   (ID, Type, diametersMicrons)
 
             ip = inputParser();
-            ip.addRequired('BeadID', @ischar);
+            ip.addRequired('microsphereID', @ischar);
+            ip.addRequired('GelSample', [], @(x) isa(x, 'GelSample'));
             ip.addOptional('Diameter_micron', 0.5, @(x) validateattributes(x, {'numeric'}, {'scalar'}));   
             ip.addOptional('BeadType', 'FluoSpheres™ carboxylate-modified polystyrene red fluorescent microspheres', @ischar);
             ip.addOptional('BeadChemistry', 'carboxylate group', @ischar);
-            ip.addOptional('AttachedProtein', '', @ischar);  
-            ip.addOptional('IncubationTime_hr', 1, @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
+            ip.addOptional('AttachedProtein', 'human plasma fibronectin purified protein (Catalog No. FC010; MilliporeSigma, St. Louis, MO', @ischar);  
+            ip.addOptional('IncubationTime_min', 0.5, @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
             ip.addOptional('IncubationTemp_C', 37,  @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
             ip.addOptional('PositionXY_pix', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));   % from top-left corner
             ip.addOptional('FrameScale_micronPerPix', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));            
@@ -47,19 +48,18 @@ classdef FluoroMicrospheres
             ip.addOptional('WorkMT_J', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('TimeStampsRT_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('TimeStampsND2_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
-            ip.addOptional('GelSample', [], @(x) isa(x, 'GelSample'));
-            ip.addOptional('MovieData', '', @isa(MovieData));  
+            ip.addOptional('MovieData', '', @(x) isa(x, 'MovieData'));  
             ip.addOptional('Notes', 'Human plasma fibronectin', @ischar);  
 
             ip.parse(varargin{:});
             
             obj.Diameter_micron = ip.Results.Diameter_micron;
-            obj.BeadID = ip.Results.BeadID;
+            obj.microsphereID = ip.Results.microsphereID;
             obj.BeadType = ip.Results.BeadType;
             obj.BeadChemistry = ip.Results.BeadChemistry;
             obj.AttachedProtein = ip.Results.AttachedProtein;
             obj.IncubationTemp_C = ip.Results.IncubationTemp_C;
-            obj.IncubationTime_hr = ip.Results.IncubationTime_hr;
+            obj.IncubationTime_min = ip.Results.IncubationTime_min;
             obj.PositionXY_pix = ip.Results.PositionXY_pix;             % could be for a single point of time or over time
             obj.FrameScale_micronPerPix = ip.Results.FrameScale_micronPerPix;
             % obj.MaxDisplacement_micron = ip.Results.MaxDisplacement_micron;

@@ -4,8 +4,9 @@ classdef MagBead
     % Written by Waddah Moghram, PhD Candidate in Biomedical Engineering on 2021-10-07
 
     properties
-        Diameter_micron
         BeadID
+        GelSample
+        Diameter_micron
         BeadType
         BeadChemistry
         AttachedProtein
@@ -20,22 +21,22 @@ classdef MagBead
         WorkMT_J
         TimeStampsRT_sec
         TimeStampsND2_sec
-        GelSample
         Notes
     end
 
     methods
         function obj = MagBead(varargin)
             %MagBead Construct an instance of this class
-            %   (ID, Type, diametersMicrons)
+            %   (ID, Type, diametersMicrons, ...). All default values are based on latest round of experiments on 2021-10-24
 
             ip = inputParser();
             ip.addRequired('BeadID', @ischar);
+            ip.addOptional('GelSample', [], @(x) isa(x, 'GelSample'));
             ip.addOptional('Diameter_micron', 4.5, @(x) validateattributes(x, {'numeric'}, {'scalar'}));   
             ip.addOptional('BeadType', 'Dynabeads M-450 Tosylactivated superparamagnetic beads', @ischar);
             ip.addOptional('BeadChemistry', 'Tosyl group', @ischar);
             ip.addOptional('AttachedProtein', 'Human plasma fibronectin purified protein. (Millipore Sigma, REF: FC010)', @ischar);  
-            ip.addOptional('IncubationTime_hr', 1, @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
+            ip.addOptional('IncubationTime_hr', duration(4,0,0), @(x) isa('duration'));     % duration type is duration(hh:mm:ss), unless other format is specified. 4 hours initially
             ip.addOptional('IncubationTemp_C', 37,  @(x) validateattributes(x, {'numeric'}, {'scalar'})); 
             ip.addOptional('PositionXY_pix', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));   % from top-left corner
             ip.addOptional('FrameScale_micronPerPix', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));            
@@ -46,7 +47,6 @@ classdef MagBead
             ip.addOptional('WorkMT_J', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('TimeStampsRT_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('TimeStampsND2_sec', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
-            ip.addOptional('GelSample', [], @(x) isa(x, 'GelSample'));
             ip.addOptional('Notes', '', @ischar);  
 
             ip.parse(varargin{:});

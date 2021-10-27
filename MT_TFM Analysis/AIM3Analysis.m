@@ -1103,7 +1103,7 @@ format longg
     title(titleStr)
     xlabel('\rmtime [s]', 'FontName', PlotsFontName)
     ylabel('\bf\it\Delta\rm_{MT}(\itt\rm)\bf\rm [\mum]', 'FontName', PlotsFontName);
-    legend('Drift not corrected', 'Drift corrected', 'location', 'eastoutside')
+    legend('Drift not corrected', 'Drift corrected', 'Location', 'southoutside', 'Orientation', 'horizontal')
    
     ImageHandle1 = getframe(figHandle);
     Image_cdata1 = ImageHandle1.cdata;
@@ -1226,7 +1226,7 @@ format longg
            poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
         end
     end
-%_________________ Calculating the EPI displacement 
+%% _________________ Calculating the EPI displacement 
     calculateMovieDisplacementField(MD_EPI, displacementParameters)
 
 %% %%%%%%%%%%%%%%%%%%  Correct displacements for spatial outliers/temporal outlier/stage drift %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
