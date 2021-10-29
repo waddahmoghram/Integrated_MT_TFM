@@ -727,7 +727,7 @@ function [Force_xyz_N, Force_xy_N, WorkBeadJ_Half_Cycles, WorkCycleFirstFrame, W
 %         GelConcentrationMgMlStr = 'N/A';
 %         GelConcentrationMgMl = NaN;
 %     else
-        GelConcentrationMgMlStr = sprintf('%.1f', GelConcentrationMgMl);
+        GelConcentrationMgMlStr = sprintf('%.3f', GelConcentrationMgMl);
 %     end
     fprintf('Gel Concentration Chosen is %s mg/mL. \n', GelConcentrationMgMlStr);
     
