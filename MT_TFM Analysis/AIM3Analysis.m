@@ -4,9 +4,11 @@
         See github history for more information and for the latest editions.
         Repository: https://github.com/waddahmoghram/Integrated_MT_TFM.git
 %}    
-format longg
+
 %% _______________________________ Predetermined Variable values and constants are listed here. 
 % Initial Parameters. Make sure you track previously.
+    format longg
+    MT_Analysis_Only = true;
     
     choiceTrackDIC ='Yes';
     choiceOpenND2DIC = 'Yes';
@@ -1192,6 +1194,7 @@ format longg
     fclose(ComputerNameDIC_ID)
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
+    if ~MT_Analysis_Only, return; end
 %% %%%%%%%%%%%%%%%%%% Part 2: TFM Calculations. 1. Displacement filtering and drift corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Start a new parpool    
     ComputerName = getenv('computername');
