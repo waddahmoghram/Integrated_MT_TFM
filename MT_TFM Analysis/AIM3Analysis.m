@@ -8,7 +8,7 @@
 %% _______________________________ Predetermined Variable values and constants are listed here. 
 % Initial Parameters. Make sure you track previously.
     format longg
-    MT_Analysis_Only = true;
+    MT_Analysis_Only = false;
     
     choiceTrackDIC ='Yes';
     choiceOpenND2DIC = 'Yes';
@@ -1194,7 +1194,7 @@
     fclose(ComputerNameDIC_ID)
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
-    if ~MT_Analysis_Only, return; end
+%     if MT_Analysis_Only, return; end
 %% %%%%%%%%%%%%%%%%%% Part 2: TFM Calculations. 1. Displacement filtering and drift corrections %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Start a new parpool    
     ComputerName = getenv('computername');
