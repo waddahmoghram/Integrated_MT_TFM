@@ -60,7 +60,7 @@ classdef  MovieObject < matlab.mixin.SetGet
             % Test if the property is writable
             if(~obj.checkProperty(property))
                 propName = lower(property(1:end-(property(end) == '_')));
-                error('lccb:set:readonly',...
+                claerror('lccb:set:readonly',...
                     ['The ' propName ' has been set previously and cannot be changed!']);
             end
             

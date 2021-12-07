@@ -19,4 +19,4 @@ for ii = 1:numel(AllVars)
         eval(sprintf('%s = gather(%s)',AllVars(ii).name,AllVars(ii).name));
     end
 end
-clear MatlabObj ParallelObj gpuArrayObj ii jj i 
+clear MatlabObj ParallelObj gpuArrayObj ii jj i ;

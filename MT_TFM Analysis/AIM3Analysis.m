@@ -226,7 +226,7 @@
     ComputerName = getenv('computername');
     Username = getenv('username');
     ComputerNameDIC = fullfile(OutputPathNameDIC, strcat(ComputerName, '.txt'));
-    ComputerNameDIC_ID = fopen(ComputerNameDIC, 'wt');
+    ComputerNameDIC_ID = fopen(ComputerNameDIC, 'a+');
     fprintf(ComputerNameDIC_ID, 'Computer ID: %s\n', ComputerName);
     fprintf(ComputerNameDIC_ID, 'Username: %s\n', Username);
     fprintf(ComputerNameDIC_ID, 'Start time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
@@ -1200,7 +1200,7 @@
     ComputerName = getenv('computername');
     Username = getenv('username');
     ComputerNameEPI = fullfile(OutputPathNameEPI, strcat(ComputerName, '.txt'));
-    ComputerNameEPI_ID = fopen(ComputerNameEPI, 'wt'); 
+    ComputerNameEPI_ID = fopen(ComputerNameEPI, 'a+'); 
     fprintf(ComputerNameEPI_ID, 'Computer ID: %s\n', ComputerName);
     fprintf(ComputerNameEPI_ID, 'Username: %s\n', Username);
     fprintf(ComputerNameEPI_ID, 'Start time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
@@ -1311,7 +1311,7 @@
     ComputerName = getenv('computername');
     Username = getenv('username');
     ComputerNameCombined = fullfile(CombinedAnalysisPath, strcat(ComputerName, '.txt'));
-    ComputerNameCombinedID = fopen(ComputerNameCombined, 'wt'); 
+    ComputerNameCombinedID = fopen(ComputerNameCombined, 'a+'); 
     fprintf(ComputerNameCombinedID, 'Computer ID: %s\n', ComputerName);
     fprintf(ComputerNameCombinedID, 'Username: %s\n', Username);
     fprintf(ComputerNameCombinedID, 'Start time: %s\n', DateString = datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
