@@ -1181,7 +1181,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
     
     if isempty(FramesDifference), FramesDifference = 0; end      
     
-    for CurrentFrame = FramesToBePloted    
+    parfor CurrentFrame = FramesToBePloted    
         if mod(CurrentFrame, FramesAtOnce * FramesDifference(1)) == 0 || FirstFrameNow == true                   % close figHandle every ... samples to prevent memory leak
             try
                 clf(figHandle, 'reset')
@@ -1261,7 +1261,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
                     'HorizontalAlignment', 'left', 'Color', TimeStampscolor, 'FontName', 'Helvetica-Narrow');
             end
         catch
-            break
+%             break
         end
         if strcmpi(FluxStatusChoice, 'Yes')
             if FluxONCombined(CurrentFrame) == 1
@@ -1296,7 +1296,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
                plotHandle = plot(figAxesHandle, displField(CurrentFrame).pos(:,1) + displField(CurrentFrame).vec(:,1), displField(CurrentFrame).pos(:,2) + displField(CurrentFrame).vec(:,2), 'wo', 'MarkerSize',1);  
             end
         else    % no tracked displacement anymore
-            return
+%             return
         end
         %-----------------------------------------------------------------------------------------------   
         try
@@ -1306,7 +1306,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
             [~, CurrentImageFileName, ~] =  fileparts(CurrentImageFullname);
         catch
             errordlg('Image File Names for Frames not found. Update code to include calling bfreader() of bioformats.')
-            return
+% %             return
         end        
         %-----------------------------------------------------------------------------------------------           .
         % convert the image to a frame\
@@ -1396,7 +1396,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
                             end              
                         end
                      otherwise
-                         return   
+%                          return   
                 end
             end
         end
