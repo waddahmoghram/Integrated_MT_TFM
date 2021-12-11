@@ -18,3 +18,6 @@ delete(gcp('nocreate'));
 pause(20);          % pause 10 seconds
 poolObj = localcluster.parpool(threadCount)
 poolObj.IdleTimeout = Inf
+
+s = settings;
+s.matlab.general.matfile.SaveFormat.TemporaryValue = 'v7.3'

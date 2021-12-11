@@ -240,7 +240,7 @@
             catch
                 
             end
-            [SensorDataDIC, HeaderDataDIC, HeaderTitleDIC, SensorDataFullFilenameDIC, SensorOutputPathNameDIC, ~, SamplingRate, SensorDataColumns]  = ReadSensorDataFile(SensorDataDICFullFileName, PlotSensorData, SensorOutputPath_DIC, AnalysisPath, HeaderLinesCount, 'No');   
+            [SensorDataDIC, HeaderDataDIC, HeaderTitleDIC, SensorDataFullFilenameDIC, SensorOutputPathNameDIC, ~, SamplingRate, SensorDataColumns]  = ReadSensorDataFile(SensorDataDICFullFileName, PlotSensorData, SensorOutputPath_DIC, AnalysisPath, HeaderLinesCount, 'Yes');   
             if CloseFigures, close all; end
             [CleanSensorDataDIC , ExposurePulseCountDIC, EveryNthFrameDIC, CleanedSensorDataFullFileName_DIC, HeaderData, HeaderTitle, FirstExposurePulseIndexDIC] = CleanSensorDataFile(SensorDataDIC, 1, SensorDataFullFilenameDIC, SamplingRate, HeaderDataDIC, HeaderTitleDIC, SensorDataColumns);
             %{
@@ -256,7 +256,7 @@
                 % directory is already there. Continue
             end
     
-            [SensorDataEPI, HeaderDataEPI, HeaderTitleEPI, SensorDataFullFilenameEPI, SensorOutputPathNameEPI, ~, SamplingRate, SensorDataEPIColumns]  = ReadSensorDataFile(SensorDataEPIFullFileName, PlotSensorData, SensorOutputPath_EPI, AnalysisPathEPI, HeaderLinesCount, 'No');   
+            [SensorDataEPI, HeaderDataEPI, HeaderTitleEPI, SensorDataFullFilenameEPI, SensorOutputPathNameEPI, ~, SamplingRate, SensorDataEPIColumns]  = ReadSensorDataFile(SensorDataEPIFullFileName, PlotSensorData, SensorOutputPath_EPI, AnalysisPathEPI, HeaderLinesCount, 'Yes');   
             if CloseFigures, close all; end
             % Cleaning the sensor data.
             [CleanSensorDataEPI , ExposurePulseCountEPI, EveryNthFrameEPI, CleanedSensorDataFullFileName_EPI, HeaderDataEPI, HeaderTitleEPI, FirstExposurePulseIndexEPI] = CleanSensorDataFile(SensorDataEPI, 1, SensorDataFullFilenameEPI, SamplingRate, HeaderDataEPI, HeaderTitleEPI, SensorDataEPIColumns);
@@ -1059,12 +1059,23 @@
     GelSampleNumber = ND2FileNamePartsDIC{1};
     BeadNumber = ND2FileNamePartsDIC{2};
     RunNumber = ND2FileNamePartsDIC{5};
-    EDCorNOTstr = ND2FileNamePartsDIC{3};
-    switch EDCorNOTstr
-        case {'NoEDC', 'NoEDAC'}
-            EDCorNOT = false;
-        case {'EDC' , 'EDAC'}
-            EDCorNOT = true;
+    EDCorNoEDCstr = ND2FileNamePartsDIC{3};
+    CO2orNoCO2str = ND2FileNamePartsDIC{3};
+    switch EDCorNoEDCstr
+        case {'NoEDC', 'NoEDAC', 'NoEDC.NoCO2', 'NoEDC.CO2', 'NoEDAC.NoCO2', 'NoEDAC.CO2'}
+            EDCorNoEDC = false;
+        case {'EDC' , 'EDAC', 'EDC.NoCO2', 'EDC.CO2', 'EDAC.NoCO2', 'EDAC.CO2'}
+            EDCorNoEDC = true;
+        otherwise
+            EDCorNoEDC = [];
+    end
+    switch CO2orNoCO2str
+        case {'NoCO2', 'NoEDC.NoCO2', 'NoEDAC.NoCO2'}
+            CO2orNoCO2 = false;
+        case {'CO2', 'EDC.CO2', 'EDAC.CO2'}
+            CO2orNoCO2 = true;
+        otherwise
+            CO2orNoCO2 = [];
     end
 
     switch GelPolymerizationTempC{:}
@@ -1078,7 +1089,7 @@
     fprintf('Gel concentration chosen is %.3f mg/mL. \n', GelConcentrationMgMl);
     save(MagBeadTrackedDisplacementsFullFileName, 'GelConcentrationMgMl', 'thickness_um','GelConcentrationMgMlStr', 'GelType',...
             'GelPolymerizationTempC', 'BeadMaxNetDisplMicronDriftCorrected', 'BeadMaxNetDisplMicronDriftCorrected', 'BeadMaxNetDisplFrameDriftCorrected',...
-            'EDCorNOTstr', 'EDCorNOT', 'GelSampleNumber', 'BeadNumber', 'RunNumber', '-append')
+            'EDCorNoEDCstr', 'EDCorNoEDC', 'CO2orNoCO2str', 'CO2orNoCO2', 'GelSampleNumber', 'BeadNumber', 'RunNumber', '-append')
     fprintf('Output of drift correction is saved as:\n\t %s\n', MagBeadTrackedDisplacementsFullFileName)
     
 % Plotting Bead Displacement Micron vs. Pixel
@@ -1189,9 +1200,9 @@
     if CloseFigures, close all; end
     % ------------------- save all variables to workspace so that I can continue my analysis
     CleanupWorkspace;
-    save(OutputPathNameDIC, '-v7.3')
-    fprintf(ComputerNameDIC_ID, 'Finish time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
-    fclose(ComputerNameDIC_ID)
+    save(strcat(OutputPathNameDIC, '.mat'), '-v7.3')
+    fprintf(strcat(OutputPathNameDIC, '.mat'), 'Finish time: %s\n', datestr(datetime,'yyyy-mm-dd HH:MM:SS'));
+    fclose(ComputerNameDIC_ID);
     fprintf('Workspace is saved as %s\n', strcat(OutputPathNameDIC, '.mat'))
 
 %     if MT_Analysis_Only, return; end

@@ -99,7 +99,7 @@ function [TimeStampsND2, FrameCount, AverageTimeInterval] = ND2TimeFrameExtract(
         MetaDataList = ImageData{CurrentSeriesIndex, 2};               % first index is from 1 to SeriesCount A hashtable type containing the OME metadata. 2nd index = 2 means metadata
         % and so on
         CurrentSeries = ImageData{CurrentSeriesIndex, 1};              % first index is from 1 to SeriesCount. A cell containing the image and title of that frame. 2nd index = 1 means image & frame
-        CurrentSeries_planeCount = size(CurrentSeries, 1);        % plane count for each series. Basically the number of frames for my images. 
+        CurrentSeries_planeCount = size(CurrentSeries{1}, 1);        % plane count for each series. Basically the number of frames for my images. 
 
     %     % Query some metadata fields (keys are format-dependent)
     %     
@@ -116,7 +116,7 @@ function [TimeStampsND2, FrameCount, AverageTimeInterval] = ND2TimeFrameExtract(
     %     end
 
         %% 6. To extract timestamps for an ND2 file:
-        metadataKeys = MetaDataList.keySet().iterator();
+%         metadataKeys = MetaDataList.keySet().iterator();
         TimeStampsND2 = zeros(CurrentSeries_planeCount,1);
         for i=1:CurrentSeries_planeCount
           NumDigits = numel(num2str(CurrentSeries_planeCount));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
