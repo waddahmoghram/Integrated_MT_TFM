@@ -23,6 +23,8 @@
 *.docx binary
 *.exe binary
 *.jpg binary
+*.tiff binary
+*.tif binary
 *.pdf binary
 *.png binary
 *.xlsx binary
