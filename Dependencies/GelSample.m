@@ -1,5 +1,5 @@
 classdef GelSample
-    %GelSample(GelID [str], EDAC [true/false], concentration_mgmL [num], Thickness_micron [num], Diameter mm [num], Type [str], pH [num], YoungElasticModulusPa [num])
+    %GelSample(GelID [str], EDAC [true/false], CO2 [true/false], concentration_mgmL [num], Thickness_micron [num], Diameter mm [num], Type [str], pH [num], YoungElasticModulusPa [num])
     %   Contains all the parameters of a given gel
 
     properties
@@ -7,9 +7,10 @@ classdef GelSample
         concentration_mgmL
         Thickness_micron
         Diameter_mm
-        Type
+        GelType
         pH
-        EDAC
+        hasCO2
+        hasEDAC
         YoungsElasticModulusPa
         Notes
         MagBeads
@@ -27,24 +28,26 @@ classdef GelSample
 
             ip = inputParser();
             ip.addRequired('GelID', @ischar);
-            ip.addRequired('EDAC', @(x) islogical(x));
+            ip.addRequired('hasEDAC', @(x) islogical(x));
+            ip.addRequired('hasCO2', @(x) islogical(x));
             ip.addRequired('concentration_mgmL', @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addRequired('Thickness_micron', @(x) validateattributes(x, {'numeric'}, {'scalar'}));
             ip.addOptional('Diameter_mm', DefaultDiameter_mm, @(x) validateattributes(x, {'numeric'}, {'scalar'}));     % 18-mm default
             ip.addOptional('YoungsElasticModulusPa', [], @(x) validateattributes(x, {'numeric'}, {'scalar'}));
-            ip.addOptional('Type', DefaultType , @ischar);  
+            ip.addOptional('GelType', DefaultType , @ischar);  
             ip.addOptional('pH', Default_pH, @(x) validateattributes(x, {'numeric'}, {'scalar'}));     % 18-mm default
             ip.addOptional('Notes', @(x) isstring(x));
-            ip.addOptional('MagBeads', @(x) isa(''))
+            ip.addOptional('MagBeads', @(x) isa(x,'MagBead'))
             
             ip.parse(varargin{:})
             
             obj.GelID = ip.Results.GelID;
-            obj.EDAC = ip.Results.EDAC;
+            obj.hasEDAC = ip.Results.hasEDAC;
+            obj.hasCO2 = ip.Results.hasCO2;
             obj.concentration_mgmL = ip.Results.concentration_mgmL;
             obj.Thickness_micron = ip.Results.Thickness_micron;
             obj.Diameter_mm = ip.Results.Diameter_mm;
-            obj.Type = ip.Results.Type;
+            obj.GelType = ip.Results.GelType;
             obj.pH = ip.Results.pH;
             obj.YoungsElasticModulusPa = ip.Results.YoungsElasticModulusPa;
             obj.Notes = ip.Results.Notes;            
