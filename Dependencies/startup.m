@@ -14,10 +14,10 @@ localcluster.NumThreads = 1
 localcluster.NumWorkers = threadCount
 delete(localcluster.Jobs)
 localcluster.JobStorageLocation
-delete(gcp('nocreate'));
-pause(20);          % pause 10 seconds
-poolObj = localcluster.parpool(threadCount)
+poolObj = localcluster.parpool(threadCount - 1)
 poolObj.IdleTimeout = Inf
-
+pause(20);          % pause 10 seconds
+delete(gcp('nocreate'));
+poolObj = localcluster.parpool(threadCount - 1)
 s = settings;
 s.matlab.general.matfile.SaveFormat.TemporaryValue = 'v7.3'
