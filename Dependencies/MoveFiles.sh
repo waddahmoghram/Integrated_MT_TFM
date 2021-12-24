@@ -1,6 +1,11 @@
-#!bin/bash
-BeadNum=$1
-F=$(ls | grep "B$BeadNum")
-outPath = B$BeadNum_Data
+#!/usr/bin/bash
+RootPath=$1
+BeadNum=$2 
 
-mv $F $outPath
+DataPath="$RootPath$BeadNum/_Data"
+ls $RootPath | grep "$BeadNum"
+
+echo $RootPath
+echo $DataPath
+echo $BeadNum
+echo $(command)
