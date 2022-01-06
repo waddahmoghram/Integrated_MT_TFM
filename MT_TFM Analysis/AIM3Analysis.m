@@ -15,7 +15,7 @@
     SaveOutput = true;
     showPlots = 'on';
     ShowOutput = 1;            % trueFramesPlottedDIC
-    CloseFigures = true;                      % switch to false if you want to leave them up
+    CloseFigures = false;                      % switch to false if you want to leave them up
     IdenticalCornersChoice = 'Yes';             % choose 4 identical corners.
     DCchoice = 'Yes';
     RendererMode = 'painters';
