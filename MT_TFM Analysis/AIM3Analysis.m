@@ -863,7 +863,7 @@
     % scalebar
     LocationScale = MD_EPI.imSize_ - [3,3];                  % bottom right corner
     ScaleLength_EPI =   round((max(MD_EPI.imSize_) - max([gridXmax - gridXmin, gridYmax - gridYmin]))/4, 1, 'significant');     
-    scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI, 'ScaleLengthRatio', ScaleMicronPerPixel_DIC, 'color', [0,0,0]', ...
+    scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI, 'ScaleLengthRatio', ScaleMicronPerPixel_EPI, 'color', [0,0,0]', ...
         'bold', true, 'unit', sprintf('%sm', char(181)), 'location', LocationScale);             % Modified by WIM                    
     hold on
     BeadCentroid = plot(figAxesHandle, BeadPositionXYcenter(1,1), BeadPositionXYcenter(1,2), 'r.', 'MarkerSize', 10);
@@ -1260,6 +1260,9 @@
     displFieldPath = displFieldProcess.outFilePaths_{1};
     load(displFieldPath, 'displField')
     fprintf('Outlier-corrected Displacement Field (displField) File is successfully loaded!: \n\t %s\n', displFieldPath);
+
+
+    
 %_____Process displacements for drift and correcting for temporal errors.    
     [MD_EPI, displField, TimeStampsRT_EPI, displFieldPath, ScaleMicronPerPixel_EPI, FramesDoneNumbersDIC, controlMode, ...
         rect, DriftROIs, DriftROIsCombined, reg_grid, gridSpacing, NoiseROIs, NoiseROIsCombined, TimeFilterChoiceStr, ...
