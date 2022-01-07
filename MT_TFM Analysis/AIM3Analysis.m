@@ -1235,7 +1235,7 @@
         end
     else
         try
-           poolsize = poolObj.NumWorkers;
+           poolsize = poolObj.NumWorkers;videofilename
         catch
            poolsize =  str2double(getenv('NUMBER_OF_PROCESSORS')) - 1;
         end
