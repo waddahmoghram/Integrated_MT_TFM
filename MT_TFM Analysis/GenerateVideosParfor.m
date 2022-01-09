@@ -3,7 +3,7 @@
     Load finalworkspace.mat and run this script.
 %}
 
-disp('============================== Running PlotDisplacementOverlays.m GPU-enabled ===============================================')
+    disp('============================== Running PlotDisplacementOverlays.m GPU-enabled ===============================================')
 %     VideoChoice = 'MPEG-4';    
     VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
 
@@ -47,15 +47,17 @@ disp('============================== Running PlotDisplacementOverlays.m GPU-enab
         (max(displField(RefFrameNumEPI).pos(:,2)) -  min(displField(RefFrameNumEPI).pos(:,2)));                 % x-length * y-length
     totalBeadsTracked = numel(displField(RefFrameNumEPI).pos(:,1));
     
- %% 1. displacement field quivers from microspheres
+ %% 1.
+    disp('------------------------------------------------------------------------------')
+    disp("1. Creating displacement quivers overlays on EPI video")
     load(displacementFileFullName, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
     fprintf('Displacement Field (displField) File is successfully loaded!:\n\t%s', displacementFileFullName);
-    disp('------------------------------------------------------------------------------')
           % Finding maximum fluorescent microsphere
+    disp('Finding the bead with the maximum displacement...in progress')
+
     dmaxTMP = nan(FramesNumEPI, 1);
     dmaxTMPindex = nan(FramesNumEPI, 1);
-
-    disp('Finding the bead with the maximum displacement...in progress')
+    
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);
     parfor CurrentFrame = FramesDoneNumbers
         dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
@@ -111,10 +113,14 @@ disp('============================== Running PlotDisplacementOverlays.m GPU-enab
     end
     close(VideoWriterObj)
     clear videoImages;
+    fprintf('Displacement Quiver overlays (%s, %s) complete: \n\t%s\n', VideoFullFileName,TimeFilterChoiceStr, DriftCorrectionChoiceStr)
+    disp('------------------------------------------------------------------------------')
 
 %% 2.  gridded heatmap for the displacement above
 % plotting displacement heat maps
    % find maximum microsphere displacement of the gridded displacement
+    disp('------------------------------------------------------------------------------')
+    disp("2. Creating displacement heatmaps of previous video EPI displacement video")   
     disp('Identifying the limits of the interpolated displacement grid limits over all frames without generating it yet.')
     disp('Note that these values might be extreme due to noise. Rely more on outlier-cleaned/filtered/drift corrected values')
 
@@ -209,9 +215,13 @@ disp('============================== Running PlotDisplacementOverlays.m GPU-enab
         writeVideo(VideoWriterObj,  videoImages{CurrentFrame})
     end
     close(VideoWriterObj)
-    clear videoImages;
-
+    clear videoImages
+    fprintf('Displacement heatmap (%s, %s) complete: \n\t%s\n', VideoFullFileName,TimeFilterChoiceStr, DriftCorrectionChoiceStr)
+    disp('------------------------------------------------------------------------------')
 %% 3. find maximum traction stress from grid
+    disp('------------------------------------------------------------------------------')
+    disp("3. Creating traction heatmaps of previous video EPI displacement video")   
+
     tmaxTMPgrid = nan(FramesNumEPI, 2);
     tminTMPgrid = nan(FramesNumEPI, 2);
 
@@ -323,8 +333,12 @@ disp('============================== Running PlotDisplacementOverlays.m GPU-enab
     end
     close(VideoWriterObj)
     clear videoImages;
-
+    fprintf('traction stress heatmap complete: \n\t%s\n', VideoFullFileName)
+    disp('------------------------------------------------------------------------------')
 %% 4. load tracked red beads first
+    disp('------------------------------------------------------------------------------')
+    disp("4. Visualizing tracked beads of raw video without drift correction or noise filtering")   
+
     displFieldProcess =  MD_EPI.findProcessTag('DisplacementFieldCalculationProcess').tag_;
     displacementFileFullName = MD_EPI.findProcessTag(displFieldProcess).outFilePaths_{1};  
     load(displacementFileFullName, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
@@ -418,3 +432,5 @@ disp('============================== Running PlotDisplacementOverlays.m GPU-enab
         end
         close(VideoWriterObj)
         clear videoImages;
+        disp('------------------------------------------------------------------------------')
+        winopen(VideoPathName)
