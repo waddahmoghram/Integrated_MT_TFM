@@ -1,4 +1,9 @@
-    disp('============================== Running PlotDisplacementOverlays.m GPU-enabled ===============================================')
+%{
+    Written by Waddah Moghram, PhD Student in Biomedical Engineering at the University of Iowa.
+    Load finalworkspace.mat and run this script.
+%}
+
+disp('============================== Running PlotDisplacementOverlays.m GPU-enabled ===============================================')
 %     VideoChoice = 'MPEG-4';    
     VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
 
