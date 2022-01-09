@@ -380,3 +380,36 @@
     close(VideoWriterObj)
     clear videoImages;
 
+    %% 5. Making movie for DIC magnetic bead with all the references.
+        FramesNumDIC = numel(FramesDoneNumbersDIC);
+        FluxStatusString = cell(FramesNumDIC, 1);
+        FluxON_DIC = CompiledMT_Results.FluxON;
+        FluxStatusString(FramesDoneNumbersDIC(CompiledMT_Results.FluxON(1:FramesNumDIC))) = {'Flux ON'};
+        FluxStatusString(FramesDoneNumbersDIC(CompiledMT_Results.FluxOFF(1:FramesNumDIC))) = {'Flux OFF'};
+        FluxStatusString(FramesDoneNumbersDIC(CompiledMT_Results.FluxTransient(1:FramesNumDIC))) = {'Flux TRANS'};    
+    
+        [VideoPathName, VideoFileNameSuffix, ~] = fileparts(MagBeadTrackedDisplacementsFullFileName);
+        VideoFullFileName = fullfile(VideoPathName, strcat(VideoFileNameSuffix, '_bead'));
+        VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
+        VideoOverlayParamFullFile = fullfile(VideoPathName, strcat(VideoFileNameSuffix, '_beads_param.mat'));
+        VideoWriterObj.FrameRate = FrameRateRT_EPI; 
+        open(VideoWriterObj)
+        videoImages = cell(FramesNumDIC, 1);
+        
+        MD_DIC_ChannelCount = numel(MD_DIC.channels_);
+        colormapLUT_GrayScale = gray(GrayLevels);
+        QuiverColor = [1,0,0];               % red 
+        GrayLevelsPercentile  = [0, 1];
+    
+        TrackingInfoTXT = sprintf('BeadTrackingMethod=%s. DriftTrackingMethod=%s', BeadTrackingMethod, DriftTrackingMethod);
+    
+        parfor CurrentFrame = FramesDoneNumbersDIC
+                videoImages{CurrentFrame} = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBeadCoordinatesXYpixels,CurrentFrame, MD_DIC_ChannelCount, BeadRadius, ...
+                    QuiverColor, GrayLevelsPercentile, colormapLUT_GrayScale, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, FluxStatusString(CurrentFrame), ...
+                    TrackingInfoTXT, scalebarFontSize); 
+        end
+        for CurrentFrame = FramesDoneNumbersDIC
+            writeVideo(VideoWriterObj,  videoImages{CurrentFrame})
+        end
+        close(VideoWriterObj)
+        clear videoImages;

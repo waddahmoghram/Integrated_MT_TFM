@@ -5,6 +5,7 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorsParfor(MD_EPI,displ
     QuiverLineWidth = 0.5;
     MarkerSize = 1;
     ylabelFontSize = round((colorbarFontSize + 2)*2)/2;     % increments of 0.5
+    scalebarFontSize = round(colorbarFontSize*2/3);
     DecimalsColorbar = 2;
     FontName1 = 'Inconsolata ExtraCondensed';
     FontName2 = 'XITS';
@@ -114,7 +115,7 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorsParfor(MD_EPI,displ
 
     Location = MD_EPI.imSize_ - [3,3];       
     sBar = scalebar(figAxesHandle,'ScaleLength',ScaleLength_EPI, 'ScaleLengthRatio',ScaleMicronPerPixel_EPI, 'color',imcomplement(colormapLUT(1, :)), ...
-        'bold',true, 'unit',colorbarUnits, 'location',Location, 'fontname', FontName1, 'fontsize',  round(colorbarFontSize/3)*2);
+        'bold',true, 'unit',colorbarUnits, 'location',Location, 'fontname', FontName1, 'fontsize',  scalebarFontSize);
 
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
     NumDigits = numel(num2str(FramesNumEPI));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
