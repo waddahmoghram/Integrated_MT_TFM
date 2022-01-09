@@ -1,6 +1,7 @@
-function [CurrentFramePlot] = plotDisplacementOverlaysParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, QuiverColor, ...
+function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, QuiverColor, ...
     GrayLevelsPercentile, colormapLUT, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT)
-
+    trackedBeads = numel(find(~isnan(displField(CurrentFrame).vec(:,1)==1)));
+    
     try
         CurrentFramePlot = gpuArray(MD_EPI.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame));
     catch
@@ -27,7 +28,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysParfor(MD_EPI,displField, 
 
     Location = MD_EPI.imSize_ - [3,3];       
     sBar = scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI, 'ScaleLengthRatio', ScaleMicronPerPixel_EPI, 'color', QuiverColor, 'bold', true, 'unit', sprintf('%sm', char(181)), 'location', Location);
-    trackedBeads = numel(find(~isnan(displField(CurrentFrame).vec(:,1)==1)));
+
 
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
     FrameString = sprintf('#Beads=%d. %s. \\itt\\rm = %0.3fs. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString{:});

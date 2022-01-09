@@ -1262,7 +1262,6 @@
     fprintf('Outlier-corrected Displacement Field (displField) File is successfully loaded!: \n\t %s\n', displFieldPath);
 
 
-    
 %_____Process displacements for drift and correcting for temporal errors.    
     [MD_EPI, displField, TimeStampsRT_EPI, displFieldPath, ScaleMicronPerPixel_EPI, FramesDoneNumbersDIC, controlMode, ...
         rect, DriftROIs, DriftROIsCombined, reg_grid, gridSpacing, NoiseROIs, NoiseROIsCombined, TimeFilterChoiceStr, ...
@@ -1613,33 +1612,33 @@
         switch tmpPlotChoice
             case 'FIG'
                 if exist(TractionForcePath,'dir') 
-                    AnalysisFileNameFIG1 = sprintf('E_%0.3gPa_TractionForce_Raw.fig', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNameFIG1 = sprintf('E_%0.3fPa_TractionForce_Raw.fig', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForceFIG1 = fullfile(TractionForcePath, AnalysisFileNameFIG1);
                     savefig(figHandleAllTraction, AnalysisTractionForceFIG1, 'compact')
                     
-                    AnalysisFileNameFIG3 = sprintf('E_%0.3gPa_TractionEnergy_Raw.fig', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNameFIG3 = sprintf('E_%0.3fPa_TractionEnergy_Raw.fig', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForceFIG3 = fullfile(TractionForcePath, AnalysisFileNameFIG3);                    
                     savefig(figHandleEnergy, AnalysisTractionForceFIG3, 'compact')
                 end
                 
             case 'PNG'                  % PNG SAVE. Consider replacing TIF to PNG.  %                 saveas(figFluxV, figureFileNames{2,1}, 'png');               
                 if exist(TractionForcePath,'dir') 
-                    AnalysisFileNamePNG1 = sprintf('E_%0.3gPa_TractionForce_Raw.png', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNamePNG1 = sprintf('E_%0.3fPa_TractionForce_Raw.png', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForcePNG1 = fullfile(TractionForcePath, AnalysisFileNamePNG1);
                     saveas(figHandleAllTraction, AnalysisTractionForcePNG1, 'png');
 
-                    AnalysisFileNamePNG3 = sprintf('E_%0.3gPa_TractionEnergy_Raw.png', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNamePNG3 = sprintf('E_%0.3fPa_TractionEnergy_Raw.png', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForcePNG3 = fullfile(TractionForcePath, AnalysisFileNamePNG3);
                     saveas(figHandleEnergy, AnalysisTractionForcePNG3, 'png');                    
                 end
                 
             case 'EPS'
                 if exist(TractionForcePath,'dir') 
-                    AnalysisFileNameEPS1 = sprintf('E_%0.3gPa_TractionForce_Raw.eps', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNameEPS1 = sprintf('E_%0.3fPa_TractionForce_Raw.eps', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForceEPS1 = fullfile(TractionForcePath, AnalysisFileNameEPS1);                                     
                     print(figHandleAllTraction, AnalysisTractionForceEPS1, '-depsc')
 
-                    AnalysisFileNameEPS3 = sprintf('E_%0.3gPa_TractionEnergy_Raw.eps', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNameEPS3 = sprintf('E_%0.3fPa_TractionEnergy_Raw.eps', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForceEPS3 = fullfile(TractionForcePath, AnalysisFileNameEPS3);                                     
                     print(figHandleEnergy, AnalysisTractionForceEPS3, '-depsc')                                
                 end
@@ -1656,10 +1655,10 @@
     disp('Now...Averaging regularization parameters by mean(log10())')
 
     [reg_corner_averaged, TransientRegParamMethod] = RegCornerBinAndAverage(reg_corner_raw, FluxON, FluxOFF, FluxTransient, FramesDoneNumbers, TransientRegParamMethod);
-    reg_corner_averagedON = reg_corner_averaged(FluxON(1));
+    reg_corner_averagedON = unique(reg_corner_averaged(find(FluxON == 1)));
     if isempty(reg_corner_averagedON), reg_corner_averagedON = nan;end
     
-    reg_corner_averagedOFF = reg_corner_averaged(FluxOFF(1));
+    reg_corner_averagedOFF = unique(reg_corner_averaged(find(FluxOFF == 1)));
     if isempty(reg_corner_averagedOFF), reg_corner_averagedOFF = nan;end
     
     % Plot 3. Regularization Parameters_______________________________
@@ -1716,21 +1715,21 @@
         switch tmpPlotChoice
             case 'FIG'
                 if exist(TractionForcePath,'dir') 
-                    AnalysisFileNameFIG7 = sprintf('E_%0.fPa_Regularization_Parameters.fig', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNameFIG7 = sprintf('E_%0.3fPa_Regularization_Parameters.fig', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForceFIG7 = fullfile(TractionForcePath, AnalysisFileNameFIG7);                    
                     savefig(figHandleRegParams, AnalysisTractionForceFIG7,'compact')    
                 end
 
             case 'PNG'                  % PNG SAVE. Consider replacing TIF to PNG.  % saveas(figFluxV, figureFileNames{2,1}, 'png');               
                 if exist(TractionForcePath,'dir')                     
-                    AnalysisFileNamePNG7 = sprintf('E_%0.fPa_Regularization_Parameters.png', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNamePNG7 = sprintf('E_%0.3fPa_Regularization_Parameters.png', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForcePNG7 = fullfile(TractionForcePath, AnalysisFileNamePNG7);
                     saveas(figHandleRegParams, AnalysisTractionForcePNG7, 'png');
                 end
 
             case 'EPS'
                 if exist(TractionForcePath,'dir')                     
-                    AnalysisFileNameEPS7 = sprintf('E_%0.fPa_Regularization_Parameters.eps', forceFieldParameters.YoungModulusPa);
+                    AnalysisFileNameEPS7 = sprintf('E_%0.3fPa_Regularization_Parameters.eps', forceFieldParameters.YoungModulusPa);
                     AnalysisTractionForceEPS7 = fullfile(TractionForcePath, AnalysisFileNameEPS7);                                     
                     print(figHandleRegParams, AnalysisTractionForceEPS7,'-depsc')
                 end
@@ -1791,7 +1790,7 @@
 %-----------         
     TimeStamps = TimeStampsRT;
     forceFieldFullFileName = fullfile(TractionForcePath, ...
-        sprintf('E_%0.3gPa_TractionField_PlusRegCorner_Averaged.mat', forceFieldParameters.YoungModulusPa));   
+        sprintf('E_%0.3fPa_TractionField_PlusRegCorner_Averaged.mat', forceFieldParameters.YoungModulusPa));   
     Notes{2} = 'Units of "forceField" = Pa. Actually traction stress, or T. Regularization parameters included.';
     save(forceFieldFullFileName, 'MD_EPI', 'displField', 'TimeFilterChoiceStr',  'SpatialFilterChoiceStr', 'WienerWindowSize', ...
          'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI',   ...
@@ -1799,18 +1798,18 @@
         'TransientRegParamMethod', 'FluxON', 'FluxOFF', 'FluxTransient', 'reg_corner_averaged', ...
         'reg_cornerChoiceStr', 'TractionStressMethod', 'PaddingChoiceStr', 'HanWindowChoice', 'forceFieldParameters', 'CalculateRegParamMethod', '-v7.3')
 
-    TractionForceFullFileName = fullfile(TractionForcePath, sprintf('E_%0.3gPa_TractionForce_Averaged.mat', forceFieldParameters.YoungModulusPa));   
+    TractionForceFullFileName = fullfile(TractionForcePath, sprintf('E_%0.3fPa_TractionForce_Averaged.mat', forceFieldParameters.YoungModulusPa));   
     Notes{3} = 'Units of "Force, or Traction Force over the entire area, or F" = N. [x,y,norm]';
     save(TractionForceFullFileName, 'MD_EPI', 'ForceN', 'TimeStamps','Notes', 'ForceIntegrationMethod', '-v7.3')
 
     Notes{4} = 'Units of "energyField, or Storage Elastic Energy Density, or Sigma" = J/m^2. ';
     energyDensityFullFileName = fullfile(TractionForcePath, ...
-        sprintf('E_%0.3gPa_EnergyDensity_Averaged.mat', forceFieldParameters.YoungModulusPa));
+        sprintf('E_%0.3fPa_EnergyDensity_Averaged.mat', forceFieldParameters.YoungModulusPa));
     save(energyDensityFullFileName, 'MD_EPI', 'energyDensityField', 'TimeStamps', 'Notes','-v7.3')
 
     Notes{5} = 'Units of "ElasticTractionEnergy, or or U" = J. ';
     TractionEnergyFullFileName = fullfile(TractionForcePath, ...
-        sprintf('E_%0.3gPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa));    
+        sprintf('E_%0.3fPa_TractionEnergy_Averaged.mat', forceFieldParameters.YoungModulusPa));    
     save(TractionEnergyFullFileName, 'MD_EPI', 'TractionEnergyJ', 'TimeStamps', 'Notes', '-v7.3')
     disp('TFM Analysis Output saved!')
         

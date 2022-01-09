@@ -935,6 +935,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
     colorbarTicks = unique(sort([colorbarLimits, colorbarHandle.Ticks]));               % updated on 2019-10-23 to make sure points are unique
     set(colorbarHandle, 'Limits', [colorbarTicks(1), colorbarTicks(end)], 'Ticks', colorbarTicks, 'TickDirection', 'out','color', 'k', ...
             'FontWeight', 'bold', 'FontName', 'Helvetica-Narrow', 'LineWidth', QuiverLineWidth, 'Units', 'Pixels');     % font size, 1/100 of height in pixels
+    
     colorbarLabelString =  sprintf('\\bf\\itu\\rm(\\itx\\fontsize{%d}*\\fontsize{%d},y\\fontsize{%d}*\\fontsize{%d},t\\rm) [%s]', ...
         repmat([ylabelFontSize * 0.75, ylabelFontSize] , 1, 2), colorbarUnits);
     ylabelHandle = ylabel(colorbarHandle, colorbarLabelString, 'FontSize', ylabelFontSize);        % 'Traction Stress (Pa)'; % in Tex Format
@@ -1425,7 +1426,7 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
     ImageSize = [200, 500, 1000, 2000]';         % pixels
     FontSizeDesired = [7, 15, 18, 25]';          
     FontSizeCurveFit = fit(ImageSize,FontSizeDesired,'poly2');       % quadratic fit between 200 pixels and 2000 pixels window size.
-    colorbarFontSize = round((FontSizeCurveFit.p1 * ImageSizePixels(1)^2 + FontSizeCurveFit.p2 * ImageSizePixels(1) + FontSizeCurveFit.p3)*2)/2;       % make in increments on 0.5 
+    colorbarFontSize = round((FontSizeCurveFit.p1 * MD_EPI.imSize_(1)^2 + FontSizeCurveFit.p2 * MD_EPI.imSize_(1) + FontSizeCurveFit.p3)*2)/2;       % make in increments on 0.5 
     if colorbarFontSize < 7
         colorbarFontSize = 7;
     end   
@@ -1438,8 +1439,8 @@ function [MD, displField, FirstFrame, LastFrame, movieFilePath, outputPath, anal
 
     while FontNotOK
         figHandlePreview = figure('visible',showPlot, 'color', 'w', 'Toolbar','none', 'Menubar','none', 'Units', 'pixels', 'Resize', 'off', 'Renderer', FigRenderer);     % added by WIM on 2019-09-14. To show, remove 'visible
-        WindowAPI(figHandlePreview, 'Position', [offSetWindow, (ScreenSize(4) - ImageSizePixels(2) - (offSetWindow + (2* bandSize))), ...
-                ImageSizePixels(1) + 300, ImageSizePixels(2) + (2 * bandSize)])          
+        WindowAPI(figHandlePreview, 'Position', [offSetWindow, (ScreenSize(4) - MD_EPI.imSize_(2) - (offSetWindow + (2* bandSize))), ...
+                MD_EPI.imSize_(1) + 300, MD_EPI.imSize_(2) + (2 * bandSize)])          
         figAxesHandle = axes;
         set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse');
         set(figAxesHandle, 'Units', 'pixels');        

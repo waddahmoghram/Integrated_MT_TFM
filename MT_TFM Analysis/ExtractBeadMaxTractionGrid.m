@@ -21,7 +21,8 @@
   %}
 
 %%
-    PlotsFontName = 'XITS'; 
+    PlotsFontName1 = 'XITS'; 
+    PlotsFontName2 = 'Inconsolata Condensed '
     EdgeErode = 1;
     gridMagnification = 1;
     bandSize = 0;
@@ -384,8 +385,8 @@
         'TitleFontSizeMultiplier', 0.9, ...
         'TitleFontWeight', 'bold');     % Make axes bold 
     xlabelHandle = xlabel(sprintf('\\rm %s', xLabelTime));
-    set(xlabelHandle, 'FontName', PlotsFontName)
-    ylabel('\bf|\itT\rm_{TxRed}(\itt\rm)\bf|\rm [Pa]', 'FontName', PlotsFontName); 
+    set(xlabelHandle, 'FontName', PlotsFontName1)
+    ylabel('\bf|\itT\rm_{TxRed}(\itt\rm)\bf|\rm [Pa]', 'FontName', PlotsFontName1); 
     
     title({'Maximum EPI Bead Traction (Interpolated)',sprintf('Max at (X,Y) = (%d,%d) pix in Frame %d/%d = %0.3f sec',...
         XI(MaxTractionIndex), YI(MaxTractionIndex), ...
