@@ -1,19 +1,18 @@
-function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, QuiverScaleToMax, QuiverColor, ...
+function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displField, CurrentFrame, MD_DIC_ChannelCount, QuiverScaleToMax, QuiverColor, ...
     GrayLevelsPercentile, colormapLUT, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT, scalebarFontSize)
-
 
     trackedBeads = numel(find(~isnan(displField(CurrentFrame).vec(:,1)==1)));
     FontName1 = 'Inconsolata ExtraCondensed';
 
     try
-        CurrentFramePlot = gpuArray(MD_EPI.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame));
+        CurrentFramePlot = gpuArray(MD_EPI.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame));
     catch
-        CurrentFramePlot = MD_EPI.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame);
+        CurrentFramePlot = MD_EPI.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame);
     end
     CurrentFramePlot = imadjust(CurrentFramePlot, stretchlim(CurrentFramePlot,GrayLevelsPercentile));
 
     NumDigits = numel(num2str(FramesNumEPI));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
-    FormatSpecifier = sprintf('%%0.%di', NumDigits);
+    FormatSpecifier = sprintf('%%%dg', NumDigits);
 
     imgHandle = imshow(CurrentFramePlot, 'Border', 'tight', 'Colormap', colormapLUT);    
     axis image
@@ -37,9 +36,8 @@ function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displ
     sBar = scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI,'ScaleLengthRatio', ScaleMicronPerPixel_EPI,'color', QuiverColor, 'bold', true, 'unit',sprintf('%sm', char(181)), ...
         'fontsize',scalebarFontSize, 'fontname',FontName1, 'location',Location);
 
-
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
-    FrameString = sprintf('#Beads=%d. %s. \\itt\\rm=%0.3fs. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString{:});
+    FrameString = sprintf('#Beads=%d. %s. \\itt\\rm=% 6.3fs. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontName',FontName1);
     Location = [3,1];

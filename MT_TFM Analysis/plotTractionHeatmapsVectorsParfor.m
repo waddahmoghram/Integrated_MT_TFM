@@ -118,9 +118,9 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParfor(MD_EPI,forceFiel
 
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
     NumDigits = numel(num2str(FramesNumEPI));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
-    FormatSpecifier = sprintf('%%0.%di', NumDigits);    
+    FormatSpecifier = sprintf('%%%dg', NumDigits);   
     FrameString = sprintf('Frame %s/%s', sprintf(FormatSpecifier, CurrentFrame), sprintf(FormatSpecifier, FramesNumEPI));
-    FrameString = sprintf('%s. \\itt\\rm=%0.3fs. %s', FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
+    FrameString = sprintf('%s. \\itt\\rm=% 6.3fs. %s', FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'left', 'Color',  imcomplement(colormapLUT(1, :)), 'FontName',FontName1);
     
@@ -130,13 +130,13 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParfor(MD_EPI,forceFiel
 
     Location =  MD_EPI.imSize_ .* [0.5, 1] + [3,0];
     tractionInfoTxt = sprintf('%s \\lambda_{2}=%0.5g', tractionInfoTxt, reg_corner_averaged);
-    text(figAxesHandle, Location(1), Location(2), tractionInfoTxt , 'FontSize', sBar.Children(1).FontSize, 'VerticalAlignment', 'bottom', ...
+    text(figAxesHandle, Location(1), Location(2), tractionInfoTxt , 'FontSize', sBar.Children(1).FontSize - 2, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'center', 'Color',  imcomplement(colormapLUT(1, :)), 'FontWeight','bold', 'FontName',FontName1);
 
-
-    quiver(figAxesHandle, X, Y,U .*QuiverScaleToMax,V .*QuiverScaleToMax, 0, ...
-                   'MarkerSize',MarkerSize, 'markerfacecolor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3, ...
-                  'color', QuiverColor, 'AutoScale','on', 'LineWidth', QuiverLineWidth , 'AlignVertexCenters', 'on');
+% 
+%     quiver(figAxesHandle, X, Y,U .*QuiverScaleToMax,V .*QuiverScaleToMax, 0, ...
+%                    'MarkerSize',MarkerSize, 'markerfacecolor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3, ...
+%                   'color', QuiverColor, 'AutoScale','on', 'LineWidth', QuiverLineWidth , 'AlignVertexCenters', 'on');
 
     plottedFrame =  getframe(figHandle);
     CurrentFramePlot =  plottedFrame.cdata;

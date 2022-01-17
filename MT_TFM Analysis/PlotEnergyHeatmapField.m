@@ -274,30 +274,33 @@ function [MD, energyDensityField, FirstFrame, LastFrame, movieFilePath, outputPa
                 fprintf([reverseString, ProgressMsg]);
                 reverseString = repmat(sprintf('\b'), 1, length(ProgressMsg));
                 
-                if useGPU
-                    FieldVec = gpuArray(energyDensityField(CurrentFrame).vec);
-                else
-                    FieldVec = energyDensityField(CurrentFrame).vec;
-                end          
-                if nargin < 4 || isempty(maxInput)
-                    [maxInput, maxInputIndex] = max([maxInput, max(FieldVec)]);
-                    if maxInputIndex == 2, maxFrame = CurrentFrame; end
-                    minInput = min([minInput,min(FieldVec)]);
+%                 if useGPU
+%                     FieldVec = gpuArray(energyDensityField(CurrentFrame).vec);
+%                 else
+%                     FieldVec = energyDensityField(CurrentFrame).vec;
+%                 end          
+%                 if nargin < 4 || isempty(maxInput)
+%                     [maxInput, maxInputIndex] = max([maxInput, max(FieldVec)]);
+%                     if maxInputIndex == 2, maxFrame = CurrentFrame; end
+%                     minInput = min([minInput,min(FieldVec)]);
+%                 end
+%             end 
+
+          % This is the most rigorous way, but it is very time consuming. 
+                [~,d_mat, ~, ~] = interp_vec2grid(displField(CurrentFrame).pos(:,1:2), displField(CurrentFrame).vec(:,1:2),[],reg_grid1, 'griddata');            % 1:cluster size
+                d_norm = (d_mat(:,:,1).^2 + d_mat(:,:,2).^2).^0.5;
+                     % Boundary cutting - I'll take care of this boundary effect later
+                if band > 2
+                    d_norm(end-(round(band/2)+1:end),:)=[];
+                    d_norm(:,end-(round(band/2)+1:end))=[];
+                    d_norm(1:(round(band/2)-1),:)=[];
+                    d_norm(:,1:(round(band/2)-1))=[];
                 end
-            end 
-%           % This is the most rigorous way, but it is very time consuming. 
-%                 [~,fmat, ~, ~] = interp_vec2grid(energyDensityField(CurrentFrame).pos(:,1:2), energyDensityField(CurrentFrame).vec,[],reg_grid1);            % 1:cluster size
-%                 fnorm = (fmat(:,:,1).^2 + fmat(:,:,2).^2).^0.5;
-%                      % Boundary cutting - I'll take care of this boundary effect later
-%                 fnorm(end-round(band/2):end,:)=[];
-%                 fnorm(:,end-round(band/2):end)=[];
-%                 fnorm(1:1+round(band/2),:)=[];
-%                 fnorm(:,1:1+round(band/2))=[];
-%                 fnorm_vec = reshape(fnorm,[],1); 
-%                 [maxInput, maxInputIndex] = max([maxInput,max(fnorm_vec)]);
-%                 if maxInputIndex == 2, maxFrame = CurrentFrame; end
-%                 minInput = min([minInput,min(fnorm_vec)]);
-%             end
+                d_norm_vec = reshape(d_norm,[],1); 
+                [maxInput, maxInputIndex] = max([maxInput,max(d_norm_vec)]);
+                if maxInputIndex == 2, maxFrame = CurrentFrame; end
+                minInput = min([minInput,min(d_norm_vec)]);
+            end
     else
 %         msgbox('Make sure the Maximum Displacement entered is in microns.')
     end  

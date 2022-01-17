@@ -1,13 +1,14 @@
-function [CurrentFramePlot] = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBeadCoordinatesXYpixels, CurrentFrame, MD_DIC_ChannelCount, BeadRadius, QuiverColor, ...
-    GrayLevelsPercentile, colormapLUT, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC,FluxStatusString, TrackingInfoTXT, scalebarFontSize)
+function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_EPI_ChannelCount, ...
+    QuiverColor, GrayLevelsPercentile, colormapLUT, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, FluxStatusString, ...
+    TrackingInfoTXT, scalebarFontSize)
     
     FontName1 = 'Inconsolata ExtraCondensed';
     FontName2 = 'XITS';
 
     try
-        CurrentFramePlot = gpuArray(MD_DIC.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame));
+        CurrentFramePlot = gpuArray(MD_DIC.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame));
     catch
-        CurrentFramePlot = MD_DIC.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame);
+        CurrentFramePlot = MD_DIC.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame);
     end
     CurrentFramePlot = imadjust(CurrentFramePlot, stretchlim(CurrentFramePlot,GrayLevelsPercentile));
 
@@ -25,12 +26,9 @@ function [CurrentFramePlot] = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBea
     FrameString = sprintf('Frame %s/%s', sprintf(FormatSpecifier, CurrentFrame), sprintf(FormatSpecifier, FramesNumDIC));
     figHandle.Name = FrameString;
 
-    plot(figAxesHandle,MagBeadCoordinatesXYpixels(CurrentFrame,1), MagBeadCoordinatesXYpixels(CurrentFrame,2), 'Marker','+', ...
-        'MarkerSize', BeadRadius(CurrentFrame)/2, 'Color',QuiverColor, 'LineWidth', 1) 
-    hold on
-    plot(figAxesHandle,MagBeadCoordinatesXYpixels(CurrentFrame,1), MagBeadCoordinatesXYpixels(CurrentFrame,2), 'Marker','o', ...
-        'MarkerSize', BeadRadius(CurrentFrame), 'Color',QuiverColor, 'LineWidth', 0.5, 'LineStyle', '--');
-
+    quiver(figAxesHandle, MagBeadCoordinatesXYpixels(1,1), MagBeadCoordinatesXYpixels(1,2), ...
+        MagBeadCoordinatesXYNetpixels(CurrentFrame,1), MagBeadCoordinatesXYNetpixels(CurrentFrame,2), ...
+                   'MarkerSize',1, 'MarkerFaceColor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3 , 'LineWidth', 0.75 ,  'color',QuiverColor, 'AutoScale','off');
     Location = MD_DIC.imSize_ - [3,3];       
     sBar = scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI, 'ScaleLengthRatio', ScaleMicronPerPixel_DIC, 'color', QuiverColor, 'bold', true, ...
         'unit', sprintf('%sm', char(181)), 'location', Location, 'fontname', FontName1, 'fontsize',  scalebarFontSize);
