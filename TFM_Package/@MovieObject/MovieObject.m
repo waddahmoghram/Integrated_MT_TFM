@@ -47,7 +47,7 @@ classdef  MovieObject < matlab.mixin.SetGet
             % Set the ouput
             endingFilesepToken = [regexptranslate('escape',filesep) '$'];
             aPath = regexprep(path,endingFilesepToken,'');
-            obj.checkPropertyValue('outputDirectory_',aPath);
+%             obj.checkPropertyValue('outputDirectory_',aPath);
             obj.outputDirectory_=aPath;
         end
         
@@ -60,7 +60,7 @@ classdef  MovieObject < matlab.mixin.SetGet
             % Test if the property is writable
             if(~obj.checkProperty(property))
                 propName = lower(property(1:end-(property(end) == '_')));
-                claerror('lccb:set:readonly',...
+                error('lccb:set:readonly',...
                     ['The ' propName ' has been set previously and cannot be changed!']);
             end
             

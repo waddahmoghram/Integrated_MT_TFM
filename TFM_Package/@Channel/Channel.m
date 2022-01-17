@@ -38,10 +38,10 @@ classdef Channel < matlab.mixin.SetGet & matlab.mixin.Copyable
         %HCS plate site indicator in second cell HCS plate wavelength names
         %in the third cell
         psfSigma_                   % Standard deviation of the psf
+        channelPath_                % Channel path (directory containing image(s))
     end
     
     properties(SetAccess=protected)
-        channelPath_                % Channel path (directory containing image(s))
         owner_                      % MovieData object which owns this channel
     end
     
@@ -197,7 +197,7 @@ classdef Channel < matlab.mixin.SetGet & matlab.mixin.Copyable
             if strcmp(property,'channelPath_');
                 stack = dbstack;
                 if any(cellfun(@(x)strcmp(x,'Channel.relocate'),{stack.name})),
-                    status  =true;
+                    status = true;
                 end
             end
         end

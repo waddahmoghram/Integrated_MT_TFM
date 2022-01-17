@@ -58,7 +58,8 @@ function calculateMovieForceField(movieData,varargin)
     if isempty(iProc)
         iProc = numel(movieData.processes_)+1;
         movieData.addProcess(ForceFieldCalculationProcess(movieData,...
-            movieData.outputDirectory_));                                                                                                 
+            movieData.outputDirectory_));    
+        movieData.processes_{iProc}.startTime_ = clock;        
     end
     forceFieldProc = movieData.processes_{iProc};
 
@@ -1096,7 +1097,7 @@ function calculateMovieForceField(movieData,varargin)
     tmax = -1;
     tmin = Inf;
     band = 0;
-    reg_grid1 = createRegGridFromDisplField(forceField,1,1);                                    % Updated by WIM on 2020-01-20, mag = 1, erodeEdge = 1
+    reg_grid1 = createRegGridFromDisplField(forceField,1,0);                                    % Updated by WIM on 2020-01-20, mag = 1, erodeEdge = 1
 %     ---------------------------------- 
     for ii=1:numel(forceField)
         %Load the saved body heat map.
@@ -1115,6 +1116,7 @@ function calculateMovieForceField(movieData,varargin)
     end
     
     save(outputFile{6},'tmax', 'tmin', '-append');                  % Added by WIM on 2019-09-23
+    movieData.processes_{iProc}.finishTime_ = clock;
     movieDataAfter = movieData;
     save(outputFile{6},'movieDataAfter', '-append');                  % Added by WIM on 2019-09-23    
     MD = movieData; 

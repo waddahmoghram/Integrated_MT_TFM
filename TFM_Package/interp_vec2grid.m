@@ -63,6 +63,7 @@ function [grid_mat,u, i_max, j_max, displHeatMap] = interp_vec2grid(pos, vec, cl
         method = 'Griddata';
     end
     %---------------
+    
     %% Check if there is a GPU. take advantage of it if is there. Updated on 2019-06-13    
     nGPU = gpuDeviceCount;
     if nGPU > 0

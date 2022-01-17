@@ -48,7 +48,8 @@ function correctMovieDisplacementField(movieData,varargin)
     if isempty(iProc)
         iProc = numel(movieData.processes_)+1;
         movieData.addProcess(DisplacementFieldCorrectionProcess(movieData,...
-            movieData.outputDirectory_));                                                                                                 
+            movieData.outputDirectory_)); 
+        movieData.processes_{iProc}.startTime_ = clock;
     end
     displFieldCorrProc = movieData.processes_{iProc};
     %Parse input, store in parameter structure
@@ -427,7 +428,7 @@ function correctMovieDisplacementField(movieData,varargin)
 %     dmax = -1;
 %     dmin = Inf;
     band = 0;
-    reg_grid = createRegGridFromDisplField(displField,1,1);
+    reg_grid = createRegGridFromDisplField(displField,1,0);
 %     ---------------------------------- 
     disp('Identifying the limits of the interpolated displacement grid limits over all frames without generating it yet.')
     disp('Note that these values might be extreme due to noise. Rely more on outlier-cleaned/filtered/drift corrected values')
@@ -468,6 +469,7 @@ function correctMovieDisplacementField(movieData,varargin)
     
     % displFieldProc.setTractionMapLimitsMicrons([dminMicrons, dmaxMicrons])
     save(outputFile{3}, 'dmin', 'dmax', 'dminMicrons', 'dmaxMicrons', 'AllOutlierIndices', '-append');           % Added 2019-09-23 by WIM. Updated on 2020-09-15   
+    movieData.processes_{iProc}.finishTime_ = clock;
     movieDataAfter = MovieData;
     save(outputFile{3}, 'movieDataAfter', '-append');                                                                                    % Updated movie data at the end of the process.
     MD = movieData; 

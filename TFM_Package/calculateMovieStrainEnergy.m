@@ -58,7 +58,8 @@ iProc = movieData.getProcessIndex('StrainEnergyCalculationProcess',1,0);
 if isempty(iProc)
     iProc = numel(movieData.processes_)+1;
     movieData.addProcess(StrainEnergyCalculationProcess(movieData,...
-        movieData.outputDirectory_));                                                                                                 
+        movieData.outputDirectory_));   
+    movieData.processes_{iProc}.startTime_ = clock;
 end
 strainEnergyCalculationProcess = movieData.processes_{iProc};
 %Parse input, store in parameter structure
@@ -378,12 +379,11 @@ end
 save(outputFile{1,10},'SE_Blobs','totalForceBlobs', 'SE_Cell','totalForceCell','SE_FOV','totalForceFOV','-v7.3')
 
 %----------- Added by Waddah Moghram on 8/21/2019. On 2019-12-12
+movieData.processes_{iProc}.finishTime_ = clock;
 movieDataAfter = movieData;
 save(outputFile{1,11},  'strainEnergyCalculationProcess', 'StrainEnergyProcessParameters', 'movieDataAfter','forceFieldProc','CorrectedDisplFieldProc', 'iMaskProcess','iSDCProc','-append');
 MD = movieData;
 save(outputFile{1,13}, 'MD', '-v7.3');
-
-
 %-------------------------------
 
 %% Close waitbar

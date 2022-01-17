@@ -157,7 +157,7 @@ classdef  MovieData < MovieObject & matlab.mixin.Heterogeneous
             % Format the path
             endingFilesepToken = [regexptranslate('escape',filesep) '$'];
             path = regexprep(path,endingFilesepToken,'');
-            obj.checkPropertyValue('movieDataPath_',path);
+%             obj.checkPropertyValue('movieDataPath_',path);
             obj.movieDataPath_=path;
         end
         

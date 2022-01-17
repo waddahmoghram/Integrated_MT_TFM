@@ -25,8 +25,6 @@ classdef Process < hgsetget
     properties (SetAccess = private, GetAccess = public)
         owner_          % Movie data object owning the process
         createTime_     % Time process was created
-        startTime_      % Time process was last started
-        finishTime_     % Time process was last run
     end
     
     properties  (SetAccess = protected)
@@ -52,6 +50,8 @@ classdef Process < hgsetget
 
     end
     properties
+        startTime_      % Time process was last started
+        finishTime_     % Time process was last run
         notes_          % Process notes
     end
     properties (Transient=true)

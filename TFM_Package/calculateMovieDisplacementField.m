@@ -52,7 +52,8 @@ function calculateMovieDisplacementField(movieData,varargin)
     if isempty(iProc)
         iProc = numel(movieData.processes_)+1;
         movieData.addProcess(DisplacementFieldCalculationProcess(movieData,...
-            movieData.outputDirectory_));                                                                                                 
+            movieData.outputDirectory_));
+        movieData.processes_{iProc}.startTime_ = clock;   
     end
     %----------------------------------
     displFieldProc = movieData.processes_{iProc};
@@ -644,7 +645,7 @@ function calculateMovieDisplacementField(movieData,varargin)
 %     dmax = -1;
 %     dmin = Inf;
     band = 0;
-    reg_grid = createRegGridFromDisplField(displField,1,1);
+    reg_grid = createRegGridFromDisplField(displField,1,0);
 %     ---------------------------------- 
     disp('Identifying the limits of the interpolated displacement grid limits over all frames without generating it yet.')
     disp('Note that these values might be extreme due to noise. Rely more on outlier-cleaned/filtered/drift corrected values')
@@ -684,13 +685,17 @@ function calculateMovieDisplacementField(movieData,varargin)
 %     displFieldProc.setTractionMapLimitsMicrons([dminMicrons, dmaxMicrons])
     
     save(outputFile{3}, 'dmin', 'dmax', 'dminMicrons', 'dmaxMicrons', 'dmaxIdx', 'dminIdx', '-append');           % Added 2019-09-23 by WIM
+    movieData.processes_{iProc}.finishTime_ = clock;
     movieDataAfter = movieData;
-    save(outputFile{3}, 'movieDataAfter', '-append');                                                                                    % Updated movie data at the end of the process.
+    save(outputFile{3}, 'movieDataAfter', '-append');      
+    % Updated movie data at the end of the process.
     MD = movieData; 
     save(outputFile{5}, 'MD','-v7.3');
     
     %% ----------------------------------
     % Close waitbar
     if ishandle(wtBar), close(wtBar); end
+
     %% ----------------------------------
+
     disp('-------------------------- Displacement field calculation COMPLETE --------------------------')
