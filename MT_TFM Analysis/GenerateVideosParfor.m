@@ -42,12 +42,6 @@
 %         % continue
 %     end
 
-%      VideoChoice = 'Motion JPEG AVI';
-%      VideoChoice = 'MPEG-4';    
-     VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
-%     VideoChoice = 'Uncompressed AVI';
-%     VideoChoice = 'Archival';
-
     ImageSize = [200, 500, 1000, 2000]';         % pixels
     FontSizeDesired = [7, 17, 19, 28]';          
     FontSizeCurveFit = fit(ImageSize,FontSizeDesired,'poly2');       % quadratic fit between 200 pixels and 2000 pixels window size.
@@ -91,12 +85,17 @@
     totalBeadsTracked = numel(displField(RefFrameNumEPI).pos(:,1));
 
 %% Video 1 & 2: 
-% Video 1:==================================================================
     disp('----------------------------------------------------------------------------------------------------------------')
     displFieldProcess =  MD_EPI.findProcessTag('DisplacementFieldCalculationProcess').tag_;
     displacementFileFullNameRaw = MD_EPI.findProcessTag(displFieldProcess).outFilePaths_{1};  
     load(displacementFileFullNameRaw, 'displField');                % at this point. displField.mat is the default file
     fprintf('Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullNameRaw);
+
+ %      VideoChoice = 'Motion JPEG AVI';
+%      VideoChoice = 'MPEG-4';    
+     VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
+%     VideoChoice = 'Uncompressed AVI';
+%     VideoChoice = 'Archival';
 
     [VideoPathName, VideoFileNameSuffix, ~] = fileparts(displacementFileFullNameRaw);   
     VideoFileName = strcat(VideoFileNameSuffix, '_tracked');
@@ -105,16 +104,18 @@
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj.FrameRate = FrameRateRT_EPI; 
     displFieldPath = VideoPathName;
-    fprintf("-------- Video 1.  tracked beads: %s ------------------\n", VideoWriterObj.Filename)
 
-    disp('1.1 Finding the bead with the maximum displacement in ON/Transient frames IN PROGRESS')
     FramesNumEPI = numel(displField);
     FramesDoneNumbers = 1:FramesNumEPI;
     FramesDoneNumbersONTrans = FramesDoneNumbersEPI(FluxON | FluxTransient);
+
+%% Video 1:==================================================================
+    fprintf("-------- Video 1.  tracked beads: %s ------------------\n", VideoWriterObj.Filename)
+
+    disp('1.1 Finding the bead with the maximum displacement in ON/Transient frames IN PROGRESS')
     dmaxTMP = nan(FramesNumEPI, 1);
     dmaxTMPindex = nan(FramesNumEPI, 1);
     diary off
-    parfor_progressPath = VideoPathName;
     parfor_progress(numel(FramesDoneNumbersEPI), displFieldPath);
     parfor CurrentFrame = FramesDoneNumbersEPI
         if find(FramesDoneNumbersONTrans == CurrentFrame)
@@ -244,9 +245,9 @@
             d_norm_vec = reshape(d_norm,[],1); 
             [dmaxTMPgrid(CurrentFrame), dmaxTMPindex(CurrentFrame)] = max(d_norm_vec);
         end
-        parfor_progress(-1, parfor_progressPath);
+        parfor_progress(-1, displFieldPath);
     end
-    parfor_progress(0, parfor_progressPath);
+    parfor_progress(0, displFieldPath);
     diary on
     [dmaxPixGridFine, MaxDisplFrameNumber] = max(dmaxTMPgrid(:,1));
     dmaxMicronsFine = dmaxPixGridFine  * ScaleMicronPerPixel_EPI;
