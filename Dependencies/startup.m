@@ -9,15 +9,15 @@ if gpuDeviceCount ~= 0
     gpuDev = gpuDevice
 end
 patchJobStorageLocation
-localcluster = parcluster('local')
-localcluster.NumThreads = 1
-localcluster.NumWorkers = threadCount
+localcluster = parcluster('local');
+localcluster.NumThreads = 1;
+localcluster.NumWorkers = threadCount - 1;
 delete(localcluster.Jobs)
 localcluster.JobStorageLocation
 delete(gcp('nocreate'));
 % pause(20);          % pause 10 seconds
-% poolObj = localcluster.parpool(threadCount)
-% poolObj.IdleTimeout = Inf
+poolObj = localcluster.parpool();
+poolObj.IdleTimeout = Inf;
 
 s = settings;
 s.matlab.general.matfile.SaveFormat.TemporaryValue = 'v7.3'

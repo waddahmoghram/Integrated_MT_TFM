@@ -1,15 +1,15 @@
-function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_EPI_ChannelCount, ...
+function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_DIC_ChannelCount, ...
     QuiverColor, GrayLevelsPercentile, colormapLUT, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, FluxStatusString, ...
-    TrackingInfoTXT, scalebarFontSize)
+    TrackingInfoTXT, scalebarFontSize, useGPU)
     
     FontName1 = 'Inconsolata ExtraCondensed';
-    FontName2 = 'XITS';
 
     try
-        CurrentFramePlot = gpuArray(MD_DIC.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame));
+        CurrentFramePlot = MD_DIC.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame);
     catch
-        CurrentFramePlot = MD_DIC.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame);
+        CurrentFramePlot = MD_DIC.channels_.loadImage(CurrentFrame);
     end
+    if useGPU, CurrentFramePlot = gpuArray(CurrentFramePlot); end
     CurrentFramePlot = imadjust(CurrentFramePlot, stretchlim(CurrentFramePlot,GrayLevelsPercentile));
 
     NumDigits = numel(num2str(FramesNumDIC));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
@@ -20,11 +20,9 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
     truesize
     hold on
     figAxesHandle = imgHandle.Parent;
-    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse');
-    set(figAxesHandle, 'Units', 'pixels');
+    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels');
     figHandle = figAxesHandle.Parent;
     FrameString = sprintf('Frame %s/%s', sprintf(FormatSpecifier, CurrentFrame), sprintf(FormatSpecifier, FramesNumDIC));
-    figHandle.Name = FrameString;
 
     quiver(figAxesHandle, MagBeadCoordinatesXYpixels(1,1), MagBeadCoordinatesXYpixels(1,2), ...
         MagBeadCoordinatesXYNetpixels(CurrentFrame,1), MagBeadCoordinatesXYNetpixels(CurrentFrame,2), ...
@@ -41,8 +39,9 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
     text(figAxesHandle, Location(1), Location(2), TrackingInfoTXT , 'FontSize', sBar.Children(1).FontSize - 2, 'VerticalAlignment', 'top', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontName', FontName1);
 
-    plottedFrame =  getframe(figAxesHandle);
-    CurrentFramePlot =  plottedFrame.cdata;
-    delete(figAxesHandle)
+    plottedFrame =  getframe(figHandle);
     close(figHandle)
+    clearvars -except plottedFrame  
+    CurrentFramePlot =  plottedFrame.cdata;
+    clear plottedFrame   
 end

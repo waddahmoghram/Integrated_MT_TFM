@@ -251,4 +251,6 @@ function [grid_mat,u, i_max, j_max, displHeatMap] = interp_vec2grid(pos, vec, cl
         i_max = gather(i_max);
         j_max = gather(j_max);
     end
+
+    clearvars -except grid_mat u i_max j_max  displHeatMap
 end
