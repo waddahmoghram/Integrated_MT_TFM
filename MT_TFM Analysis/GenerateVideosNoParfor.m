@@ -84,18 +84,6 @@
         (max(displField(RefFrameNumEPI).pos(:,2)) -  min(displField(RefFrameNumEPI).pos(:,2)));                 % x-length * y-length
     totalBeadsTracked = numel(displField(RefFrameNumEPI).pos(:,1));
 
-       VideoChoice = 'Motion JPEG AVI';
-%      VideoChoice = 'MPEG-4';    
-%      VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
-%     VideoChoice = 'Uncompressed AVI';
-%     VideoChoice = 'Archival';
-%% searchpath for current project to be attached
-searchPath = split(path, ';');
-proj = currentProject;
-for ii = 1:numel(proj.ProjectPath)
-    searchPathProject{ii} = proj.ProjectPath(ii).File;
-end
-
 %% Video 1 & 2: 
     disp('----------------------------------------------------------------------------------------------------------------')
     displFieldProcess =  MD_EPI.findProcessTag('DisplacementFieldCalculationProcess').tag_;
@@ -113,8 +101,7 @@ end
     VideoFileName = strcat(VideoFileNameSuffix, '_tracked');
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
-    if any(strcmpi(VideoChoice, {'Motion JPEG AVI', 'MPEG-4'})), VideoWriterObj.Quality = 100; end
-    VideoFullFileName = fullfile(VideoPathName, VideoWriterObj.Filename);
+    VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj.FrameRate = FrameRateRT_EPI; 
     displFieldPath = VideoPathName;
 
@@ -130,7 +117,7 @@ end
     dmaxTMPindex = nan(FramesNumEPI, 1);
     diary off
     parfor_progress(numel(FramesDoneNumbersEPI), displFieldPath);
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
         if find(FramesDoneNumbersONTrans == CurrentFrame)
             dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
             if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
@@ -166,45 +153,32 @@ end
         displacementParameters.minCorLength,displacementParameters.maxFlowSpeed, displacementParameters.useGrid, displacementParameters.lastToFirst, displacementParameters.noFlowOutwardOnBorder);
     TrackingInfoTXT = sprintf('%s\nMaxDisplNetMicrons=%0.3f %s in %s @ [%0.3f, %0.3f] pix.', TrackingInfoTXT, MaxDisplNetMicrons(3), sprintf('%sm', char(181)), FrameString, MaxDispl_PosXY_Pixels); 
     videoImages = cell(FramesNumEPI, 1);
+    open(VideoWriterObj)
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
             videoImages{CurrentFrame} = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField,CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, ...
                 QuiverColor, colormapLUT_TxRed, GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
                 TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels); 
+            writeVideo(VideoWriterObj,  videoImages{CurrentFrame})
             parfor_progress(-1, displFieldPath);
     end
     parfor_progress(0, displFieldPath);
     diary on
     disp("1.2 Creating frames COMPLETE!") 
-
-    disp("1.3 Writing  frames IN PROGRESS") 
-    open(VideoWriterObj)
-    diary off
-    parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    for CurrentFrame = FramesDoneNumbersEPI 
-        writeVideo(VideoWriterObj,  videoImages{CurrentFrame})
-        parfor_progress(-1, displFieldPath);
-    end
-    parfor_progress(0, displFieldPath);
-    diary on
     close(VideoWriterObj)
-    disp("1.3 Writing  frames COMPLETE!") 
+
+    clear videoImages 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName)
     disp('----------------------------------------------------------------------------------------------------------------')
     winopen(VideoPathName)
 
-    delete(localcluster.Jobs)
-    clear videoImages 
-    
 %% Video 2:==================================================================
-    localcluster.parpool
     disp('----------------------------------------------------------------------------------------------------------------')  
     [VideoPathName, VideoFileNameSuffix, ~] = fileparts(displacementFileFullNameRaw);   
     VideoFileName = strcat(VideoFileNameSuffix, '_heatmap');
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
-    if any(strcmpi(VideoChoice, {'Motion JPEG AVI', 'MPEG-4'})), VideoWriterObj.Quality = 100; end
     VideoFullFileName = fullfile(VideoPathName, VideoWriterObj.Filename);
     VideoWriterObj.FrameRate = FrameRateRT_EPI; 
     displFieldPath = VideoPathName;
@@ -214,7 +188,7 @@ end
     disp('2.0 Calculating displacements in microns IN PROGRESS')
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);    
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
           displFieldMicron(CurrentFrame).pos = displField(CurrentFrame).pos;             % pixels
           displFieldMicron(CurrentFrame).vec = displField(CurrentFrame).vec * ScaleMicronPerPixel_EPI;
           parfor_progress(-1, displFieldPath);
@@ -248,7 +222,7 @@ end
     if useGPU, dmaxTMPgrid = gpuArray(dmaxTMPgrid); dmaxTMPindex = gpuArray(dmaxTMPindex); end
     diary off
     parfor_progress(numel(FramesDoneNumbersEPI), displFieldPath);
-    parfor CurrentFrame=FramesDoneNumbersEPI
+    for CurrentFrame=FramesDoneNumbersEPI
         if find(FramesDoneNumbersONTrans == CurrentFrame)
             [~, displVecGridXY,~,~] = interp_vec2grid(displField(CurrentFrame).pos(:,1:2), displField(CurrentFrame).vec(:,1:2) ,[], reg_gridFull, InterpolationMethod);         
             if useGPU, displVecGridXY = gpuArray(displVecGridXY);end
@@ -261,7 +235,6 @@ end
             end
             d_norm_vec = reshape(d_norm,[],1); 
             [dmaxTMPgrid(CurrentFrame), dmaxTMPindex(CurrentFrame)] = max(d_norm_vec);
-            displVecGridXY = [];
         end
         parfor_progress(-1, displFieldPath);
     end
@@ -316,30 +289,21 @@ end
         MaxDisplFieldIndexXY); 
     videoImages = cell(FramesNumEPI, 1);
     parfor_progressPath = displFieldPath;
+    open(VideoWriterObj)
     diary off
     parfor_progress(numel(FramesDoneNumbers), parfor_progressPath);
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
         videoImages{CurrentFrame} = plotDisplacementHeatmapsVectorParfor(MD_EPI,displFieldMicron, CurrentFrame, QuiverScaleToMax, ...
             QuiverColor, colormapLUT_TxRed, TrackingInfoTXT, colormapLUT_parula, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
-            reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize,useGPU, MaxDisplNetPixels)
+            reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize,useGPU, MaxDisplNetPixels);
+        writeVideo(VideoWriterObj,  videoImages{CurrentFrame})
         parfor_progress(-1, parfor_progressPath);
     end
     parfor_progress(0, parfor_progressPath);
     diary on
     disp("2.2 Creating frames COMPLETE!") 
 
-    disp("2.3 Writing  frames IN PROGRESS") 
-    open(VideoWriterObj)
-    diary off
-    parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    for CurrentFrame = FramesDoneNumbersEPI 
-        writeVideo(VideoWriterObj,  videoImages{CurrentFrame})
-        parfor_progress(-1, displFieldPath);
-    end
-    parfor_progress(0, displFieldPath);
-    diary on
     close(VideoWriterObj)
-    disp("2.3 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName)    
     clear videoImages
     disp('------------------------------------------------------------------------------')
@@ -354,8 +318,7 @@ end
     VideoFileName = strcat(VideoFileNameSuffix, '_vectors');
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
-    if any(strcmpi(VideoChoice, {'Motion JPEG AVI', 'MPEG-4'})), VideoWriterObj.Quality = 100; end
-    VideoFullFileName = fullfile(VideoPathName, VideoWriterObj.Filename);
+    VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj.FrameRate = FrameRateRT_EPI; 
     displFieldPath = VideoPathName;
     fprintf("--------Video 3.  displacement vectors: %s ------------------\n", VideoWriterObj.Filename)
@@ -367,7 +330,7 @@ end
     dmaxTMPindex = nan(FramesNumEPI, 1);    
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    parfor CurrentFrame = FramesDoneNumbers
+    for CurrentFrame = FramesDoneNumbers
         if find(FramesDoneNumbersONTrans == CurrentFrame)
             dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
             displField(CurrentFrame).vec(:,3)  = dnorm_vec;
@@ -408,7 +371,7 @@ end
     videoImages = cell(FramesNumEPI, 1);
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
         videoImages{CurrentFrame} = plotDisplacementOverlaysVectorsParfor(MD_EPI,displField,CurrentFrame, MD_EPI_ChannelCount, QuiverScaleToMax, ...
             QuiverColor, colormapLUT_TxRed, GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, ...
             FluxStatusString{CurrentFrame}, TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels); 
@@ -439,7 +402,6 @@ end
     VideoFileName = strcat(VideoFileNameSuffix, '_heatmap');
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
-    if any(strcmpi(VideoChoice, {'Motion JPEG AVI', 'MPEG-4'})), VideoWriterObj.Quality = 100; end
     VideoFullFileName = fullfile(VideoPathName, VideoWriterObj.Filename);
     VideoWriterObj.FrameRate = FrameRateRT_EPI; 
     displFieldPath = VideoPathName;
@@ -449,7 +411,7 @@ end
     disp('4.0 Calculating displacements in microns IN PROGRESS')
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);    
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
           displFieldMicron(CurrentFrame).pos = displField(CurrentFrame).pos;             % pixels
           displFieldMicron(CurrentFrame).vec = displField(CurrentFrame).vec * ScaleMicronPerPixel_EPI;
           parfor_progress(-1, displFieldPath);
@@ -481,7 +443,7 @@ end
     dmaxTMPindex = nan(FramesNumEPI, 1);
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    parfor CurrentFrame=FramesDoneNumbersEPI
+    for CurrentFrame=FramesDoneNumbersEPI
         if find(FramesDoneNumbersONTrans == CurrentFrame)
             %Load the saved body heat map.
             [~, displVecGridXY,~,~] = interp_vec2grid(displField(CurrentFrame).pos(:,1:2), displField(CurrentFrame).vec(:,1:2) ,[], reg_gridFull, InterpolationMethod);         
@@ -555,7 +517,7 @@ end
     diary off
     parfor_progressPath = displFieldPath;
     parfor_progress(FramesNumEPI, parfor_progressPath);
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
         videoImages{CurrentFrame} = plotDisplacementHeatmapsVectorParfor(MD_EPI,displFieldMicron, CurrentFrame, QuiverScaleToMax, ...
             QuiverColor, colormapLUT_TxRed, TrackingInfoTXT, colormapLUT_parula, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
             reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, useGPU, MaxDisplNetPixels)
@@ -589,7 +551,6 @@ end
     VideoFileName = strcat(VideoFileNameSuffix, '_heatmap');
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
-    if any(strcmpi(VideoChoice, {'Motion JPEG AVI', 'MPEG-4'})), VideoWriterObj.Quality = 100; end
     VideoFullFileName = fullfile(VideoPathName, VideoWriterObj.Filename);
     VideoWriterObj.FrameRate = FrameRateRT_EPI; 
     forceFieldPath = VideoPathName;
@@ -603,7 +564,7 @@ end
     diary off
     parfor_progressPath = TractionForcePath;
     parfor_progress(numel(FramesDoneNumbers), parfor_progressPath);
-    parfor CurrentFrame=FramesDoneNumbersEPI
+    for CurrentFrame=FramesDoneNumbersEPI
         if find(FramesDoneNumbersONTrans == CurrentFrame) 
             [~, stressFieldGridXY,~,~] = interp_vec2grid(forceField(CurrentFrame).pos(:,1:2), forceField(CurrentFrame).vec(:,1:2) ,[], reg_gridFull, InterpolationMethod);         
             stressFieldGridXY = gpuArray(stressFieldGridXY);
@@ -669,7 +630,7 @@ end
     tractionInfoTxt = sprintf('\\itE\\rm=%0.3f Pa. \\nu=%0.2g.', YoungModulusPaOptimum, PoissonRatio);
     diary off
     parfor_progress(FramesNumEPI, parfor_progressPath);
-    parfor CurrentFrame = FramesDoneNumbersEPI
+    for CurrentFrame = FramesDoneNumbersEPI
             videoImages{CurrentFrame} = plotTractionHeatmapsVectorsParfor(MD_EPI,forceField, CurrentFrame, QuiverScaleToMax, QuiverColor, colormapLUT_TxRed, ...
                 TrackingInfoTXT, colormapLUT_parula, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
                 reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa)
@@ -702,7 +663,6 @@ end
     VideoFileName = strcat(VideoFileNameSuffix, '_bead');
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
-    if any(strcmpi(VideoChoice, {'Motion JPEG AVI', 'MPEG-4'})), VideoWriterObj.Quality = 100; end
     VideoFullFileName = fullfile(VideoPathName, VideoWriterObj.Filename);
     VideoWriterObj.FrameRate = FrameRateRT_DIC; 
     forceFieldPath = VideoPathName;
@@ -726,9 +686,9 @@ end
     disp("6.1 Creating frames IN PROGRESS") 
     videoImages = cell(FramesNumDIC, 1);
     diary off
-    parfor_progressPath = forceFieldPath;
+    parfor_progressPath = VideoPathName;
     parfor_progress(FramesNumDIC, parfor_progressPath);
-    parfor CurrentFrame = FramesDoneNumbersDIC
+    for CurrentFrame = FramesDoneNumbersDIC
             videoImages{CurrentFrame} = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBeadCoordinatesXYpixels,CurrentFrame, MD_DIC_ChannelCount, BeadRadius, ...
                 QuiverColor, GrayLevelsPercentile, colormapLUT_GrayScale, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, ...
                 FluxStatusString{CurrentFrame}, TrackingInfoTXT, scalebarFontSize, useGPU); 
@@ -762,9 +722,9 @@ end
     VideoFileName = strcat(VideoFileNameSuffix, '_vector');
     VideoFullFileName = fullfile(VideoPathName, VideoFileName);
     VideoWriterObj = VideoWriter(VideoFullFileName, VideoChoice);
-    if any(strcmpi(VideoChoice, {'Motion JPEG AVI', 'MPEG-4'})), VideoWriterObj.Quality = 100; end
     VideoFullFileName = fullfile(VideoPathName, VideoWriterObj.Filename);
     VideoWriterObj.FrameRate = FrameRateRT_DIC; 
+    forceFieldPath = VideoPathName;
     fprintf("-------- Video 7.  Making movie for Corrected DIC magnetic bead displacement vector: %s ------------------\n", VideoWriterObj.Filename)
 
     TrackingInfoTXT = sprintf('BeadTrackingMethod=%s. DriftTrackingMethod=%s. Max displ.=%0.3f%s (%0.3f%s Drift-corrected). ', ...
@@ -775,7 +735,7 @@ end
     diary off
     parfor_progressPath = VideoPathName;
     parfor_progress(FramesNumDIC, parfor_progressPath);
-    parfor CurrentFrame = FramesDoneNumbersDIC
+    for CurrentFrame = FramesDoneNumbersDIC
         videoImages{CurrentFrame} = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_EPI_ChannelCount, ...
             QuiverColor, GrayLevelsPercentile, colormapLUT_GrayScale, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, FluxStatusString{CurrentFrame}, ...
             TrackingInfoTXT, scalebarFontSize, useGPU)

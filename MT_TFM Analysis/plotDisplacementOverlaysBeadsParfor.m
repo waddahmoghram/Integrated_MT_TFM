@@ -2,7 +2,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
         GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels)
   %%
     MaxDisplNetPixelsCurrentFrame = max(vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2));
-    if MaxDisplNetPixelsCurrentFrame > MaxDisplNetPixels(3), error('Maximum displacement in an OFF frame. Check for max displacement in ALL FRAMES'); end
+    if MaxDisplNetPixelsCurrentFrame > MaxDisplNetPixels(3), error(sprintf('Maximum displacement in Frame #%d is more than max found. Check for max displacement in ALL FRAMES', CurrentFrame)); end
   %%
     FontName1 = 'Inconsolata ExtraCondensed';
 
@@ -34,7 +34,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
         'fontname',FontName1, 'FontSize', scalebarFontSize, 'bold', true, 'unit', sprintf('%sm', char(181)), 'location', Location);
 
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
-    FrameString = sprintf('#Beads=%d. %s. \\itt\\rm = % 6.3fs. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
+    FrameString = sprintf('#Beads = %d. %s. \\itt\\rm = % 6.3f s. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'FontName',FontName1, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor);
     Location = [3,1];
@@ -42,8 +42,9 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
                     'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontWeight','normal');
 
     plottedFrame =  getframe(figAxesHandle);
+    delete(figAxesHandle)
     close(figHandle)
-    clearvars -except plottedFrame  
+    clearvars -except plottedFrame  useGPU
     CurrentFramePlot =  plottedFrame.cdata;
-    clear plottedFrame   
+    if useGPU, CurrentFramePlot = gather(CurrentFramePlot);end
 end
