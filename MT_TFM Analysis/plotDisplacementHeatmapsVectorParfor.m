@@ -102,7 +102,7 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorParfor(MD_EPI,displF
     NumDigits = numel(num2str(FramesNumEPI));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
     FormatSpecifier = sprintf('%%%dg', NumDigits);
     FrameString = sprintf('Frame %s/%s', sprintf(FormatSpecifier, CurrentFrame), sprintf(FormatSpecifier, FramesNumEPI));
-    FrameString = sprintf('%s. \\itt\\rm = % 6.3fs. %s', FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
+    FrameString = sprintf('%s. \\itt\\rm = %6.3fs. %s', FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'left', 'Color',  colormapLUT(end,:), 'FontName',FontName1);    
     Location = [3,3];

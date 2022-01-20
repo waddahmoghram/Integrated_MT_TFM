@@ -91,7 +91,7 @@
     load(displacementFileFullNameRaw, 'displField');                % at this point. displField.mat is the default file
     fprintf('Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullNameRaw);
 
- %      VideoChoice = 'Motion JPEG AVI';
+%       VideoChoice = 'Motion JPEG AVI';
 %      VideoChoice = 'MPEG-4';    
      VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
 %     VideoChoice = 'Uncompressed AVI';
@@ -109,7 +109,7 @@
     FramesDoneNumbers = 1:FramesNumEPI;
     FramesDoneNumbersONTrans = FramesDoneNumbersEPI(FluxON | FluxTransient);
 
-%% Video 1:==================================================================
+% Video 1:==================================================================
     fprintf("-------- Video 1.  tracked beads: %s ------------------\n", VideoWriterObj.Filename)
 
     disp('1.1 Finding the bead with the maximum displacement in ON/Transient frames IN PROGRESS')
@@ -118,14 +118,12 @@
     diary off
     parfor_progress(numel(FramesDoneNumbersEPI), displFieldPath);
     for CurrentFrame = FramesDoneNumbersEPI
-        if find(FramesDoneNumbersONTrans == CurrentFrame)
-            dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
-            if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
-            displField(CurrentFrame).vec(:,3)  = dnorm_vec;
-            dmaxTMP(CurrentFrame) = max(dnorm_vec);
-            [~, IdxTMP] = max(dnorm_vec);
-            dmaxTMPindex(CurrentFrame) = IdxTMP;
-        end
+        dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
+        if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
+        displField(CurrentFrame).vec(:,3)  = dnorm_vec;
+        dmaxTMP(CurrentFrame) = max(dnorm_vec);
+        [~, IdxTMP] = max(dnorm_vec);
+        dmaxTMPindex(CurrentFrame) = IdxTMP;
         parfor_progress(-1, displFieldPath);
     end
     parfor_progress(0, displFieldPath);
@@ -188,7 +186,7 @@
     disp('2.0 Calculating displacements in microns IN PROGRESS')
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);    
-    for CurrentFrame = FramesDoneNumbersEPI
+    parfor CurrentFrame = FramesDoneNumbersEPI
           displFieldMicron(CurrentFrame).pos = displField(CurrentFrame).pos;             % pixels
           displFieldMicron(CurrentFrame).vec = displField(CurrentFrame).vec * ScaleMicronPerPixel_EPI;
           parfor_progress(-1, displFieldPath);
@@ -222,7 +220,7 @@
     if useGPU, dmaxTMPgrid = gpuArray(dmaxTMPgrid); dmaxTMPindex = gpuArray(dmaxTMPindex); end
     diary off
     parfor_progress(numel(FramesDoneNumbersEPI), displFieldPath);
-    for CurrentFrame=FramesDoneNumbersEPI
+    parfor CurrentFrame=FramesDoneNumbersEPI
         if find(FramesDoneNumbersONTrans == CurrentFrame)
             [~, displVecGridXY,~,~] = interp_vec2grid(displField(CurrentFrame).pos(:,1:2), displField(CurrentFrame).vec(:,1:2) ,[], reg_gridFull, InterpolationMethod);         
             if useGPU, displVecGridXY = gpuArray(displVecGridXY);end

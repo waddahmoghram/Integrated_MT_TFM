@@ -84,16 +84,17 @@
         (max(displField(RefFrameNumEPI).pos(:,2)) -  min(displField(RefFrameNumEPI).pos(:,2)));                 % x-length * y-length
     totalBeadsTracked = numel(displField(RefFrameNumEPI).pos(:,1));
 
-       VideoChoice = 'Motion JPEG AVI';
+%        VideoChoice = 'Motion JPEG AVI';
 %      VideoChoice = 'MPEG-4';    
 %      VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
 %     VideoChoice = 'Uncompressed AVI';
 %     VideoChoice = 'Archival';
+
 %% searchpath for current project to be attached
 searchPath = split(path, ';');
 proj = currentProject;
 for ii = 1:numel(proj.ProjectPath)
-    searchPathProject{ii} = proj.ProjectPath(ii).File;
+    searchPathProject{ii} = proj.ProjectPath(ii).File{:};
 end
 
 %% Video 1 & 2: 
@@ -105,9 +106,9 @@ end
 
  %      VideoChoice = 'Motion JPEG AVI';
 %      VideoChoice = 'MPEG-4';    
-     VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
+%      VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
 %     VideoChoice = 'Uncompressed AVI';
-%     VideoChoice = 'Archival';
+    VideoChoice = 'Archival';
 
     [VideoPathName, VideoFileNameSuffix, ~] = fileparts(displacementFileFullNameRaw);   
     VideoFileName = strcat(VideoFileNameSuffix, '_tracked');
@@ -131,14 +132,12 @@ end
     diary off
     parfor_progress(numel(FramesDoneNumbersEPI), displFieldPath);
     parfor CurrentFrame = FramesDoneNumbersEPI
-        if find(FramesDoneNumbersONTrans == CurrentFrame)
-            dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
-            if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
-            displField(CurrentFrame).vec(:,3)  = dnorm_vec;
-            dmaxTMP(CurrentFrame) = max(dnorm_vec);
-            [~, IdxTMP] = max(dnorm_vec);
-            dmaxTMPindex(CurrentFrame) = IdxTMP;
-        end
+        dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
+        if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
+        displField(CurrentFrame).vec(:,3)  = dnorm_vec;
+        dmaxTMP(CurrentFrame) = max(dnorm_vec);
+        [~, IdxTMP] = max(dnorm_vec);
+        dmaxTMPindex(CurrentFrame) = IdxTMP;
         parfor_progress(-1, displFieldPath);
     end
     parfor_progress(0, displFieldPath);
@@ -670,8 +669,8 @@ end
     diary off
     parfor_progress(FramesNumEPI, parfor_progressPath);
     parfor CurrentFrame = FramesDoneNumbersEPI
-            videoImages{CurrentFrame} = plotTractionHeatmapsVectorsParfor(MD_EPI,forceField, CurrentFrame, QuiverScaleToMax, QuiverColor, colormapLUT_TxRed, ...
-                TrackingInfoTXT, colormapLUT_parula, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
+            videoImages{CurrentFrame} = plotTractionHeatmapsVectorsParfor(MD_EPI,forceField, CurrentFrame, QuiverScaleToMax, QuiverColor, colormapLUT_parula, ...
+                TrackingInfoTXT, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
                 reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa)
                 parfor_progress(-1, parfor_progressPath);
     end

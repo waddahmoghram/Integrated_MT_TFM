@@ -34,7 +34,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
         'fontname',FontName1, 'FontSize', scalebarFontSize, 'bold', true, 'unit', sprintf('%sm', char(181)), 'location', Location);
 
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
-    FrameString = sprintf('#Beads = %d. %s. \\itt\\rm = % 6.3f s. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
+    FrameString = sprintf('%d microspheres. %s. \\itt\\rm = %6.3f s. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'FontName',FontName1, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor);
     Location = [3,1];

@@ -1,4 +1,4 @@
-function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displField, CurrentFrame, MD_DIC_ChannelCount, QuiverScaleToMax, QuiverColor, colormapLUT_TxRed,...
+function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, QuiverScaleToMax, QuiverColor, colormapLUT_TxRed,...
     GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT, scalebarFontSize, ...
     useGPU, MaxDisplNetPixels)
 %%
@@ -36,7 +36,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displ
         'fontname',FontName1, 'FontSize', scalebarFontSize, 'bold', true, 'unit', sprintf('%sm', char(181)), 'location', Location);
 
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
-    FrameString = sprintf('#Beads=%d. %s. \\itt\\rm=% 6.3fs. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
+    FrameString = sprintf('%d microspheres. %s. \\itt\\rm = %6.3f s. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontName',FontName1);
     Location = [3,1];
