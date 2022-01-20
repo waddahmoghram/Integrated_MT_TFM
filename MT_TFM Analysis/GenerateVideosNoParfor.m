@@ -631,7 +631,7 @@
     for CurrentFrame = FramesDoneNumbersEPI
             videoImages{CurrentFrame} = plotTractionHeatmapsVectorsParfor(MD_EPI,forceField, CurrentFrame, QuiverScaleToMax, QuiverColor, colormapLUT_TxRed, ...
                 TrackingInfoTXT, colormapLUT_parula, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
-                reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa)
+                reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa);
                 parfor_progress(-1, parfor_progressPath);
     end
     parfor_progress(0, parfor_progressPath);

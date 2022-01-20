@@ -30,8 +30,8 @@
 %         try
 %             copyfile(FontName1,matlabFontPath, 'f')
 %             copyfile(FontName2, matlabFontPath, 'f')
-% %             !matlab &
-% %             exit
+%             !matlab &
+%             exit
 %         catch
 %            font1 = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, java.io.File(FontName1));
 %            font2 = java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, java.io.File(FontName2));
@@ -84,18 +84,18 @@
         (max(displField(RefFrameNumEPI).pos(:,2)) -  min(displField(RefFrameNumEPI).pos(:,2)));                 % x-length * y-length
     totalBeadsTracked = numel(displField(RefFrameNumEPI).pos(:,1));
 
-%        VideoChoice = 'Motion JPEG AVI';
+ %      VideoChoice = 'Motion JPEG AVI';
 %      VideoChoice = 'MPEG-4';    
-%      VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
+     VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
 %     VideoChoice = 'Uncompressed AVI';
 %     VideoChoice = 'Archival';
 
 %% searchpath for current project to be attached
-searchPath = split(path, ';');
-proj = currentProject;
-for ii = 1:numel(proj.ProjectPath)
-    searchPathProject{ii} = proj.ProjectPath(ii).File{:};
-end
+    searchPath = split(path, ';');
+    proj = currentProject;
+    for ii = 1:numel(proj.ProjectPath)
+        searchPathProject{ii} = proj.ProjectPath(ii).File{:};
+    end
 
 %% Video 1 & 2: 
     disp('----------------------------------------------------------------------------------------------------------------')
@@ -103,12 +103,6 @@ end
     displacementFileFullNameRaw = MD_EPI.findProcessTag(displFieldProcess).outFilePaths_{1};  
     load(displacementFileFullNameRaw, 'displField');                % at this point. displField.mat is the default file
     fprintf('Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullNameRaw);
-
- %      VideoChoice = 'Motion JPEG AVI';
-%      VideoChoice = 'MPEG-4';    
-%      VideoChoice = 'Motion JPEG 2000';                  % better than mp4. Keeps more details but compresses it. Lossy compression, but quality is the same
-%     VideoChoice = 'Uncompressed AVI';
-    VideoChoice = 'Archival';
 
     [VideoPathName, VideoFileNameSuffix, ~] = fileparts(displacementFileFullNameRaw);   
     VideoFileName = strcat(VideoFileNameSuffix, '_tracked');
@@ -139,6 +133,8 @@ end
         [~, IdxTMP] = max(dnorm_vec);
         dmaxTMPindex(CurrentFrame) = IdxTMP;
         parfor_progress(-1, displFieldPath);
+        dnorm_vec = [];
+        IdxTMP = [];
     end
     parfor_progress(0, displFieldPath);
     clear dnorm_vec  IdxTMP IdxTMP
@@ -339,6 +335,7 @@ end
     diary on
     close(VideoWriterObj)
     disp("2.3 Writing  frames COMPLETE!") 
+
     fprintf('Saved as: \n\t%s\n', VideoFullFileName)    
     clear videoImages
     disp('------------------------------------------------------------------------------')
@@ -670,8 +667,8 @@ end
     parfor_progress(FramesNumEPI, parfor_progressPath);
     parfor CurrentFrame = FramesDoneNumbersEPI
             videoImages{CurrentFrame} = plotTractionHeatmapsVectorsParfor(MD_EPI,forceField, CurrentFrame, QuiverScaleToMax, QuiverColor, colormapLUT_parula, ...
-                TrackingInfoTXT, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
-                reg_grid, InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa)
+                TrackingInfoTXT, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, reg_grid, ...
+                InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa)
                 parfor_progress(-1, parfor_progressPath);
     end
     parfor_progress(0, parfor_progressPath);
@@ -727,7 +724,7 @@ end
     diary off
     parfor_progressPath = forceFieldPath;
     parfor_progress(FramesNumDIC, parfor_progressPath);
-    parfor CurrentFrame = FramesDoneNumbersDIC
+    for CurrentFrame = FramesDoneNumbersDIC
             videoImages{CurrentFrame} = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBeadCoordinatesXYpixels,CurrentFrame, MD_DIC_ChannelCount, BeadRadius, ...
                 QuiverColor, GrayLevelsPercentile, colormapLUT_GrayScale, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, ...
                 FluxStatusString{CurrentFrame}, TrackingInfoTXT, scalebarFontSize, useGPU); 
@@ -749,9 +746,10 @@ end
     diary on
     close(VideoWriterObj)
     disp("6.2 Writing  frames COMPLETE!") 
+    fprintf('Saved as: \n\t%s\n', VideoFullFileName)
 
     clear videoImages 
-    fprintf('Saved as: \n\t%s\n', VideoFullFileName)
+
     disp('------------------------------------------------------------------------------')
     winopen(VideoPathName)
 
@@ -797,8 +795,9 @@ end
     close(VideoWriterObj)
     disp("7.2 Writing  frames COMPLETE!") 
 
-    clear videoImages 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName)
     disp('----------------------------------------------------------------------------------------------------------------')
     diary off
-    winopen(videoIm)
+    winopen(VideoPathName)
+
+    clear videoImages 

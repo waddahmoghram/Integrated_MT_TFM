@@ -1942,9 +1942,9 @@
 
     figHandleMaxDispl_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleMaxDispl_MTvTFM, 'Position', [275, 435, 825, 375])
-    plot(TimeStampsRT_Abs_EPI(FramesPlotted), FluoroBeadTrackedMaxDisplacementStruct.TxRedBeadMaxNetDisplacementMicrons(FramesPlotted, 3), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
-    hold on
     plot(TimeStampsRT_Abs_DIC(FramesPlotted), BeadPositionXYdisplMicron(FramesPlotted,3), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
+    hold on
+    plot(TimeStampsRT_Abs_EPI(FramesPlotted), FluoroBeadTrackedMaxDisplacementStruct.TxRedBeadMaxNetDisplacementMicrons(FramesPlotted, 3), 'r.-', 'LineWidth', 1, 'MarkerSize', 2)
     xlim([0, max([TimeStampsRT_Abs_DIC(numel(FramesPlotted)), TimeStampsRT_Abs_EPI(numel(FramesPlotted))])]);
     title(titleStr, 'interpreter', 'none');
     set(findobj(gcf,'type', 'axes'), ...

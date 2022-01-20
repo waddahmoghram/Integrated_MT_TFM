@@ -44,7 +44,13 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
     plottedFrame =  getframe(figAxesHandle);
     delete(figAxesHandle)
     close(figHandle)
+
+    displField = [];
+    colormapLUT_TxRed = [];
+    TimeStampsRT_Abs_EPI = [];
     clearvars -except plottedFrame  useGPU
+    
     CurrentFramePlot =  plottedFrame.cdata;
-    if useGPU, CurrentFramePlot = gather(CurrentFramePlot);end
+%     if useGPU, CurrentFramePlot = gather(CurrentFramePlot);end
+    plottedFrame = [];
 end

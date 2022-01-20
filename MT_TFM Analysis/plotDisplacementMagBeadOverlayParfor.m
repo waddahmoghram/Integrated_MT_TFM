@@ -15,13 +15,13 @@ function [CurrentFramePlot] = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBea
     FormatSpecifier = sprintf('%%%dg', NumDigits);
     FrameString = sprintf('Frame %s/%s', sprintf(FormatSpecifier, CurrentFrame), sprintf(FormatSpecifier, FramesNumDIC));
 
+    figHandle = figure('color','w', 'Units','pixels', 'visible', 'off');    
     imgHandle = imshow(CurrentFramePlot, 'Border', 'tight');    
     axis image
     truesize
     hold on
     figAxesHandle = imgHandle.Parent;
-    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT);
-    figHandle = figAxesHandle.Parent;
+    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'off', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT);
 
     plot(figAxesHandle,MagBeadCoordinatesXYpixels(CurrentFrame,1), MagBeadCoordinatesXYpixels(CurrentFrame,2), 'Marker','+', ...
         'MarkerSize', BeadRadius(CurrentFrame)/2, 'Color',QuiverColor, 'LineWidth', 1) 

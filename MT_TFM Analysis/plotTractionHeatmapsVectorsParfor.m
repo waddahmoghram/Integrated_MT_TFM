@@ -54,9 +54,9 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParfor(MD_EPI,forceFiel
     IsWithinGridSpliced = ones(size(grid_mat));         
     IsWithin = IsWithinGridSpliced(:,:,1) & IsWithinGridSpliced(:,:,2);
 
-    figHandle = figure('color','w', 'Units','pixels', 'visible', 'on');
+    figHandle = figure('color','w', 'Units','pixels', 'visible', 'off');
     figAxesHandle = axes(figHandle);
-    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormap('parula'));
+    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT_parula);
     imagesc(figAxesHandle, 'CData', displHeatMapPadded');                % transpose to convert ndgrid to meshgrid for imagesc Cdata
     axis image
     truesize
