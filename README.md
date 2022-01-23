@@ -3,6 +3,26 @@ Latest compilations of MT_TFM geared etween 2016-06-28 through 2021-10-31 for th
 
 This code is a compilation of other codes that is to be used to conduct the complete analysis for the following:
 
+
+
+# Dependencies
+For this code to be guaranteed to work, use MATLAB 2021b. Previous version as old as MATLAB 2018a have been not been tested throughly for code parts at later times.
+The project needs the following MATLAB toolboxes and add-ons: 
+* Curve Fitting Toolbox
+* Deep Learning Toolbox
+* Image Processing Toolbox
+* MATLAB
+* Optimization Toolbox
+* Parallel Computing Toolbox
+* Signal Processing Toolbox
+* Statistics and Machine Learning Toolbox
+* Symbolic Math
+* C\C++ Library Header
+* C\C++ System Header
+
+
+
+
 ## Chapter 2 Code [2]
 1. Create movies using 
 2
