@@ -9,7 +9,6 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
     if ~exist('DriftROI_rect','var'), DriftROI_rect = []; end
     if nargin < 18 || isempty(DriftROI_rect); DriftROI_rect = []; end
 
-
   %%
     MaxDisplNetPixelsCurrentFrame = max(vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2));
     if MaxDisplNetPixelsCurrentFrame > MaxDisplNetPixels(3), error(sprintf('Maximum displacement in Frame #%d is more than max found. Check for max displacement in ALL FRAMES', CurrentFrame)); end

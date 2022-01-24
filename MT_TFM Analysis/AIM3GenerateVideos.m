@@ -3,6 +3,9 @@
     Load finalworkspace.mat and run this script. Run 'startup.m' script to initiate the localcluster parpool
 %}   
 %%
+    localcluster.NumWorkers = 32;         % works with my workstation. Not all threads can be used. GPU memory overflows
+    localcluster.parpool;
+
     % load workspace "finalworkspace.mat"
     nGPU = gpuDeviceCount;
     if nGPU > 0
@@ -763,7 +766,7 @@
     disp("6.1 Creating frames IN PROGRESS") 
     videoImages = cell(FramesNumDIC, 1);
     diary off
-    parfor_progressPath = forceFieldPath;
+    parfor_progressPath = VideoPathName1;
     parfor_progress(FramesNumDIC, parfor_progressPath);
     parfor CurrentFrame = FramesDoneNumbersDIC
             videoImages{CurrentFrame} = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBeadCoordinatesXYpixels,CurrentFrame, MD_DIC_ChannelCount, BeadRadius, ...

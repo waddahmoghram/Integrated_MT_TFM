@@ -22,7 +22,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displ
         CurrentFramePlot = MD_EPI.channels_.loadImage(CurrentFrame);
     end
     if useGPU, CurrentFramePlot = gpuArray(CurrentFramePlot); end
-    CurrentFramePlot = imadjust(CurrentFramePlot, stretchlim(CurrentFramePlot,GrayLevelsPercentile));
+%     CurrentFramePlot = imadjust(CurrentFramePlot, stretchlim(CurrentFramePlot,GrayLevelsPercentile));
     figHandle = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_TxRed);
     imgHandle = imshow(CurrentFramePlot, []);
     figAxesHandle = figHandle.findobj('type', 'axes');
