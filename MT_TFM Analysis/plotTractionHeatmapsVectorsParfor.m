@@ -112,7 +112,7 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParfor(MD_EPI,forceFiel
     FrameString = sprintf('Frame %s/%s', sprintf(FormatSpecifier, CurrentFrame), sprintf(FormatSpecifier, FramesNumEPI));
     FrameString = sprintf('%s. \\itt\\rm = %6.3fs. %s', FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'VerticalAlignment', 'bottom', ...
-                    'HorizontalAlignment', 'left', 'Color',  imcomplement(colormapLUT_parula(1, :)), 'FontName',FontName1);    
+                    'HorizontalAlignment', 'left', 'Color',  imcomplement(colormapLUT_parula(1, :)), 'FontName',FontName1, 'interpreter', 'tex');    
     Location = [3,3];
     text(figAxesHandle, Location(1), Location(2), TrackingInfoTXT , 'FontSize', sBar.Children(1).FontSize - 2, 'VerticalAlignment', 'top', ...
                     'HorizontalAlignment', 'left', 'Color',  imcomplement(colormapLUT_parula(1, :)),'FontName',FontName1, 'Interpreter','none');
