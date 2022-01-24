@@ -1,4 +1,4 @@
-function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, QuiverColor, colormapLUT_TxRed,...
+function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField, CurrentFrame, MD_DIC_ChannelCount, FluoroSphereSizePixel, QuiverColor, colormapLUT_TxRed,...
         GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels, DriftROI_rect)
   %%    
     if nargin > 18
@@ -18,7 +18,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
 
     trackedBeads = numel(find(~isnan(displField(CurrentFrame).vec(:,1)==1)));
     try
-        CurrentFramePlot = MD_EPI.channels_(MD_EPI_ChannelCount).loadImage(CurrentFrame);
+        CurrentFramePlot = MD_EPI.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame);
     catch
         CurrentFramePlot = MD_EPI.channels_.loadImage(CurrentFrame);
     end
@@ -75,5 +75,4 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
         end
     end
     clear AllVars ii 
-
 end

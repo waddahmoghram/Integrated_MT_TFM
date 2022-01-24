@@ -1,8 +1,7 @@
 function [CurrentFramePlot] = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBeadCoordinatesXYpixels, CurrentFrame, MD_DIC_ChannelCount, BeadRadius, QuiverColor, ...
-    GrayLevelsPercentile, colormapLUT, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC,FluxStatusString, TrackingInfoTXT, scalebarFontSize, useGPU)
-    
+    GrayLevelsPercentile, colormapLUT_GrayScale, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC,FluxStatusString, TrackingInfoTXT, scalebarFontSize, useGPU)
+%%
     FontName1 = 'Inconsolata ExtraCondensed';
-
     try
         CurrentFramePlot = MD_DIC.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame);
     catch
@@ -21,7 +20,7 @@ function [CurrentFramePlot] = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBea
     truesize
     hold on
     figAxesHandle = imgHandle.Parent;
-    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'off', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT);
+    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'off', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT_GrayScale);
 
     plot(figAxesHandle,MagBeadCoordinatesXYpixels(CurrentFrame,1), MagBeadCoordinatesXYpixels(CurrentFrame,2), 'Marker','+', ...
         'MarkerSize', BeadRadius(CurrentFrame)/2, 'Color',QuiverColor, 'LineWidth', 1) 
@@ -41,9 +40,18 @@ function [CurrentFramePlot] = plotDisplacementMagBeadOverlayParfor(MD_DIC,MagBea
     text(figAxesHandle, Location(1), Location(2), TrackingInfoTXT , 'FontSize', sBar.Children(1).FontSize - 2, 'VerticalAlignment', 'top', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontName', FontName1);
 
-    plottedFrame =  getframe(figHandle);
-    close(figHandle)
-    clearvars -except plottedFrame  
+    plottedFrame =  getframe(figHandle);    
     CurrentFramePlot =  plottedFrame.cdata;
-    clear plottedFrame   
+    close(figHandle)
+
+    AllVars = whos;
+    for ii = 1:numel(AllVars)
+        if contains(AllVars(ii).class, 'gpuArray')
+            eval(sprintf('%s = gather(%s);',AllVars(ii).name,AllVars(ii).name));
+        end
+        if ~any(strcmp(AllVars(ii).name, {'CurrentFramePlot', 'AllVars'})) 
+            eval(sprintf('%s = []; clear %s;',AllVars(ii).name,AllVars(ii).name));
+        end
+    end
+    clear Allvars ii   
 end

@@ -1,9 +1,8 @@
 function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_DIC_ChannelCount, ...
     QuiverColor, GrayLevelsPercentile, colormapLUT, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, FluxStatusString, ...
     TrackingInfoTXT, scalebarFontSize, useGPU)
-    
+ %%   
     FontName1 = 'Inconsolata ExtraCondensed';
-
     try
         CurrentFramePlot = MD_DIC.channels_(MD_DIC_ChannelCount).loadImage(CurrentFrame);
     catch
@@ -11,6 +10,13 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
     end
     if useGPU, CurrentFramePlot = gpuArray(CurrentFramePlot); end
     CurrentFramePlot = imadjust(CurrentFramePlot, stretchlim(CurrentFramePlot,GrayLevelsPercentile));
+    figHandle = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_TxRed);
+    imgHandle = imshow(CurrentFramePlot, []);
+    figAxesHandle = figHandle.findobj('type', 'axes');
+%% 
+    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels');
+    figHandle = figAxesHandle.Parent;
+    hold on
 
     NumDigits = numel(num2str(FramesNumDIC));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
     FormatSpecifier = sprintf('%%%dg', NumDigits);
@@ -21,12 +27,11 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
     truesize
     hold on
     figAxesHandle = imgHandle.Parent;
-    set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels');
-    figHandle = figAxesHandle.Parent;
 
     quiver(figAxesHandle, MagBeadCoordinatesXYpixels(1,1), MagBeadCoordinatesXYpixels(1,2), ...
         MagBeadCoordinatesXYNetpixels(CurrentFrame,1), MagBeadCoordinatesXYNetpixels(CurrentFrame,2), ...
-                   'MarkerSize',1, 'MarkerFaceColor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3 , 'LineWidth', 0.75 ,  'color',QuiverColor, 'AutoScale','off');
+                   'MarkerSize',1, 'MarkerFaceColor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3 , 'LineWidth', 0.75 ,  'color', QuiverColor, 'AutoScale','off');
+
     Location = MD_DIC.imSize_ - [3,3];       
     sBar = scalebar(figAxesHandle,'ScaleLength', ScaleLength_EPI, 'ScaleLengthRatio', ScaleMicronPerPixel_DIC, 'color', QuiverColor, 'bold', true, ...
         'unit', sprintf('%sm', char(181)), 'location', Location, 'fontname', FontName1, 'fontsize',  scalebarFontSize);
@@ -39,7 +44,8 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
     text(figAxesHandle, Location(1), Location(2), TrackingInfoTXT , 'FontSize', sBar.Children(1).FontSize - 2, 'VerticalAlignment', 'top', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontName', FontName1);
 
-    plottedFrame =  getframe(figHandle);
+    plottedFrame =  getframe(figHandle);    
+    CurrentFramePlot =  plottedFrame.cdata;
     close(figHandle)
 
     AllVars = whos;
