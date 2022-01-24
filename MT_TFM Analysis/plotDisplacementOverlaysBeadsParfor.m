@@ -1,5 +1,15 @@
 function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, QuiverColor, colormapLUT_TxRed,...
-        GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels)
+        GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels, DriftROI_rect)
+  %%    
+    if nargin > 18
+        errordlg('Too many arguments in this function, or wrong argument structure!')
+        return
+    end 
+    
+    if ~exist('DriftROI_rect','var'), DriftROI_rect = []; end
+    if nargin < 18 || isempty(DriftROI_rect); DriftROI_rect = []; end
+
+
   %%
     MaxDisplNetPixelsCurrentFrame = max(vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2));
     if MaxDisplNetPixelsCurrentFrame > MaxDisplNetPixels(3), error(sprintf('Maximum displacement in Frame #%d is more than max found. Check for max displacement in ALL FRAMES', CurrentFrame)); end
@@ -17,6 +27,7 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
     figHandle = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_TxRed);
     imgHandle = imshow(CurrentFramePlot, []);
     figAxesHandle = figHandle.findobj('type', 'axes');
+    
     %% 
     set(figAxesHandle, 'Visible', 'off', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT_TxRed);    
 %      imgHandle = imagesc(figAxesHandle, CurrentFramePlot)
@@ -37,20 +48,32 @@ function [CurrentFramePlot] = plotDisplacementOverlaysBeadsParfor(MD_EPI,displFi
     FrameString = sprintf('%d microspheres. %s. \\itt\\rm = %6.3f s. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'FontName',FontName1, 'VerticalAlignment', 'bottom', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor);
-    Location = [3,1];
+    Location = [3,3];
     text(figAxesHandle, Location(1), Location(2), TrackingInfoTXT , 'FontSize', sBar.Children(1).FontSize - 3, 'FontName',FontName1, 'VerticalAlignment', 'top', ...
                     'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontWeight','normal');
 
+    if ~isempty(DriftROI_rect)
+        for jj = 1:4
+            RefFrameDIC_RectHandle(jj) = rectangle(figAxesHandle,'Position', DriftROI_rect(jj, :), 'EdgeColor', 'm',  'FaceColor', 'none', 'LineWidth', 0.5, 'LineStyle', ':');   
+        end
+    end
+
     plottedFrame =  getframe(figAxesHandle);
+    CurrentFramePlot =  plottedFrame.cdata;
+    CurrentFramePlot(end,:,:) = [];  CurrentFramePlot(:,1,:) = [];   % get rid of weight margin on edges that "getframe" creates. on the left/bottom
+
     delete(figAxesHandle)
     close(figHandle)
 
-    displField = [];
-    colormapLUT_TxRed = [];
-    TimeStampsRT_Abs_EPI = [];
-    clearvars -except plottedFrame  useGPU
-    
-    CurrentFramePlot =  plottedFrame.cdata;
-%     if useGPU, CurrentFramePlot = gather(CurrentFramePlot);end
-    plottedFrame = [];
+    AllVars = whos;
+    for ii = 1:numel(AllVars)
+        if contains(AllVars(ii).class, 'gpuArray')
+            eval(sprintf('%s = gather(%s);',AllVars(ii).name,AllVars(ii).name));
+        end
+        if ~any(strcmp(AllVars(ii).name, {'CurrentFramePlot', 'AllVars'})) 
+            eval(sprintf('%s = []; clear %s;',AllVars(ii).name,AllVars(ii).name));
+        end
+    end
+    clear AllVars ii 
+
 end

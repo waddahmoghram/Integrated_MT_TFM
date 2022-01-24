@@ -8,10 +8,10 @@ MatlabObj = nan(numel(AllVars),1);
 ParallelObj = nan(numel(AllVars),1);
 gpuArrayObj = nan(numel(AllVars),1);
 for ii = 1:numel(AllVars)
-    currentStr = AllVars(ii).class;
-    MatlabObj(ii) =  contains(currentStr, 'matlab.');
-    ParallelObj(ii) = contains(currentStr, 'parallel.');
-    gpuArrayObj(ii) = contains(currentStr, 'gpuArray');
+    currentClassStr = AllVars(ii).class;
+    MatlabObj(ii) =  contains(currentClassStr, 'matlab.');
+    ParallelObj(ii) = contains(currentClassStr, 'parallel.');
+    gpuArrayObj(ii) = contains(currentClassStr, 'gpuArray');
     if MatlabObj(ii) || ParallelObj(ii)
         eval(sprintf('clear %s', AllVars(ii).name));
     end

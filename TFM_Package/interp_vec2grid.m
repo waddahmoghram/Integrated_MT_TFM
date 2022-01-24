@@ -41,10 +41,21 @@ function [grid_mat,u, i_max, j_max, displHeatMap] = interp_vec2grid(pos, vec, cl
         Gives the option of which interpolation to use
     v.2019-10-08..09 Fixed by Waddah Moghram
         1. use gridded interpolant instead of griddata()
+    v.2021-01-21 by Waddah Moghram
 %} 
+%%
+    if nargin > 5
+        errordlg('Too many arguments in this function, or wrong argument structure!')
+        return
+    end    
+    if ~exist('method','var'), method = []; end
+    if nargin < 2 || isempty(method)
+        method = 'griddata';
+    end
+
     %% parameters 
     scatteredInterpolantMethod =  'linear';
-    gridatatMethod = 'cubic';                  % 'cubic';  % cubic leaves more "NaN if the corner is not inside the convex hull polygon.
+%     
 %     griddedInterpolantMethod = 'cubic';
     MaskSizePerSide = min(15, round(sqrt(size(pos,1))));                        % choose 4 grid points on either side.
     
@@ -62,6 +73,15 @@ function [grid_mat,u, i_max, j_max, displHeatMap] = interp_vec2grid(pos, vec, cl
     if nargin < 5 || isempty(method)
         method = 'Griddata';
     end
+    switch upper(method)
+        case {'GRIDDATA', 'GRIDDATA_CUBIC'}
+            gridatatMethod = 'cubic';                  % 'cubic';  % cubic leaves more "NaN if the corner is not inside the convex hull polygon.
+        case 'GRIDDATA_V4'
+            gridatatMethod = 'v4';
+        case 'GRIDDATA_LINEAR'
+            gridatatMethod = 'linear';
+    end
+    
     %---------------
     
     %% Check if there is a GPU. take advantage of it if is there. Updated on 2019-06-13    
@@ -127,7 +147,7 @@ function [grid_mat,u, i_max, j_max, displHeatMap] = interp_vec2grid(pos, vec, cl
  
 % %     %---------------
     switch upper(method)
-        case 'GRIDDATA'             % works. Verified 2020-02-06 by WIM            
+        case {'GRIDDATA', 'GRIDDATA_CUBIC', 'GRIDDATA_V4'}            % works. Verified 2020-02-06 by WIM            
             u(1:i_max,1:j_max,1) = griddata(pos(1:minSize,1), pos(1:minSize,2), vec(1:minSize,1), grid_mat(:,:,1), grid_mat(:,:,2),gridatatMethod);
             if size(vec, 2) == 2
                 u(1:i_max,1:j_max,2) = griddata(pos(1:minSize,1), pos(1:minSize,2), vec(1:minSize,2), grid_mat(:,:,1), grid_mat(:,:,2),gridatatMethod);
@@ -211,9 +231,12 @@ function [grid_mat,u, i_max, j_max, displHeatMap] = interp_vec2grid(pos, vec, cl
 %             u(1:i_max,1:j_max,3) = displHeatMap;
              
         case 'GRIDDATAV4'
-            u(1:i_max,1:j_max,1) = griddataV4(pos(1:minSize,1), pos(1:minSize,2), vec(1:minSize,1), grid_mat(:,:,1), grid_mat(:,:,2));
-            u(1:i_max,1:j_max,2) = griddataV4(pos(1:minSize,1), pos(1:minSize,2), vec(1:minSize,2), grid_mat(:,:,1), grid_mat(:,:,2));
-  
+            try
+                u(1:i_max,1:j_max,1) = griddataV4(pos(1:minSize,1), pos(1:minSize,2), vec(1:minSize,1), grid_mat(:,:,1), grid_mat(:,:,2));
+                u(1:i_max,1:j_max,2) = griddataV4(pos(1:minSize,1), pos(1:minSize,2), vec(1:minSize,2), grid_mat(:,:,1), grid_mat(:,:,2));
+            catch
+
+            end
         case 'GRIDDEDINTERPOLANT'
             % % %---- new part by Waddah Moghram on 2019-10-10 that uses griddedInterpolant. INCOMPLETE
 %             X = pos(1:minSize,1);

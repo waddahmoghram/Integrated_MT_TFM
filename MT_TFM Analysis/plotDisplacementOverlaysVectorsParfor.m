@@ -1,10 +1,18 @@
-function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, QuiverScaleToMax, QuiverColor, colormapLUT_TxRed,...
-    GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI,FluxStatusString, TrackingInfoTXT, scalebarFontSize, ...
-    useGPU, MaxDisplNetPixels)
-%%
+function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displField, CurrentFrame, MD_EPI_ChannelCount, QuiverScaleToMax, ...
+        QuiverColor, colormapLUT_TxRed, GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, ...
+        FluxStatusString, TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels, DriftROI_rect)
+%%   
+    if nargin > 18
+        errordlg('Too many arguments in this function, or wrong argument structure!')
+        return
+    end 
+    
+    if ~exist('DriftROI_rect','var'), DriftROI_rect = []; end
+    if nargin < 18 || isempty(DriftROI_rect); DriftROI_rect = []; end
+
     MaxDisplNetPixelsCurrentFrame = max(vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2));
     if MaxDisplNetPixelsCurrentFrame > MaxDisplNetPixels(3), error('Maximum displacement in an OFF frame. Check for max displacement in ALL FRAMES'); end    
-%%
+
     FontName1 = 'Inconsolata ExtraCondensed';
 
     trackedBeads = numel(find(~isnan(displField(CurrentFrame).vec(:,1)==1)));
@@ -38,13 +46,32 @@ function [CurrentFramePlot] = plotDisplacementOverlaysVectorsParfor(MD_EPI,displ
     Location = MD_EPI.imSize_ .* [0, 1] + [3,-3];                  % bottom right corner
     FrameString = sprintf('%d microspheres. %s. \\itt\\rm = %6.3f s. %s', trackedBeads, FrameString, TimeStampsRT_Abs_EPI(CurrentFrame), FluxStatusString);
     text(figAxesHandle, Location(1), Location(2), FrameString , 'FontSize', sBar.Children(1).FontSize, 'VerticalAlignment', 'bottom', ...
-                    'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontName',FontName1);
+                    'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontName',FontName1, 'Interpreter','tex');
     Location = [3,1];
     text(figAxesHandle, Location(1), Location(2), TrackingInfoTXT , 'FontSize', sBar.Children(1).FontSize - 3, 'VerticalAlignment', 'top', ...
-                    'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontWeight','bold', 'FontName',FontName1);
+                    'HorizontalAlignment', 'left', 'Color', QuiverColor, 'FontWeight','bold', 'FontName',FontName1, 'Interpreter','none')
+
+    if ~isempty(DriftROI_rect)
+        for jj = 1:4
+            RefFrameDIC_RectHandle(jj) = rectangle(figAxesHandle,'Position', DriftROI_rect(jj, :), 'EdgeColor', 'm',  'FaceColor', 'none', 'LineWidth', 0.5, 'LineStyle', ':');   
+        end
+    end
 
     plottedFrame =  getframe(figAxesHandle);
     CurrentFramePlot =  plottedFrame.cdata;
+    CurrentFramePlot(end,:,:) = [];  CurrentFramePlot(:,1,:) = [];   % get rid of weight margin on edges that "getframe" creates. on the left/bottom
+
     delete(figAxesHandle)
     close(figHandle)
+
+    AllVars = whos;
+    for ii = 1:numel(AllVars)
+        if contains(AllVars(ii).class, 'gpuArray')
+            eval(sprintf('%s = gather(%s);',AllVars(ii).name,AllVars(ii).name));
+        end
+        if ~any(strcmp(AllVars(ii).name, {'CurrentFramePlot', 'AllVars'})) 
+            eval(sprintf('%s = []; clear %s;',AllVars(ii).name,AllVars(ii).name));
+        end
+    end
+    clear Allvars ii   
 end

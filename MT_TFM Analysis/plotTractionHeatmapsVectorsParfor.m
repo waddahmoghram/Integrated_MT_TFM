@@ -86,6 +86,12 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParfor(MD_EPI,forceFiel
     colorbarHandle = colorbar('eastoutside'); 
     colorbarHandle.Limits = colorbarLimits;   
     colorbarTicksDiff = diff(colorbarTicks);
+    colorbarTickNoDiffIdx = find(~colorbarTicksDiff);  % find ticks where there is no difference between
+    if colorbarTickNoDiffIdx
+        colorbarTickLabels(colorbarTickNoDiffIdx) = [];       
+        colorbarTicks(colorbarTickNoDiffIdx) = [];      
+        colorbarTicksDiff(colorbarTickNoDiffIdx) = [];     
+    end
     if colorbarTicksDiff(end)/colorbarTicksDiff(end-1) < 0.2, colorbarTickLabels{end - 1} = ''; end
     set(colorbarHandle, 'Limits', [colorbarTicks(1), colorbarTicks(end)], 'Ticks',colorbarTicks,  'TickLabels', colorbarTickLabels, 'TickDirection', 'out', 'color', 'k',...
             'FontWeight', 'bold', 'FontName', FontName1, 'LineWidth', QuiverLineWidth, 'Units', 'Pixels', 'FontSize', colorbarFontSize)     % font size, 1/100 of height in pixels     
@@ -109,18 +115,28 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParfor(MD_EPI,forceFiel
                     'HorizontalAlignment', 'left', 'Color',  imcomplement(colormapLUT_parula(1, :)), 'FontName',FontName1);    
     Location = [3,3];
     text(figAxesHandle, Location(1), Location(2), TrackingInfoTXT , 'FontSize', sBar.Children(1).FontSize - 2, 'VerticalAlignment', 'top', ...
-                    'HorizontalAlignment', 'left', 'Color',  imcomplement(colormapLUT_parula(1, :)),'FontName',FontName1);
+                    'HorizontalAlignment', 'left', 'Color',  imcomplement(colormapLUT_parula(1, :)),'FontName',FontName1, 'Interpreter','none');
     Location =  MD_EPI.imSize_ .* [0.5, 1] + [3,0];
     tractionInfoTxt = sprintf('%s \\lambda_{2}=%0.5g', tractionInfoTxt, reg_corner_averaged);
     text(figAxesHandle, Location(1), Location(2), tractionInfoTxt , 'FontSize', sBar.Children(1).FontSize - 2, 'VerticalAlignment', 'bottom', ...
-                    'HorizontalAlignment', 'center', 'Color',  imcomplement(colormapLUT_parula(1, :)), 'FontWeight','bold', 'FontName',FontName1);
+                    'HorizontalAlignment', 'center', 'Color',  imcomplement(colormapLUT_parula(1, :)), 'FontWeight','bold', 'FontName',FontName1, 'Interpreter','none');
 
     quiver(figAxesHandle, X, Y,U .*QuiverScaleToMax,V .*QuiverScaleToMax, 0, ...
                    'MarkerSize',MarkerSize, 'markerfacecolor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3, ...
                   'color', QuiverColor, 'AutoScale','on', 'LineWidth', QuiverLineWidth , 'AlignVertexCenters', 'on');
-    plottedFrame =  getframe(figHandle);
-    close(figHandle)
-    clearvars -except plottedFrame  
+
+    plottedFrame =  getframe(figHandle);    
     CurrentFramePlot =  plottedFrame.cdata;
-    clear plottedFrame
+    close(figHandle)
+
+    AllVars = whos;
+    for ii = 1:numel(AllVars)
+        if contains(AllVars(ii).class, 'gpuArray')
+            eval(sprintf('%s = gather(%s);',AllVars(ii).name,AllVars(ii).name));
+        end
+        if ~any(strcmp(AllVars(ii).name, {'CurrentFramePlot', 'AllVars'})) 
+            eval(sprintf('%s = []; clear %s;',AllVars(ii).name,AllVars(ii).name));
+        end
+    end
+    clear Allvars ii   
 end

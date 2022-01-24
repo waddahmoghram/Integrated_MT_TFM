@@ -41,7 +41,15 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
 
     plottedFrame =  getframe(figHandle);
     close(figHandle)
-    clearvars -except plottedFrame  
-    CurrentFramePlot =  plottedFrame.cdata;
-    clear plottedFrame   
+
+    AllVars = whos;
+    for ii = 1:numel(AllVars)
+        if contains(AllVars(ii).class, 'gpuArray')
+            eval(sprintf('%s = gather(%s);',AllVars(ii).name,AllVars(ii).name));
+        end
+        if ~any(strcmp(AllVars(ii).name, {'CurrentFramePlot', 'AllVars'})) 
+            eval(sprintf('%s = []; clear %s;',AllVars(ii).name,AllVars(ii).name));
+        end
+    end
+    clear Allvars ii   
 end
