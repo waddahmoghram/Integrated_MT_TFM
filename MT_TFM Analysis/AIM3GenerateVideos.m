@@ -3,6 +3,7 @@
     Load finalworkspace.mat and run this script. Run 'startup.m' script to initiate the localcluster parpool
 %}   
 %%
+    startup;
     localcluster.NumWorkers = 32;         % works with my workstation. Not all threads can be used. GPU memory overflows
     localcluster.parpool;
 
@@ -162,9 +163,9 @@
     fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] %s      \t==> Net displacement [disp_net] = [%0.3f] %s. \n', ...
         MaxDisplNetMicrons(1:2), displUnit, MaxDisplNetMicrons(3) , displUnit)
     disp('1.1 Finding the bead with the maximum displacement in ON/Transient frames COMPLETE')
-    
-    delete(gcp('nocreate'));
-    localcluster.parpool
+%     
+%     delete(gcp('nocreate'));
+%     localcluster.parpool
 
     AvgInterBeadDist = sqrt(TotalAreaPixel/totalBeadsTracked);        % avg inter-bead separation distance = total img area/number of tracked points
     QuiverScaleDefault = 0.95 * (AvgInterBeadDist/MaxDisplNetPixels(3)) * QuiverMagnificationFactor;    
@@ -218,7 +219,6 @@
     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
 
-    delete(localcluster.Jobs)
     clear videoImages 
     
 %% Video 2: displfield corrected + LPEF + DC (heatmap)
@@ -379,11 +379,11 @@
     winopen(VideoPathName1)
     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
-    %__________________
-    figure()
-    [XIM, YIM] = meshgrid(Xmin:Xmax,Ymin:Ymax);    
-    surf(XIM,YIM,d_norm, 'linestyle', 'none'); colorbar
-    surf(XIM,YIM,d_norm * ScaleMicronPerPixel_EPI   , 'linestyle', 'none'); colorbar    
+%     %__________________
+%     figure()
+%     [XIM, YIM] = meshgrid(Xmin:Xmax,Ymin:Ymax);    
+%     surf(XIM,YIM,d_norm, 'linestyle', 'none'); colorbar
+%     surf(XIM,YIM,d_norm * ScaleMicronPerPixel_EPI   , 'linestyle', 'none'); colorbar    
     %__________________
     clear videoImages;
 
@@ -632,7 +632,7 @@
     winopen(VideoPathName1)
 
     clear videoImages 
-    delete(localcluster.Jobs);localcluster.parpool
+%     delete(localcluster.Jobs);localcluster.parpool
 
 %% Video 5: displfield (tracked beads)
     disp('----------------------------------------------------------------------------------------------------------------')
@@ -738,6 +738,7 @@
 
 %% Video 6: Magnetic bead displacement (tracked bead)
     disp('------------------------------------------------------------------------------')
+    load(MagBeadTrackedDisplacementsFullFileName, 'MagBeadCoordinatesXYpixels')
     [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(MagBeadTrackedDisplacementsFullFileName);   
     VideoFileName = strcat(VideoFileNameSuffix, '_tracked');
     VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
@@ -748,6 +749,7 @@
     VideoWriterObj3 = VideoWriter(VideoFullFileName3, VideoType3);
     VideoWriterObj3.FrameRate = FrameRateRT_EPI; 
     fprintf("-------- Video 6. **** %s **** ------------------\n%s", VideoWriterObj1.Filename)
+
 
     FramesNumDIC = numel(FramesDoneNumbersDIC);
     FluxStatusString = cell(FramesNumDIC, 1);
@@ -802,7 +804,8 @@
 
 %% Video 7: Magnetic bead displacement, drift-corrected (vector bead)
     disp('------------------------------------------------------------------------------')
-    [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(MagBeadTrackedDisplacementsFullFileName);   
+    load(MagBeadTrackedDisplacementsFullFileNameCorrected, 'MagBeadCoordinatesXYpixels')
+    [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(MagBeadTrackedDisplacementsFullFileNameCorrected);   
     VideoFileName = strcat(VideoFileNameSuffix, '_vector');
     VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
     VideoWriterObj1 = VideoWriter(VideoFullFileName1, VideoType1);
@@ -812,6 +815,8 @@
     VideoWriterObj3 = VideoWriter(VideoFullFileName3, VideoType3);
     VideoWriterObj3.FrameRate = FrameRateRT_EPI; 
     fprintf("-------- Video 7. **** %s **** ------------------\n%s", VideoWriterObj1.Filename)
+
+    MagBeadCoordinatesXYNetpixels = (MagBeadCoordinatesXYpixels - MagBeadCoordinatesXYpixels(1,:));
 
     FramesNumDIC = numel(FramesDoneNumbersDIC);
     FluxStatusString = cell(FramesNumDIC, 1);
@@ -829,7 +834,7 @@
     parfor_progressPath = VideoPathName1;
     parfor_progress(FramesNumDIC, parfor_progressPath);
     parfor CurrentFrame = FramesDoneNumbersDIC
-        videoImages{CurrentFrame} = plotDisplacementMagBeadVectorParfor(MD_DIC, MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_EPI_ChannelCount, ...
+        videoImages{CurrentFrame} = plotDisplacementMagBeadVectorParfor(MD_DIC, MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_DIC_ChannelCount, ...
             QuiverColor, GrayLevelsPercentile, colormapLUT_GrayScale, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, ...
             FluxStatusString{CurrentFrame}, TrackingInfoTXT, scalebarFontSize, useGPU)
             parfor_progress(-1, parfor_progressPath);

@@ -16,8 +16,8 @@ delete(localcluster.Jobs)
 localcluster.JobStorageLocation
 delete(gcp('nocreate'));
 % pause(20);          % pause 10 seconds
-poolObj = localcluster.parpool();
-poolObj.IdleTimeout = Inf;
+% poolObj = localcluster.parpool();
+% poolObj.IdleTimeout = Inf;
 
 s = settings;
-s.matlab.general.matfile.SaveFormat.TemporaryValue = 'v7.3'
+s.matlab.general.matfile.SaveFormat.TemporaryValue = 'v7.3';

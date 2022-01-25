@@ -1,5 +1,5 @@
 function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBeadCoordinatesXYpixels, MagBeadCoordinatesXYNetpixels, CurrentFrame, MD_DIC_ChannelCount, ...
-    QuiverColor, GrayLevelsPercentile, colormapLUT, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, FluxStatusString, ...
+    QuiverColor, GrayLevelsPercentile, colormapLUT_GrayScale, FramesNumDIC, ScaleLength_EPI, ScaleMicronPerPixel_DIC, TimeStampsRT_Abs_DIC, FluxStatusString, ...
     TrackingInfoTXT, scalebarFontSize, useGPU)
  %%   
     FontName1 = 'Inconsolata ExtraCondensed';
@@ -10,9 +10,10 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
     end
     if useGPU, CurrentFramePlot = gpuArray(CurrentFramePlot); end
     CurrentFramePlot = imadjust(CurrentFramePlot, stretchlim(CurrentFramePlot,GrayLevelsPercentile));
-    figHandle = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_TxRed);
+    figHandle = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_GrayScale);
     imgHandle = imshow(CurrentFramePlot, []);
     figAxesHandle = figHandle.findobj('type', 'axes');
+    
 %% 
     set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels');
     figHandle = figAxesHandle.Parent;
@@ -22,7 +23,7 @@ function [CurrentFramePlot] = plotDisplacementMagBeadVectorParfor(MD_DIC,MagBead
     FormatSpecifier = sprintf('%%%dg', NumDigits);
     FrameString = sprintf('Frame %s/%s', sprintf(FormatSpecifier, CurrentFrame), sprintf(FormatSpecifier, FramesNumDIC));
 
-    imgHandle = imshow(CurrentFramePlot, 'Border', 'tight', 'Colormap', colormapLUT);    
+    imgHandle = imshow(CurrentFramePlot, 'Border', 'tight', 'Colormap', colormapLUT_GrayScale);    
     axis image
     truesize
     hold on
