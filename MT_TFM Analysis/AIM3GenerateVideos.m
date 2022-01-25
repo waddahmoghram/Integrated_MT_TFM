@@ -3,7 +3,7 @@
     Load finalworkspace.mat and run this script. Run 'startup.m' script to initiate the localcluster parpool
 %}   
 %%
-    startup;
+%     startup;
     localcluster.NumWorkers = 32;         % works with my workstation. Not all threads can be used. GPU memory overflows
     localcluster.parpool;
 
