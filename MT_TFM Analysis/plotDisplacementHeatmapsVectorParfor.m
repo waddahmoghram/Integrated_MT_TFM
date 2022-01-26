@@ -56,7 +56,8 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorParfor(MD_EPI,displF
     figHandle = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_parula);
     figAxesHandle = axes(figHandle);
     set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormap('parula'));  
-    imagesc(figAxesHandle, 'CData', displHeatMapPadded');                % transpose to convert ndgrid to meshgrid for imagesc Cdata
+    imgHandle  = imagesc(figAxesHandle, 'CData', displHeatMapPadded');                % transpose to convert ndgrid to meshgrid for imagesc Cdata
+    imgHandle.Interpolation = 'bilinear';
     axis image
     truesize
     hold on        

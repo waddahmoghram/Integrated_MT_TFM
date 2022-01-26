@@ -245,8 +245,8 @@ function h = scalebar(varargin)
 %     line(ends(:,1,1), ends(:,2,1), 'color', color, 'linewidth', linewidth, 'parent', hg);
 %     line(ends(:,1,2), ends(:,2,2), 'color', color, 'linewidth', linewidth, 'parent', hg);
 %     text(linepos(1,1),linepos(1,2),0,'0','verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, 'color', color, 'fontweight', fontweight, , 'FontSize', fontsize, 'parent', hg);
-    text(mean(linepos(:,1)),mean(linepos(:,2) - 5),0,[num2str(scalelength) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, ...
-        'color', color, 'FontWeight', fontweight, 'FontName' , fontname, 'FontSize', fontsize, 'parent', hg);
+    text(mean(linepos(:,1)),mean(linepos(:,2))- diff(linepos(:,1)) * 0.05,0,[num2str(scalelength) unitstring],'verticalalignment',textalignment{1},'horizontalalignment',textalignment{2}, ...
+        'color', color, 'FontWeight', fontweight, 'FontName' , fontname, 'FontSize', fontsize, 'parent', hg);   % fixed to make the text a percentage of the line length instead of "5 data units" whatever that is
 
     if nargout>0
         h = hg;

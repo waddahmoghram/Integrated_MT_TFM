@@ -432,7 +432,7 @@
     parfor_progressPath = forceFieldPath;
     parfor_progress(numel(FramesDoneNumbers), parfor_progressPath);
     parfor CurrentFrame=FramesDoneNumbersEPI
-        if find(FramesDoneNumbersONTrans == CurrentFrame) 
+%         if find(FramesDoneNumbersONTrans == CurrentFrame) 
             [~, stressFieldGridXY,~,~] = interp_vec2grid(forceField(CurrentFrame).pos(:,1:2), forceField(CurrentFrame).vec(:,1:2) ,[], reg_gridFull, InterpolationMethod);         
             stressFieldGridXY = gpuArray(stressFieldGridXY);
             t_norm = (stressFieldGridXY(:,:,1).^2 + stressFieldGridXY(:,:,2).^2).^0.5;
@@ -444,7 +444,7 @@
             end
             t_norm_vec = reshape(t_norm,[],1); 
             [tmaxTMPgrid(CurrentFrame), tmaxTMPindex(CurrentFrame)] = max(t_norm_vec);
-        end
+%         end
         parfor_progress(-1, parfor_progressPath);
     end
     parfor_progress(0, parfor_progressPath);
@@ -501,7 +501,7 @@
     parfor CurrentFrame = FramesDoneNumbersEPI
             videoImages{CurrentFrame} = plotTractionHeatmapsVectorsParfor(MD_EPI,forceField, CurrentFrame, QuiverScaleToMax, QuiverColor, colormapLUT_parula, ...
                 TrackingInfoTXT, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, reg_grid, ...
-                InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa)
+                InterpolationMethod, bandSize, colorbarLimits, colorbarFontSize, reg_corner_averaged(CurrentFrame), tractionInfoTxt, useGPU, MaxTractionNetPa);
                 parfor_progress(-1, parfor_progressPath);
     end
     parfor_progress(0, parfor_progressPath);
@@ -524,7 +524,7 @@
     close(VideoWriterObj3)
     disp("3.3 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
+%     winopen(VideoPathName1)
     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
 
@@ -626,7 +626,7 @@
     close(VideoWriterObj3)
     disp("4.3 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
+%     winopen(VideoPathName1)
     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
     winopen(VideoPathName1)
@@ -730,7 +730,7 @@
     close(VideoWriterObj3)
     disp("5.3 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
+%     winopen(VideoPathName1)
     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
 
@@ -760,7 +760,7 @@
     MD_DIC_ChannelCount = numel(MD_DIC.channels_);
     colormapLUT_GrayScale = gray(GrayLevels);
     QuiverColor = [1,0,0];  
-    GrayLevelsPercentile  = [0, 1];
+    GrayLevelsPercentile = [0,1];                        % to make beads show up better;
 
     TrackingInfoTXT = sprintf('BeadTrackingMethod=%s. DriftTrackingMethod=%s. Max displ.=%0.3f%s (%0.3f%s drift-corrected). ', ...
         BeadTrackingMethod, DriftTrackingMethod,BeadMaxNetDisplMicron, displUnit, BeadMaxNetDisplMicronDriftCorrected, displUnit);
@@ -796,7 +796,7 @@
     close(VideoWriterObj3)
     disp("6.2 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
+%     winopen(VideoPathName1)
     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
 
@@ -824,6 +824,11 @@
     FluxStatusString(FramesDoneNumbersDIC(CompiledMT_Results.FluxON(1:FramesNumDIC))) = {'Flux ON'};
     FluxStatusString(FramesDoneNumbersDIC(CompiledMT_Results.FluxOFF(1:FramesNumDIC))) = {'Flux OFF'};
     FluxStatusString(FramesDoneNumbersDIC(CompiledMT_Results.FluxTransient(1:FramesNumDIC))) = {'Flux TRANS'};    
+
+    MD_DIC_ChannelCount = numel(MD_DIC.channels_);
+    colormapLUT_GrayScale = gray(GrayLevels);
+    QuiverColor = [1,0,0];  
+    GrayLevelsPercentile = [0,1];                        % to make beads show up better
 
     TrackingInfoTXT = sprintf('BeadTrackingMethod=%s. DriftTrackingMethod=%s. Max displ.=%0.3f%s (%0.3f%s Drift-corrected). ', ...
         BeadTrackingMethod, DriftTrackingMethod,BeadMaxNetDisplMicron, displUnit, BeadMaxNetDisplMicronDriftCorrected, displUnit);
@@ -859,7 +864,7 @@
     close(VideoWriterObj3)
     disp("7.2 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
+%     winopen(VideoPathName1)
     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
 
