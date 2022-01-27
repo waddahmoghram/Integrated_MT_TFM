@@ -73,7 +73,7 @@
     displacementParameters.mode = 'accurate';
 
     CorrectionfunParams.doRogReg = 0;               % No rotational adjustments for drift
-    CorrectionfunParams.outlierThreshold = 4;       % ranges from 1 to 5. Lower is more aggressive value.
+    CorrectionfunParams.outlierThreshold = 2;       % ranges from 1 to 5. Lower is more aggressive value.
     CorrectionfunParams.fillVectors = 0;            % eliminated outliers are not retracked with interpolated values from surrounding displacements
 
     GelType = {'Corning Type I rat-tail collagen.', 'Stock concentration: ~3.04 mg/mL',  'Cat: CB40236. Stock .  LOT: ____.'};

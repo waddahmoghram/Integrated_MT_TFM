@@ -11,7 +11,8 @@ end
 patchJobStorageLocation
 localcluster = parcluster('local');
 localcluster.NumThreads = 1;
-localcluster.NumWorkers = threadCount - 1;
+% localcluster.NumWorkers = threadCount - 1;
+localcluster.NumWorkers = 40;
 delete(localcluster.Jobs)
 localcluster.JobStorageLocation
 delete(gcp('nocreate'));

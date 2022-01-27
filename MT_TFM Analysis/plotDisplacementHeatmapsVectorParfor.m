@@ -53,7 +53,7 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorParfor(MD_EPI,displF
     IsWithinGridSpliced = ones(size(grid_mat));         
     IsWithin = IsWithinGridSpliced(:,:,1) & IsWithinGridSpliced(:,:,2);
 
-    figHandle = figure('visible','off', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_parula);
+    figHandle = figure('visible','on', 'color', 'w', 'Units', 'pixels', 'Toolbar', 'none', 'Menubar', 'none', 'Resize', 'off', 'Colormap',colormapLUT_parula);
     figAxesHandle = axes(figHandle);
     set(figAxesHandle, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormap('parula'));  
     imgHandle  = imagesc(figAxesHandle, 'CData', displHeatMapPadded');                % transpose to convert ndgrid to meshgrid for imagesc Cdata
