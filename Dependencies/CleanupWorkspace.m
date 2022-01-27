@@ -16,7 +16,7 @@ for ii = 1:numel(AllVars)
         eval(sprintf('clear %s', AllVars(ii).name));
     end
     if gpuArrayObj(ii)
-        eval(sprintf('%s = gather(%s)',AllVars(ii).name,AllVars(ii).name));
+        eval(sprintf('%s = gather(%s);',AllVars(ii).name,AllVars(ii).name));
     end
 end
 clear MatlabObj ParallelObj gpuArrayObj ii jj i ;

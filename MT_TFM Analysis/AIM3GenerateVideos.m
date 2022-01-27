@@ -230,6 +230,7 @@
     fprintf('2.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullName);
 
     [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(displacementFileFullName);   
+    displFieldPath = VideoPathName1;
     VideoFileName = strcat(VideoFileNameSuffix, '_heatmap');
     VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
     VideoWriterObj1 = VideoWriter(VideoFullFileName1, VideoType1);
@@ -368,7 +369,7 @@
     open(VideoWriterObj3)        
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    for CurrentFrame = FramesDoneNumbersEPI 
+    parfor CurrentFrame = FramesDoneNumbersEPI 
         writeVideo(VideoWriterObj1,  videoImages{CurrentFrame})
         writeVideo(VideoWriterObj3,  videoImages{CurrentFrame})
         parfor_progress(-1, displFieldPath);
@@ -768,7 +769,7 @@
     dmaxTMP = nan(FramesNumEPI, 1);
     dmaxTMPindex = nan(FramesNumEPI, 1);
     diary off
-    parfor_progress(numel(FramesDoneNumbersEPI), displFieldPath);
+    parfor_progress(numel(FramesDoneNumbersEPI), DisplPathName);
     parfor CurrentFrame = FramesDoneNumbersEPI
         dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
         if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
@@ -776,11 +777,11 @@
         dmaxTMP(CurrentFrame) = max(dnorm_vec);
         [~, IdxTMP] = max(dnorm_vec);
         dmaxTMPindex(CurrentFrame) = IdxTMP;
-        parfor_progress(-1, displFieldPath);
+        parfor_progress(-1, DisplPathName);
         dnorm_vec = [];
         IdxTMP = [];
     end
-    parfor_progress(0, displFieldPath);
+    parfor_progress(0, DisplPathName);
     clear dnorm_vec  IdxTMP IdxTMP
     diary on
     [~, MaxDisplFrameNumber]  = max(dmaxTMP);
@@ -807,14 +808,14 @@
         TrackingInfoTXT, MaxDisplNetMicrons(3), sprintf('%sm', char(181)), FrameString, MaxDispl_PosXY_Pixels, CorrectionfunParams.outlierThreshold); 
     videoImages = cell(FramesNumEPI, 1);
     diary off
-    parfor_progress(numel(FramesDoneNumbers), displFieldPath);
+    parfor_progress(numel(FramesDoneNumbers), DisplPathName);
     parfor CurrentFrame = FramesDoneNumbersEPI
             videoImages{CurrentFrame} = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField,CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, ...
                 QuiverColor, colormapLUT_TxRed, GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
                 TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels); 
-            parfor_progress(-1, displFieldPath);
+            parfor_progress(-1, DisplPathName);
     end
-    parfor_progress(0, displFieldPath);
+    parfor_progress(0, DisplPathName);
     diary on
     disp("5.2 Creating frames COMPLETE!") 
 
@@ -822,13 +823,13 @@
     open(VideoWriterObj1)
     open(VideoWriterObj3)        
     diary off
-    parfor_progress(numel(FramesDoneNumbers), parfor_progressPath);
+    parfor_progress(numel(FramesDoneNumbers), DisplPathName);
     for CurrentFrame = FramesDoneNumbersEPI 
         writeVideo(VideoWriterObj1,  videoImages{CurrentFrame})
         writeVideo(VideoWriterObj3,  videoImages{CurrentFrame})
-        parfor_progress(-1, parfor_progressPath);
+        parfor_progress(-1, DisplPathName);
     end
-    parfor_progress(0, parfor_progressPath);
+    parfor_progress(0, DisplPathName);
     diary on
     close(VideoWriterObj1)
     close(VideoWriterObj3)
@@ -950,9 +951,9 @@
     end
     parfor_progress(0, parfor_progressPath);
     diary on
-    disp("7.1 Writing  frames COMPLETE!") 
+    disp("7.1 Creating frames COMPLETE!") 
 
-    disp("7.2 Writing  frames IN PROGRESS") 
+    disp("7.1 Writing  frames IN PROGRESS") 
     open(VideoWriterObj1)
     open(VideoWriterObj3)        
     diary off
@@ -966,7 +967,7 @@
     diary on
     close(VideoWriterObj1)
     close(VideoWriterObj3)
-    disp("7.2 Writing  frames COMPLETE!") 
+    disp("7.1 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
 %     winopen(VideoPathName1)
     winopen(CombinedAnalysisPath)
