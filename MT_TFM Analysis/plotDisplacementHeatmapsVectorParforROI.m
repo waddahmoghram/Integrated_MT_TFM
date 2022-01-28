@@ -71,7 +71,7 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorParforROI(MD_EPI,dis
     
     figHandleROI = figure('color','w', 'Units','pixels', 'visible', 'on');
     figAxesHandleROI = axes(figHandleROI);
-    set(figAxesHandleROI, 'Box', 'on', 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT_parula);
+    set(figAxesHandleROI, 'Box', 'on', 'XTick',[], 'YTick', [], 'Visible', 'on', 'YDir', 'reverse', 'Units', 'pixels', 'Colormap', colormapLUT_parula);
     imgHandleROI = imagesc(figAxesHandleROI, 'CData', displHeatMapPaddedCroppedMicronROI') ;               % transpose to convert ndgrid to meshgrid for imagesc Cdata
     imgHandleROI.Interpolation = 'bilinear';
     axis image

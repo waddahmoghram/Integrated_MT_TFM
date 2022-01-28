@@ -107,12 +107,114 @@
     ROIsideSizeMicron = 50;  % default 50 microns
     ROIMagnificationFactor = 3;  % default 300% or 3X 
     
-%% Video 1: displfield corrected + LPEF + DC (vectors)
     disp('----------------------------------------------------------------------------------------------------------------')
-    load(displacementFileFullName, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
+    displacementFileFullNameLPEFDC = displacementFileFullName;
+
+    %% Video 1: displfield (tracked beads)
+    disp('----------------------------------------------------------------------------------------------------------------')
+    displFieldProcess =  MD_EPI.findProcessTag('DisplacementFieldCalculationProcess').tag_;
+    displacementFileFullNameRaw = MD_EPI.findProcessTag(displFieldProcess).outFilePaths_{1};  
+    [DisplPathName, displFileNamePrefix, displFieldFileNameExt] = fileparts(displacementFileFullNameRaw);   
+    displacementFileFullName = fullfile(DisplPathName, strcat(displFileNamePrefix, displFieldFileNameExt));
     fprintf('1.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullName);
 
+    load(displacementFileFullName, 'displField');                % at this point. displField.mat is the default file
+    fprintf('Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullName);
+
     [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(displacementFileFullName);   
+    VideoFileName = strcat(VideoFileNameSuffix, '_tracked');
+    VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
+    VideoWriterObj1 = VideoWriter(VideoFullFileName1, VideoType1);
+    VideoWriterObj1.LosslessCompression = true;
+    VideoWriterObj1.FrameRate = FrameRateRT_EPI; 
+    VideoFullFileName3 = fullfile(CombinedAnalysisPath, VideoFileName);
+    VideoWriterObj3 = VideoWriter(VideoFullFileName3, VideoType3);
+    VideoWriterObj3.FrameRate = FrameRateRT_EPI; 
+    fprintf("-------- Video 5. **** %s **** ------------------\n%s", VideoWriterObj1.Filename)
+
+    FramesNumEPI = numel(displField);
+    FramesDoneNumbers = 1:FramesNumEPI;
+    FramesDoneNumbersONTrans = FramesDoneNumbersEPI(FluxON | FluxTransient);
+
+    disp('1.1 Finding the bead with the maximum displacement in ON/Transient frames IN PROGRESS')
+    dmaxTMP = nan(FramesNumEPI, 1);
+    dmaxTMPindex = nan(FramesNumEPI, 1);
+    diary off
+    parfor_progress(numel(FramesDoneNumbersEPI), DisplPathName);
+    parfor CurrentFrame = FramesDoneNumbersEPI
+        dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
+        if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
+        displField(CurrentFrame).vec(:,3)  = dnorm_vec;
+        dmaxTMP(CurrentFrame) = max(dnorm_vec);
+        [~, IdxTMP] = max(dnorm_vec);
+        dmaxTMPindex(CurrentFrame) = IdxTMP;
+        parfor_progress(-1, DisplPathName);
+        dnorm_vec = [];
+        IdxTMP = [];
+    end
+    parfor_progress(0, DisplPathName);
+    clear dnorm_vec  IdxTMP IdxTMP
+    diary on
+    [~, MaxDisplFrameNumber]  = max(dmaxTMP);
+    MaxDisplFieldIndex = dmaxTMPindex(MaxDisplFrameNumber);
+    MaxDispl_PosXY_Pixels =  displField(MaxDisplFrameNumber).pos(MaxDisplFieldIndex,:);
+    MaxDisplNetPixels = displField(MaxDisplFrameNumber).vec(MaxDisplFieldIndex,:);
+    MaxDisplNetMicrons =  MaxDisplNetPixels .* ScaleMicronPerPixel_EPI;
+    fprintf('[x,y] = [%0.3f, %0.3f] pixels in Frame #%d, Point Index #%d \n', MaxDispl_PosXY_Pixels, MaxDisplFrameNumber, MaxDisplFieldIndex)
+    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] pixels  \t==> Net displacement [disp_net] = [%0.3f] pixels. \n', MaxDisplNetPixels)
+    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] %s      \t==> Net displacement [disp_net] = [%0.3f] %s. \n', ...
+        MaxDisplNetMicrons(1:2), displUnit, MaxDisplNetMicrons(3) , displUnit)
+    disp('1.1 Finding the bead with the maximum displacement in ON/Transient frames COMPLETE')
+
+    disp("1.2 Creating frames IN PROGRESS") 
+    colormapLUT_TxRed = [linspace(0,1,GrayLevels)', zeros(GrayLevels,2)];    % Texas Red LUT
+    QuiverColor = median(imcomplement(colormapLUT_TxRed));               % User Complement of the colormap for maximum visibililty of the quiver.
+    NumDigits = numel(num2str(FramesNumEPI));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
+    FormatSpecifier = sprintf('%%%dg', NumDigits);
+    FrameString = sprintf('Frame #%s', sprintf(FormatSpecifier, MaxDisplFrameNumber));
+    TrackingInfoTXT = sprintf('mode=%s. highRes=%g. addNonLocMaxBeads=%d. trackSuccessively=%d. alpha=%0.3f, minCorLength=%g, maxFlowSpeed=%g. useGrid=%g. lastToFirst=%g. noFlowOutwardOnBorder=%d.', ...
+        displacementParameters.mode,displacementParameters.highRes, displacementParameters.addNonLocMaxBeads,displacementParameters.trackSuccessively, displacementParameters.alpha, ...
+        displacementParameters.minCorLength,displacementParameters.maxFlowSpeed, displacementParameters.useGrid, displacementParameters.lastToFirst, displacementParameters.noFlowOutwardOnBorder);
+    TrackingInfoTXT = sprintf('%s\nMaxDisplNetMicrons=%0.3f %s in %s @ [%0.3f, %0.3f] pix.', TrackingInfoTXT, MaxDisplNetMicrons(3), sprintf('%sm', char(181)), FrameString, MaxDispl_PosXY_Pixels); 
+    videoImages = cell(FramesNumEPI, 1);
+    diary off
+    parfor_progress(numel(FramesDoneNumbers), DisplPathName);
+    parfor CurrentFrame = FramesDoneNumbersEPI
+            videoImages{CurrentFrame} = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField,CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, ...
+                QuiverColor, colormapLUT_TxRed, GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
+                TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels); 
+            parfor_progress(-1, DisplPathName);
+    end
+    parfor_progress(0, DisplPathName);
+    diary on
+    disp("1.2 Creating frames COMPLETE!") 
+
+    disp("1.2 Writing  frames IN PROGRESS") 
+    open(VideoWriterObj1)
+    open(VideoWriterObj3)        
+    diary off
+    parfor_progress(numel(FramesDoneNumbers), DisplPathName);
+    for CurrentFrame = FramesDoneNumbersEPI 
+        writeVideo(VideoWriterObj1,  videoImages{CurrentFrame})
+        writeVideo(VideoWriterObj3,  videoImages{CurrentFrame})
+        parfor_progress(-1, DisplPathName);
+    end
+    parfor_progress(0, DisplPathName);
+    diary on
+    close(VideoWriterObj1)
+    close(VideoWriterObj3)
+    disp("1.2 Writing  frames COMPLETE!") 
+    fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
+%     winopen(VideoPathName1)
+%     winopen(CombinedAnalysisPath)
+    disp('----------------------------------------------------------------------------------------------------------------')
+    clear videoImages 
+
+%% Video 2: displfield corrected + LPEF + DC (vectors)
+    load(displacementFileFullNameLPEFDC, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
+    fprintf('1.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullNameLPEFDC);
+
+    [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(displacementFileFullNameLPEFDC);   
     VideoFileName = strcat(VideoFileNameSuffix, '_vectors');
     VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
     VideoWriterObj1 = VideoWriter(VideoFullFileName1, VideoType1);
@@ -166,9 +268,9 @@
     fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] %s      \t==> Net displacement [disp_net] = [%0.3f] %s. \n', ...
         MaxDisplNetMicrons(1:2), displUnit, MaxDisplNetMicrons(3) , displUnit)
     disp('1.1 Finding the bead with the maximum displacement in ON/Transient frames COMPLETE')
-%     
-%     delete(gcp('nocreate'));
-%     localcluster.parpool
+
+    delete(gcp('nocreate'));
+    localcluster.parpool
 
     AvgInterBeadDist = sqrt(TotalAreaPixel/totalBeadsTracked);        % avg inter-bead separation distance = total img area/number of tracked points
     QuiverScaleDefault = 0.95 * (AvgInterBeadDist/MaxDisplNetPixels(3)) * QuiverMagnificationFactor;    
@@ -218,18 +320,18 @@
     close(VideoWriterObj3)
     disp("1.3 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
+%     winopen(VideoPathName1)
+%     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
-
     clear videoImages 
     
-%% Video 2: displfield corrected + LPEF + DC (heatmap)
+%     delete(gcp('nocreate'));    localcluster.parpool()
+%% Video 3: displfield corrected + LPEF + DC (heatmap)       
     disp('----------------------------------------------------------------------------------------------------------------')
-    load(displacementFileFullName, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
-    fprintf('2.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullName);
+    load(displacementFileFullNameLPEFDC, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
+    fprintf('3.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullNameLPEFDC);
 
-    [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(displacementFileFullName);   
+    [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(displacementFileFullNameLPEFDC);   
     displFieldPath = VideoPathName1;
     VideoFileName = strcat(VideoFileNameSuffix, '_heatmap');
     VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
@@ -239,7 +341,7 @@
     VideoFullFileName3 = fullfile(CombinedAnalysisPath, VideoFileName);
     VideoWriterObj3 = VideoWriter(VideoFullFileName3, VideoType3);
     VideoWriterObj3.FrameRate = FrameRateRT_EPI; 
-    fprintf("-------- Video 2. **** %s **** ------------------\n%s", VideoWriterObj1.Filename)
+    fprintf("-------- Video 3. **** %s **** ------------------\n%s", VideoWriterObj1.Filename)
 
     [grid_mat, ~,~,~] = interp_vec2grid(displField(RefFrameNumEPI).pos(:,1:2), displField(RefFrameNumEPI).vec(:,1:2) ,[], reg_grid, InterpolationMethod);
     grid_mat = gpuArray(grid_mat);
@@ -271,9 +373,9 @@
     end
     parfor_progress(0, displFieldPath);
     diary on
-    disp('2.0 Calculating displacements in microns COMPLETE')
+    disp('3.0 Calculating displacements in microns COMPLETE')
 
-    disp('2.1 Finding the pixel with the maximum displacement in ON/Transient frames IN PROGRESS')    
+    disp('3.1 Finding the pixel with the maximum displacement in ON/Transient frames IN PROGRESS')    
     dmaxTMPgrid = nan(FramesNumEPI, 1);
     dmaxTMPindex = nan(FramesNumEPI, 1);
     diary off
@@ -330,9 +432,9 @@
     fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] pixels  \t==> Net displacement [disp_net] = [%0.3f] pixels. \n', MaxDisplNetPixels)
     fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] %s      \t==> Net displacement [disp_net] = [%0.3f] %s. \n', ...
         MaxDisplNetMicrons(1:2), displUnit, MaxDisplNetMicrons(3) , displUnit)
-    disp('2.1 Finding the pixel with the maximum displacement in ON/Transient frames COMPLETE')  
+    disp('3.1 Finding the pixel with the maximum displacement in ON/Transient frames COMPLETE')  
 
-    disp("2.2 Creating frames IN PROGRESS") 
+    disp("3.2 Creating frames IN PROGRESS") 
     QuiverMagnificationFactor = 1;
     colormapLUT_TxRed = [linspace(0,1,GrayLevels)', zeros(GrayLevels,2)];    % Texas Red LUT
     totaGridPoints = size(reg_grid,1)*size(reg_grid,2);
@@ -369,7 +471,7 @@
     open(VideoWriterObj3)        
     diary off
     parfor_progress(numel(FramesDoneNumbers), displFieldPath);
-    parfor CurrentFrame = FramesDoneNumbersEPI 
+    for CurrentFrame = FramesDoneNumbersEPI 
         writeVideo(VideoWriterObj1,  videoImages{CurrentFrame})
         writeVideo(VideoWriterObj3,  videoImages{CurrentFrame})
         parfor_progress(-1, displFieldPath);
@@ -380,12 +482,12 @@
     close(VideoWriterObj3)
     disp("2.2 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
+%     winopen(VideoPathName1)
+%     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
     clear videoImages;
-
-    disp("2.3 Creating ROI frames IN PROGRESS") 
+ 
+    disp("3.3 Creating ROI frames IN PROGRESS") 
     QuiverMagnificationFactor = 2;
     totaGridPoints = size(reg_grid,1)*size(reg_grid,2);
     AvgInterBeadDist = sqrt(TotalAreaPixel/totaGridPoints);        % avg inter-bead separation distance = total img area/number of tracked points    
@@ -398,7 +500,7 @@
     FormatSpecifier = sprintf('%%%dg', NumDigits);
     FrameString = sprintf('Frame #%s', sprintf(FormatSpecifier, MaxDisplFrameNumber));
     diary off
-    TrackingInfoTXT = sprintf('MaxDisplNetMicrons=%0.3f %s in %s @ [%0.3f, %0.3f] pix.', MaxDisplNetMicrons(3), sprintf('%sm', char(181)), FrameString,  MaxDisplFieldIndexXY);
+    TrackingInfoTXT = '';
     videoImages = cell(FramesNumEPI, 1);
     parfor_progressPath = displFieldPath;
     parfor_progress(numel(FramesDoneNumbers), parfor_progressPath);
@@ -435,15 +537,16 @@
     diary on
     close(VideoWriterObj1)
     close(VideoWriterObj3)
-    disp("2.2 Writing  frames COMPLETE!") 
+    disp("3.3 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
 %     winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
+%     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
     clear videoImages;   
-    delete(gcp('nocreate')); localcluster.parpool       
+    delete(gcp('nocreate')) 
 
 %% Video 3: traction stress from grid from displ outliercorrection, LPEF, DC (heatmap) 
+    localcluster.parpool      
     disp('------------------------------------------------------------------------------')
     load(forceFieldFullFileName, 'forceField')
     [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(forceFieldFullFileName);   
@@ -582,7 +685,9 @@
     disp("3.2 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
 %     winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
+%     winopen(CombinedAnalysisPath)
+
+    delete(gcp('nocreate')); localcluster.parpool       
 
     disp("3.3 Creating ROI frames IN PROGRESS") 
     QuiverMagnificationFactor = 2;
@@ -629,8 +734,8 @@
     close(VideoWriterObj3)
     disp("3.3 Writing  ROI frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-    winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
+%     winopen(VideoPathName1)
+%     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
     
     clear videoImages 
@@ -719,127 +824,24 @@
     open(VideoWriterObj1)
     open(VideoWriterObj3)        
     diary off
-    parfor_progress(numel(FramesDoneNumbers), parfor_progressPath);
+    parfor_progress(numel(FramesDoneNumbers), displFieldPath);
     for CurrentFrame = FramesDoneNumbersEPI 
         writeVideo(VideoWriterObj1,  videoImages{CurrentFrame})
         writeVideo(VideoWriterObj3,  videoImages{CurrentFrame})
-        parfor_progress(-1, parfor_progressPath);
+        parfor_progress(-1, displFieldPath);
     end
-    parfor_progress(0, parfor_progressPath);
+    parfor_progress(0, displFieldPath);
     diary on
     close(VideoWriterObj1)
     close(VideoWriterObj3)
     disp("4.3 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
 %     winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
+%     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
-    winopen(VideoPathName1)
 
     clear videoImages 
 %     delete(localcluster.Jobs);localcluster.parpool
-
-%% Video 5: displfield (tracked beads)
-    disp('----------------------------------------------------------------------------------------------------------------')
-    displFieldProcess =  MD_EPI.findProcessTag('DisplacementFieldCalculationProcess').tag_;
-    displacementFileFullNameRaw = MD_EPI.findProcessTag(displFieldProcess).outFilePaths_{1};  
-    [DisplPathName, displFileNamePrefix, displFieldFileNameExt] = fileparts(displacementFileFullNameRaw);   
-    displacementFileFullName = fullfile(DisplPathName, strcat(displFileNamePrefix, displFieldFileNameExt));
-    fprintf('5.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullName);
-
-    load(displacementFileFullName, 'displField');                % at this point. displField.mat is the default file
-    fprintf('Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullName);
-
-    [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(displacementFileFullName);   
-    VideoFileName = strcat(VideoFileNameSuffix, '_tracked');
-    VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
-    VideoWriterObj1 = VideoWriter(VideoFullFileName1, VideoType1);
-    VideoWriterObj1.LosslessCompression = true;
-    VideoWriterObj1.FrameRate = FrameRateRT_EPI; 
-    VideoFullFileName3 = fullfile(CombinedAnalysisPath, VideoFileName);
-    VideoWriterObj3 = VideoWriter(VideoFullFileName3, VideoType3);
-    VideoWriterObj3.FrameRate = FrameRateRT_EPI; 
-    fprintf("-------- Video 5. **** %s **** ------------------\n%s", VideoWriterObj1.Filename)
-
-    FramesNumEPI = numel(displField);
-    FramesDoneNumbers = 1:FramesNumEPI;
-    FramesDoneNumbersONTrans = FramesDoneNumbersEPI(FluxON | FluxTransient);
-
-    disp('5.1 Finding the bead with the maximum displacement in ON/Transient frames IN PROGRESS')
-    dmaxTMP = nan(FramesNumEPI, 1);
-    dmaxTMPindex = nan(FramesNumEPI, 1);
-    diary off
-    parfor_progress(numel(FramesDoneNumbersEPI), DisplPathName);
-    parfor CurrentFrame = FramesDoneNumbersEPI
-        dnorm_vec = vecnorm(displField(CurrentFrame).vec(:,1:2), 2,2);  
-        if useGPU, dnorm_vec = gpuArray(dnorm_vec); end
-        displField(CurrentFrame).vec(:,3)  = dnorm_vec;
-        dmaxTMP(CurrentFrame) = max(dnorm_vec);
-        [~, IdxTMP] = max(dnorm_vec);
-        dmaxTMPindex(CurrentFrame) = IdxTMP;
-        parfor_progress(-1, DisplPathName);
-        dnorm_vec = [];
-        IdxTMP = [];
-    end
-    parfor_progress(0, DisplPathName);
-    clear dnorm_vec  IdxTMP IdxTMP
-    diary on
-    [~, MaxDisplFrameNumber]  = max(dmaxTMP);
-    MaxDisplFieldIndex = dmaxTMPindex(MaxDisplFrameNumber);
-    MaxDispl_PosXY_Pixels =  displField(MaxDisplFrameNumber).pos(MaxDisplFieldIndex,:);
-    MaxDisplNetPixels = displField(MaxDisplFrameNumber).vec(MaxDisplFieldIndex,:);
-    MaxDisplNetMicrons =  MaxDisplNetPixels .* ScaleMicronPerPixel_EPI;
-    fprintf('[x,y] = [%0.3f, %0.3f] pixels in Frame #%d, Point Index #%d \n', MaxDispl_PosXY_Pixels, MaxDisplFrameNumber, MaxDisplFieldIndex)
-    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] pixels  \t==> Net displacement [disp_net] = [%0.3f] pixels. \n', MaxDisplNetPixels)
-    fprintf('Maximum displacement [disp_x, disp_y] =  [%0.3f, %0.3f] %s      \t==> Net displacement [disp_net] = [%0.3f] %s. \n', ...
-        MaxDisplNetMicrons(1:2), displUnit, MaxDisplNetMicrons(3) , displUnit)
-    disp('5.1 Finding the bead with the maximum displacement in ON/Transient frames COMPLETE')
-
-    disp("5.2 Creating frames IN PROGRESS") 
-    colormapLUT_TxRed = [linspace(0,1,GrayLevels)', zeros(GrayLevels,2)];    % Texas Red LUT
-    QuiverColor = median(imcomplement(colormapLUT_TxRed));               % User Complement of the colormap for maximum visibililty of the quiver.
-    NumDigits = numel(num2str(FramesNumEPI));            %counting the number of digits in the number of frames. E.g., 1000 = 4 digits, 100 is three digits, and so forth.
-    FormatSpecifier = sprintf('%%%dg', NumDigits);
-    FrameString = sprintf('Frame #%s', sprintf(FormatSpecifier, MaxDisplFrameNumber));
-    TrackingInfoTXT = sprintf('mode=%s. highRes=%g. addNonLocMaxBeads=%d. trackSuccessively=%d. alpha=%0.3f, minCorLength=%g, maxFlowSpeed=%g. useGrid=%g. lastToFirst=%g. noFlowOutwardOnBorder=%d.', ...
-        displacementParameters.mode,displacementParameters.highRes, displacementParameters.addNonLocMaxBeads,displacementParameters.trackSuccessively, displacementParameters.alpha, ...
-        displacementParameters.minCorLength,displacementParameters.maxFlowSpeed, displacementParameters.useGrid, displacementParameters.lastToFirst, displacementParameters.noFlowOutwardOnBorder);
-    TrackingInfoTXT = sprintf('%s\nMaxDisplNetMicrons=%0.3f %s in %s @ [%0.3f, %0.3f] pix. Spatially corrected: outlierThreshold = %g. Low-pass Equirriples temporal filter.', ...
-        TrackingInfoTXT, MaxDisplNetMicrons(3), sprintf('%sm', char(181)), FrameString, MaxDispl_PosXY_Pixels, CorrectionfunParams.outlierThreshold); 
-    videoImages = cell(FramesNumEPI, 1);
-    diary off
-    parfor_progress(numel(FramesDoneNumbers), DisplPathName);
-    parfor CurrentFrame = FramesDoneNumbersEPI
-            videoImages{CurrentFrame} = plotDisplacementOverlaysBeadsParfor(MD_EPI,displField,CurrentFrame, MD_EPI_ChannelCount, FluoroSphereSizePixel, ...
-                QuiverColor, colormapLUT_TxRed, GrayLevelsPercentile, FramesNumEPI, ScaleLength_EPI, ScaleMicronPerPixel_EPI, TimeStampsRT_Abs_EPI, FluxStatusString{CurrentFrame}, ...
-                TrackingInfoTXT, scalebarFontSize, useGPU, MaxDisplNetPixels); 
-            parfor_progress(-1, DisplPathName);
-    end
-    parfor_progress(0, DisplPathName);
-    diary on
-    disp("5.2 Creating frames COMPLETE!") 
-
-    disp("5.2 Writing  frames IN PROGRESS") 
-    open(VideoWriterObj1)
-    open(VideoWriterObj3)        
-    diary off
-    parfor_progress(numel(FramesDoneNumbers), DisplPathName);
-    for CurrentFrame = FramesDoneNumbersEPI 
-        writeVideo(VideoWriterObj1,  videoImages{CurrentFrame})
-        writeVideo(VideoWriterObj3,  videoImages{CurrentFrame})
-        parfor_progress(-1, DisplPathName);
-    end
-    parfor_progress(0, DisplPathName);
-    diary on
-    close(VideoWriterObj1)
-    close(VideoWriterObj3)
-    disp("5.2 Writing  frames COMPLETE!") 
-    fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
-%     winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
-    disp('----------------------------------------------------------------------------------------------------------------')
-
-    clear videoImages 
 
 %% Video 6: Magnetic bead displacement (tracked bead)
     disp('------------------------------------------------------------------------------')
@@ -902,7 +904,7 @@
     disp("6.2 Writing  frames COMPLETE!") 
     fprintf('Saved as: \n\t%s\n', VideoFullFileName1)
 %     winopen(VideoPathName1)
-    winopen(CombinedAnalysisPath)
+%     winopen(CombinedAnalysisPath)
     disp('----------------------------------------------------------------------------------------------------------------')
 
     clear videoImages 
