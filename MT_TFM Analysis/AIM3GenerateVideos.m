@@ -3,10 +3,8 @@
     Load finalworkspace.mat and run this script. Run 'startup.m' script to initiate the localcluster parpool
 %}   
 %%
-%     startup;
-%     localcluster.NumWorkers = 32;         % works with my workstation. Not all threads can be used. GPU memory overflows
-%     localcluster.parpool;
-%% Initial Setup for videos. 
+    startup
+%% Initia hl Setup for videos. 
     % load workspace "finalworkspace.mat"
     nGPU = gpuDeviceCount;
     if nGPU > 0
@@ -111,6 +109,7 @@
     displacementFileFullNameLPEFDC = displacementFileFullName;
 
 %% Video 1: displfield (tracked beads)
+    if isempty(gcp('nocreate')), localcluster.parpool;end
     disp('----------------------------------------------------------------------------------------------------------------')
     displFieldProcess =  MD_EPI.findProcessTag('DisplacementFieldCalculationProcess').tag_;
     displacementFileFullNameRaw = MD_EPI.findProcessTag(displFieldProcess).outFilePaths_{1};  
@@ -211,6 +210,7 @@
     clear videoImages 
 
 %% Video 2: displfield corrected + LPEF + DC (vectors)
+    if isempty(gcp('nocreate')), localcluster.parpool;end
     load(displacementFileFullNameLPEFDC, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
     fprintf('2.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullNameLPEFDC);
 
@@ -270,7 +270,7 @@
     disp('2.1 Finding the bead with the maximum displacement in ON/Transient frames COMPLETE')
 
     delete(gcp('nocreate'));
-    localcluster.parpool
+    if isempty(gcp('nocreate')), localcluster.parpool;end
 
     AvgInterBeadDist = sqrt(TotalAreaPixel/totalBeadsTracked);        % avg inter-bead separation distance = total img area/number of tracked points
     QuiverScaleDefault = 0.95 * (AvgInterBeadDist/MaxDisplNetPixels(3)) * QuiverMagnificationFactor;    
@@ -304,7 +304,7 @@
     diary on
     disp("2.2 Creating frames COMPLETE!") 
 
-    disp("2.3 Writing  frames IN PROGRESS") 
+    disp("2.2 Writing  frames IN PROGRESS") 
     open(VideoWriterObj1)
     open(VideoWriterObj3)        
     diary off
@@ -325,8 +325,9 @@
     disp('----------------------------------------------------------------------------------------------------------------')
     clear videoImages 
     
-%     delete(gcp('nocreate'));    localcluster.parpool()
+    delete(gcp('nocreate'))    
 %% Video 3: displfield corrected + LPEF + DC (heatmap)       
+    if isempty(gcp('nocreate')), localcluster.parpool;end
     disp('----------------------------------------------------------------------------------------------------------------')
     load(displacementFileFullNameLPEFDC, 'displField');                % at this point. displField_LPEF_DC.mat is the default file
     fprintf('3.0 Displacement Field (displField) File is successfully loaded!:\n\t%s\n', displacementFileFullNameLPEFDC);
@@ -512,8 +513,8 @@
     end
     parfor_progress(0, parfor_progressPath);
     diary on
-    disp("2.3 Creating ROI frames COMPLETE!") 
-    disp("2.3 Writing  ROI frames IN PROGRESS") 
+    disp("3.3 Creating ROI frames COMPLETE!") 
+    disp("3.3 Writing  ROI frames IN PROGRESS") 
     VideoFileName = strcat(VideoFileNameSuffix, '_ROI_heatmap');
     VideoFullFileName1 = fullfile(VideoPathName1, VideoFileName);
     VideoWriterObj1 = VideoWriter(VideoFullFileName1, VideoType1);
@@ -546,7 +547,7 @@
     delete(gcp('nocreate')) 
 
 %% Video 4: traction stress from grid from displ outliercorrection, LPEF, DC (heatmap) 
-%     localcluster.parpool      
+    localcluster.parpool      
     disp('------------------------------------------------------------------------------')
     load(forceFieldFullFileName, 'forceField')
     [VideoPathName1, VideoFileNameSuffix, ~] = fileparts(forceFieldFullFileName);   
