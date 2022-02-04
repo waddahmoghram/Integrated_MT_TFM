@@ -70,9 +70,9 @@ function correctMovieDisplacementField(movieData,varargin)
     mkClrDir(correctionParameters.OutputDirectory);
     
     %% --------------- Initialization ---------------%%
-%     if feature('ShowFigureWindows')
-%         wtBar = waitbar(0,'Initializing...','Name',displFieldCorrProc.getName());
-%     end
+    if feature('ShowFigureWindows')
+        wtBar = waitbar(0,'Initializing...','Name',displFieldCorrProc.getName());
+    end
 
     % Reading various constants
     nFrames = movieData.nFrames_;
@@ -129,13 +129,10 @@ function correctMovieDisplacementField(movieData,varargin)
     save(outputFile{3}, 'correctionParameters', 'movieDataBefore', 'iSDCProc', 'displFieldCorrProc','displFieldCalcProc','-v7.3');   
     MD = movieData; 
     save(outputFile{4}, 'MD','-v7.3');        
-    %----------------------------------------------------------------------
-    
-   
+    %----------------------------------------------------------------------  
     % Anonymous functions for reading input/output
     displField = displFieldCalcProc.loadChannelOutput;
 
-    %
     FramesTrackedTF = (arrayfun(@(x) ~isempty(x.vec), displField));          % in case previous step was not tracked completely. WIM 2021-08-04
     FramesTrackedNumbers = find(FramesTrackedTF);
     displField(~FramesTrackedTF) = [];                              % remove frames that were not tracked.
@@ -145,38 +142,40 @@ function correctMovieDisplacementField(movieData,varargin)
     % %Parse input, store in parameter structure
     % pd = parseProcessParams(displFieldCalcProc,paramsIn);
 
-%     disp('Detecting and filtering vector field outliers...')
-%     logMsg = 'Please wait, detecting and filtering vector field outliers';
-%     timeMsg = @(t) ['\nEstimated time remaining: ' num2str(round(t/60)) 'min'];
-%     if feature('ShowFigureWindows'), waitbar(0,wtBar,sprintf(logMsg)); end
-%     if feature('ShowFigureWindows'),parfor_progress(nFrames); end
+    disp('Detecting and filtering vector field outliers...')
+    logMsg = 'Please wait, detecting and filtering vector field outliers';
+    timeMsg = @(t) ['\nEstimated time remaining: ' num2str(round(t/60)) 'min'];
+    if feature('ShowFigureWindows'), waitbar(0,wtBar,sprintf(logMsg)); end
+    if feature('ShowFigureWindows'),parfor_progress(nFrames); end
 
     outlierThreshold = correctionParameters.outlierThreshold;
                               % Remove the empty ones. 
+    FramesToBeTracked = 1:nFrames;
+    FramesToBeTrackedCount = numel(FramesToBeTracked);
     parfor_progressPath = movieData.outputDirectory_;
-    tic;    
     parfor_progress(nFrames, parfor_progressPath);
-    parfor j = 1:nFrames
-%     for j = FramesTrackedNumbers
+%     parfor CurrentFrame = FramesToBeTracked
+    for CurrentFrame = FramesTrackedNumbers
         % Outlier detection
-        dispMat = [displField(j).pos displField(j).vec];
-%         fprintf('Correcting Frame #%d\n', j);
+        tick = tic;
+        dispMat = [displField(CurrentFrame).pos displField(CurrentFrame).vec];
+%         fprintf('Correcting Frame #%d\n', CurrentFrame);
         % Take out duplicate points (Sangyoon)
         [dispMat,~,~] = unique(dispMat,'rows'); %dispMat2 = dispMat(idata,:),dispMat = dispMat2(iudata,:)
-        displField(j).pos=dispMat(:,1:2);
-        displField(j).vec=dispMat(:,3:4);
+        displField(CurrentFrame).pos=dispMat(:,1:2);
+        displField(CurrentFrame).vec=dispMat(:,3:4);
 
         if ~isempty(outlierThreshold)
             if useGrid
-                if j==1
+                if CurrentFrame==1
                     disp('In previous step, PIV was used, which does not require the current filtering step. skipping...')
                 end
             else
-                [outlierIndex,sparselyLocatedIdx,~,neighborhood_distance(j)] = detectVectorFieldOutliersTFM(dispMat,outlierThreshold,1);
-                AllOutlierIndices{j} = outlierIndex;
+                [outlierIndex,sparselyLocatedIdx,~,neighborhood_distance(CurrentFrame)] = detectVectorFieldOutliersTFM(dispMat,outlierThreshold,1);
+                AllOutlierIndices{CurrentFrame} = outlierIndex;
                 
-                %displField(j).pos(outlierIndex,:)=[];
-                %displField(j).vec(outlierIndex,:)=[];
+                %displField(CurrentFrame).pos(outlierIndex,:)=[];
+                %displField(CurrentFrame).vec(outlierIndex,:)=[];
                 dispMat(outlierIndex,3:4)=NaN;
                 dispMat(sparselyLocatedIdx,3:4)=NaN;
             end
@@ -186,8 +185,8 @@ function correctMovieDisplacementField(movieData,varargin)
     %         ind= ~isnan(dispMat(:,3));
     %         dispMat=dispMat(ind,:);
 
-            displField(j).pos=dispMat(:,1:2);
-            displField(j).vec=dispMat(:,3:4);
+            displField(CurrentFrame).pos=dispMat(:,1:2);
+            displField(CurrentFrame).vec=dispMat(:,3:4);
 
             % I deleted this part because artificially interpolated vector can
             % cause more error or false force. - Sangyoon June 2013
@@ -196,16 +195,20 @@ function correctMovieDisplacementField(movieData,varargin)
     %         % They are considered smoothed displacements at the data points. Sangyoon
     %         dispMat = [dispMat(:,2:-1:1) dispMat(:,2:-1:1)+dispMat(:,4:-1:3)];
     %         intDisp = vectorFieldSparseInterp(dispMat,...
-    %             displField(j).pos(:,2:-1:1),...
+    %             displField(CurrentFrame).pos(:,2:-1:1),...
     %             pd.minCorLength,pd.minCorLength,[],true);
-    %         displField(j).vec = intDisp(:,4:-1:3) - intDisp(:,2:-1:1);
+    %         displField(CurrentFrame).vec = intDisp(:,4:-1:3) - intDisp(:,2:-1:1);
         end
-% %         Update the waitbar
-%         if mod(j,5)==1 && feature('ShowFigureWindows')
-%             tj=toc;
-%             waitbar(j/numel(FramesTrackedNumbers),wtBar,sprintf([logMsg timeMsg(tj*(nFrames-j)/j)]));
-%         end
-%         if feature('ShowFigureWindows'), parfor_progress; end
+%         Update the waitbar
+        if mod(CurrentFrame,5)==1 && feature('ShowFigureWindows')
+            if ishandle(wtBar)
+                timeSec =toc(tick);
+                FramesTrackedSoFarCount = (CurrentFrame-firstFrame);
+                FramesLeftCount = FramesToBeTrackedCount - FramesTrackedSoFarCount ;
+                waitbar((CurrentFrame-firstFrame)/FramesToBeTrackedCount,wtBar,sprintf([logMsg, timeMsg(timeSec*FramesLeftCount)]));
+            end
+        end
+        if feature('ShowFigureWindows'), parfor_progress; end
         parfor_progress(-1, parfor_progressPath);
     end
 %     if feature('ShowFigureWindows'), parfor_progress(0); end
@@ -228,34 +231,34 @@ function correctMovieDisplacementField(movieData,varargin)
         timeMsg = @(t) ['\nEstimated time remaining: ' num2str(round(t/60)) 'min'];
         tic
         nFillingTries = 10;             % Modified by Waddah Moghram on 2019-06-02 from 5 to 30, to have smaller increases in search radius
-        for j = FramesTrackedNumbers
+        for CurrentFrame = FramesTrackedNumbers
             % Read image and perform correlation
             if ~isempty(iSDCProc)
-                currImage = double(SDCProc.loadChannelOutput(pStep2.ChannelIndex(1),j));
+                currImage = double(SDCProc.loadChannelOutput(pStep2.ChannelIndex(1),CurrentFrame));
             else
-                currImage = double(movieData.channels_(pStep2.ChannelIndex(1)).loadImage(j));
+                currImage = double(movieData.channels_(pStep2.ChannelIndex(1)).loadImage(CurrentFrame));
             end
             nTracked=1000;
             nFailed=0;
             for k = 0:nFillingTries   % Modified by Waddah Moghram on 2019-06-02 from 1  to 0, for starting value so that radius is always the same at first, to be more consistent.
                 % only un-tracked vectors
-                unTrackedBeads=isnan(displField(j).vec(:,1));
+                unTrackedBeads=isnan(displField(CurrentFrame).vec(:,1));
                 ratioUntracked = sum(unTrackedBeads)/length(unTrackedBeads);
                 if logical(ratioUntracked<0.0001) || logical(nTracked==0 && nFailed>30)
                     break
                 end
-                currentBeads = displField(j).pos(unTrackedBeads,:);
-                neighborBeads = displField(j).pos(~unTrackedBeads,:);
-                neighborVecs = displField(j).vec(~unTrackedBeads,:);
+                currentBeads = displField(CurrentFrame).pos(unTrackedBeads,:);
+                neighborBeads = displField(CurrentFrame).pos(~unTrackedBeads,:);
+                neighborVecs = displField(CurrentFrame).vec(~unTrackedBeads,:);
                 % Get neighboring vectors from these vectors (meanNeiVecs)
-                [idx] = KDTreeBallQuery(neighborBeads, currentBeads, (1+5*k/nFillingTries)*neighborhood_distance(j)); % Increasing search radius with further iteration
-    %             [idx] = KDTreeBallQuery(neighborBeads, currentBeads, (2-1.5*k/nFillingTries)*neighborhood_distance(j)); % Increasing search radius with further iteration
+                [idx] = KDTreeBallQuery(neighborBeads, currentBeads, (1+5*k/nFillingTries)*neighborhood_distance(CurrentFrame)); % Increasing search radius with further iteration
+    %             [idx] = KDTreeBallQuery(neighborBeads, currentBeads, (2-1.5*k/nFillingTries)*neighborhood_distance(CurrentFrame)); % Increasing search radius with further iteration
                 % In case of empty idx, search with larger radius.
                 emptyCases = cellfun(@isempty,idx);
                 mulFactor=1;
                 while any(emptyCases)
                     mulFactor=mulFactor+0.5;
-                    idxEmpty = KDTreeBallQuery(neighborBeads, currentBeads(emptyCases,:), mulFactor*(1+5*k/nFillingTries)*neighborhood_distance(j));
+                    idxEmpty = KDTreeBallQuery(neighborBeads, currentBeads(emptyCases,:), mulFactor*(1+5*k/nFillingTries)*neighborhood_distance(CurrentFrame));
                     idx(emptyCases)=idxEmpty;
                     emptyCases = cellfun(@isempty,idx);
                 end
@@ -274,14 +277,14 @@ function correctMovieDisplacementField(movieData,varargin)
                         pStep2.minCorLength,pStep2.minCorLength,'maxSpd',pStep2.maxFlowSpeed,...
                         'mode',pStep2.mode,'hardCandidates',closeNeiVecs);%,'usePIVSuite', pStep2.usePIVSuite);
                 else
-                    if j == 1
+                    if CurrentFrame == 1
                         prevImage = refFrame;
                     else
                         if ~exist('prevImage', 'var')
                             if ~isempty(SDCProc)
-                                prevImage = double(SDCProc.loadChannelOutput(correctionParameters.ChannelIndex(1), j - 1));
+                                prevImage = double(SDCProc.loadChannelOutput(correctionParameters.ChannelIndex(1), CurrentFrame - 1));
                             else
-                                prevImage = double(movieData.channels_(correctionParameters.ChannelIndex(1)).loadImage(j - 1));
+                                prevImage = double(movieData.channels_(correctionParameters.ChannelIndex(1)).loadImage(CurrentFrame - 1));
                             end
                         end
                     end
@@ -300,34 +303,34 @@ function correctMovieDisplacementField(movieData,varargin)
                     nFailed = 0;
                 end
 
-            %     displField(j).pos(unTrackedBeads,:)=currentBeads; % validV is removed to include NaN location - SH 030417
-                displField(j).vec(unTrackedBeads,:) = [v(:,1)+residualT(j,2), v(:,2)+residualT(j,1)]; % residual should be added with oppiste order! -SH 072514
+            %     displField(CurrentFrame).pos(unTrackedBeads,:)=currentBeads; % validV is removed to include NaN location - SH 030417
+                displField(CurrentFrame).vec(unTrackedBeads,:) = [v(:,1)+residualT(CurrentFrame,2), v(:,2)+residualT(CurrentFrame,1)]; % residual should be added with oppiste order! -SH 072514
             end
-            disp(['Done for frame ' num2str(j) '/' num2str(nFrames) '.'])
+            disp(['Done for frame ' num2str(CurrentFrame) '/' num2str(nFrames) '.'])
             % Update the waitbar
 %             if feature('ShowFigureWindows')
 %                 tj=toc;
-%                 waitbar(j/nFrames,wtBar,sprintf([logMsg timeMsg(tj*(nFrames-j)/j)]));
+%                 waitbar(CurrentFrame/nFrames,wtBar,sprintf([logMsg timeMsg(tj*(nFrames-CurrentFrame)/CurrentFrame)]));
 %             end
         end
         
         %Filtering again
-        for j= FramesTrackedNumbers
+        for CurrentFrame= FramesTrackedNumbers
             % Outlier detection
-            dispMat = [displField(j).pos displField(j).vec];
+            dispMat = [displField(CurrentFrame).pos displField(CurrentFrame).vec];
             % Take out duplicate points (Sangyoon)
             [dispMat,~,~] = unique(dispMat,'rows'); %dispMat2 = dispMat(idata,:),dispMat = dispMat2(iudata,:)
-            displField(j).pos = dispMat(:,1:2);
-            displField(j).vec = dispMat(:,3:4);
+            displField(CurrentFrame).pos = dispMat(:,1:2);
+            displField(CurrentFrame).vec = dispMat(:,3:4);
 
             [outlierIndex,sparselyLocatedIdx] = detectVectorFieldOutliersTFM(dispMat,outlierThreshold*3,1);
-            %displField(j).pos(outlierIndex,:)=[];
-            %displField(j).vec(outlierIndex,:)=[];
+            %displField(CurrentFrame).pos(outlierIndex,:)=[];
+            %displField(CurrentFrame).vec(outlierIndex,:)=[];
             dispMat(outlierIndex,3:4)=NaN;
             dispMat(sparselyLocatedIdx,3:4)=NaN;
 
-            displField(j).pos=dispMat(:,1:2);
-            displField(j).vec=dispMat(:,3:4);
+            displField(CurrentFrame).pos=dispMat(:,1:2);
+            displField(CurrentFrame).vec=dispMat(:,3:4);
             if feature('ShowFigureWindows'), parfor_progress(-1, parfor_progressPath); end
         end
         if feature('ShowFigureWindows'), parfor_progress(0, parfor_progressPath); end

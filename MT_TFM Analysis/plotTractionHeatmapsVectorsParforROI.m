@@ -85,7 +85,7 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParforROI(MD_EPI,forceF
     caxis(colorbarLimits);
     colorbarTicks = unique(sort([colorbarLimits, colorbarHandle.Ticks])); 
     colorbarTicksExpDefault = colorbarHandle.Ruler.Exponent;   
-    colorbarUnits = '\mum';   
+    colorbarUnits = 'Pa';   
     colorbarTickLabels = {};
     colorbarTickLabels{1} = num2str(colorbarTicks(1));
     colorbarTicks(1) = str2double(colorbarTickLabels{1});

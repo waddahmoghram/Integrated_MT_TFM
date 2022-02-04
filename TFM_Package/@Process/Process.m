@@ -1,4 +1,4 @@
-classdef Process < hgsetget
+classdef Process < matlab.mixin.SetGet
     % Defines the abstract class Process from which every user-defined process
     % will inherit.
     %
@@ -34,6 +34,8 @@ classdef Process < hgsetget
         
         % Success/Uptodate flags
         procChanged_   % Whether process parameters have been changed
+    end
+    properties
         success_       % If the process has been successfully run
         % If the parameter of parent process is changed
         % updated_ - false, not changed updated_ - true
@@ -48,8 +50,6 @@ classdef Process < hgsetget
 
         is3Dcompatible_ % can process handle 3D movie data
 
-    end
-    properties
         startTime_      % Time process was last started
         finishTime_     % Time process was last run
         notes_          % Process notes

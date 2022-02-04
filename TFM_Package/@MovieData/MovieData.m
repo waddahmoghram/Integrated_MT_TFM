@@ -31,8 +31,7 @@ classdef  MovieData < MovieObject & matlab.mixin.Heterogeneous
         parent_ =  MovieData.empty(1,0); % Parent movie(s)
         bfSeries_               % Series of the image file
    end
-    
-    
+        
     properties
         roiMaskPath_            % The path where the roi mask is stored
         roiOmeroId_             % The ID of the OMERO ROI
@@ -44,14 +43,12 @@ classdef  MovieData < MovieObject & matlab.mixin.Heterogeneous
         numAperture_            % Lens numerical aperture
         camBitdepth_            % Camera Bit-depth
         acquisitionDate_        % Camera Bit-depth
-        
-        
+   
         % ---- Un-used params ----
         
         eventTimes_             % Time of movie events
         magnification_          % Magnification
         binning_                % Camera binning
-        
         
         % For mockMovieData
         mockMD_
