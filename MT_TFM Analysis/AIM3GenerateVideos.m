@@ -632,6 +632,7 @@
     clear videoImages;
 
     delete(gcp('nocreate'));
+    startup
     if isempty(gcp('nocreate')), localcluster.parpool;end
 
     disp("4.3 Creating ROI frames IN PROGRESS") 

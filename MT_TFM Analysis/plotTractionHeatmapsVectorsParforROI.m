@@ -8,6 +8,7 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParforROI(MD_EPI,forceF
     DecimalsColorbar = 2;
     FontName1 = 'Inconsolata ExtraCondensed';
     FontName2 = 'XITS';
+    FluoroSphereSizePixel = 0.5 * ScaleMicronPerPixel_EPI;                % assuming 0.5 micron fluorescent beads
 
 %     ROIsideSizeMicron = 50;  % default 50 microns
 %     ROIMagnificationFactor = 3;  % default 300% or 3X 
@@ -149,6 +150,8 @@ function [CurrentFramePlot] = plotTractionHeatmapsVectorsParforROI(MD_EPI,forceF
 %     quiver(figAxesHandleROI, X, Y, U .*QuiverScaleToMax,V .*QuiverScaleToMax, 0, ...
 %                    'MarkerSize',MarkerSize, 'markerfacecolor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3, ...
 %                   'color', QuiverColor, 'AutoScale','on', 'LineWidth', QuiverLineWidth , 'AlignVertexCenters', 'on');
+    plot(figAxesHandleROI, X, Y, ...
+            'MarkerSize', FluoroSphereSizePixel * 1.5, 'Marker', '.', 'MarkerEdgeColor', QuiverColor, 'LineStyle', 'none') ;
 
     plottedFrame =  getframe(figHandleROI);    
     CurrentFramePlot =  plottedFrame.cdata;

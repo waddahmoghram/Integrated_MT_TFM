@@ -10,6 +10,7 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorParforROI(MD_EPI,dis
     FontName1 = 'Inconsolata ExtraCondensed';
     FontName2 = 'XITS';
     displUnit = sprintf('%sm', char(181));      % um using micron unicode.
+    FluoroSphereSizePixel = 0.5 * ScaleMicronPerPixel_EPI;                % assuming 0.5 micron fluorescent beads
 
 %%
     [grid_mat, displVecGridXY,~,~] = interp_vec2grid(displFieldMicron(CurrentFrame).pos(:,1:2), displFieldMicron(CurrentFrame).vec(:,1:2) ,[], reg_grid, InterpolationMethod);
@@ -152,6 +153,8 @@ function [CurrentFramePlot] = plotDisplacementHeatmapsVectorParforROI(MD_EPI,dis
 %     quiver(figAxesHandleROI, Xum, Yum, Uum * QuiverScaleToMax ,Vum * QuiverScaleToMax, 0, ...
 %                    'MarkerSize',MarkerSize, 'markerfacecolor',QuiverColor, 'ShowArrowHead','on', 'MaxHeadSize', 3, ...
 %                   'color', QuiverColor, 'AutoScale','on', 'LineWidth', QuiverLineWidth , 'AlignVertexCenters', 'on');
+    plot(figAxesHandleROI, Xum, Yum, ...
+            'MarkerSize', FluoroSphereSizePixel * 1.5, 'Marker', '.', 'MarkerEdgeColor', QuiverColor, 'LineStyle', 'none') ;
 
     plottedFrame =  getframe(figHandleROI);    
     CurrentFramePlot =  plottedFrame.cdata;
