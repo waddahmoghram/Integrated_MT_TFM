@@ -79,10 +79,11 @@ function [CleanedSensorData , ExposurePulseCount, EveryNthFrame, CleanedSensorDa
 %     HeaderTitle = [];
     ExposurePulseCount = 0;    
     FirstExposurePulseDatapointNumber = 0;
-    
+    TotalSamplePoints = size(SensorData,1);
+
     CameraExposureCutoffHigh = 3;                       % Camera Exposure (>3V).
     CameraExposureCutoffLow = 0.1;                      % No Camera Exposure (~ 0V). 
-    
+
     if ~exist('SensorData','var'), SensorData = []; end
     if nargin < 1 || isempty(SensorData)
         [SensorData, HeaderData, HeaderTitle, SensorDataFullFilename, ~, ~, SamplingRate]  = ReadSensorDataFile([], 0, [], [], [], []);            
@@ -119,39 +120,57 @@ function [CleanedSensorData , ExposurePulseCount, EveryNthFrame, CleanedSensorDa
     disp('Cleaning up to keep sensors data points that have camera exposure...in Progress')
 
 %% =========== 2. Loop through all datapoints of Sensor Data
-    for ii = 1:size(SensorData,1)                
-        CurrentDataPointExposure = SensorData(ii,4);                         % Last column (4th Column) is camera exposure signal
-        if CurrentDataPointExposure < CameraExposureCutoffLow
-            if CleanSensorDataPointAppended == true                         % Ask if data has been pushed out already CleanSensorDataPoint?
-                CurrentDataPoint = [] ;                                     % Reset the current data point between pulses
-%                 Prompt = sprintf('Exposure ON at data point %d ',CurrentPulseIndexInFile);
-%                 disp(Prompt);
-                CurrentDataPointAVG(1,1) = CurrentPulseIndexInFile;         % Corrected the index reading and made sure it starts from index 0 by fixing ReadSensorDataFile on 1/24/2018.
-                CleanSensorDataTmp = [CleanSensorDataTmp; CurrentDataPointAVG];
-                CleanSensorDataPointAppended = false ;                      % Reset to indicate the value was pushed through and other variables
-            end
-        %-------------------------
-        elseif CurrentDataPointExposure > CameraExposureCutoffHigh                    
-            if CleanSensorDataPointAppended == false                        % Ask if this is the first datapoint of the pulse. Store its index and reading so that it will be recorrected once done               
-                CurrentPulseIndexInFile = SensorData(ii,1); 
-                ExposurePulseCount = ExposurePulseCount + 1;                                % Increment the Exposure Pulse Count
-                if FirstExposurePulseDatapointNumber == 0
-                    FirstExposurePulseDatapointNumber = ii;
-                    fprintf('First Exposure Pulse data point number = %d\n', ii);
+    try
+        for ii = 1:TotalSamplePoints              
+            CurrentDataPointExposure = SensorData(ii,4);                         % Last column (4th Column) is camera exposure signal
+            if CurrentDataPointExposure < CameraExposureCutoffLow
+                if CleanSensorDataPointAppended == true                         % Ask if data has been pushed out already CleanSensorDataPoint?
+                    CurrentDataPoint = [] ;                                     % Reset the current data point between pulses
+    %                 Prompt = sprintf('Exposure ON at data point %d ',CurrentPulseIndexInFile);
+    %                 disp(Prompt);
+                    CurrentDataPointAVG(1,1) = CurrentPulseIndexInFile;         % Corrected the index reading and made sure it starts from index 0 by fixing ReadSensorDataFile on 1/24/2018.
+                    CleanSensorDataTmp = [CleanSensorDataTmp; CurrentDataPointAVG];
+                    CleanSensorDataPointAppended = false ;                      % Reset to indicate the value was pushed through and other variables
                 end
-            end     
-            CurrentDataPoint = [CurrentDataPoint;SensorData(ii,:)];          % Append the current pulse datapoints together
-            CurrentDataPointAVG = mean(CurrentDataPoint) ;                  % Average them out so that they be as a single point. These data points are what actually happens during exposure. Not very efficient since you average everytime this line runs instead of at the end
-                                %CurrentDataPointAVG(i,1) = PulseSampleIndex
-            CleanSensorDataPointAppended = true;                            % To let loop know Data was appended   
-        %-------------------------
-        else                                                                % Exposure signal is between 0.1V and 3V. Either weird signal or transient signal
-            %Prompt = sprintf('Weird or transient Camera Exposure Signal at data point #%d. Ignore it',SensorData(i,1));
-            %disp(Prompt);
-        end   % End of if statemnets
+            %-------------------------
+            elseif CurrentDataPointExposure > CameraExposureCutoffHigh                    
+                if CleanSensorDataPointAppended == false                        % Ask if this is the first datapoint of the pulse. Store its index and reading so that it will be recorrected once done               
+                    CurrentPulseIndexInFile = SensorData(ii,1); 
+                    ExposurePulseCount = ExposurePulseCount + 1;                                % Increment the Exposure Pulse Count
+                    if FirstExposurePulseDatapointNumber == 0
+                        FirstExposurePulseDatapointNumber = ii;
+                        fprintf('First Exposure Pulse data point number = %d\n', ii);
+                    end
+                end     
+                CurrentDataPoint = [CurrentDataPoint;SensorData(ii,:)];          % Append the current pulse datapoints together
+                CurrentDataPointAVG = mean(CurrentDataPoint) ;                  % Average them out so that they be as a single point. These data points are what actually happens during exposure. Not very efficient since you average everytime this line runs instead of at the end
+                                    %CurrentDataPointAVG(i,1) = PulseSampleIndex
+                CleanSensorDataPointAppended = true;                            % To let loop know Data was appended   
+            %-------------------------
+            else                                                                % Exposure signal is between 0.1V and 3V. Either weird signal or transient signal
+                %Prompt = sprintf('Weird or transient Camera Exposure Signal at data point #%d. Ignore it',SensorData(i,1));
+                %disp(Prompt);
+            end   % End of if statemnets
+        end
+        CleanedSensorData = CleanSensorDataTmp(1:EveryNthFrame:size(CleanSensorDataTmp,1),:);  
+    catch
+        PercentExposureSamples = numel(find(abs(SensorData(:,4)) > CameraExposureCutoffLow)) / numel(SensorData(:,4));
+        AverageExposureFrames = floor(PercentExposureSamples * SamplingRate);
+        [peaks,peakLocationsStart,~,~] = findpeaks(SensorData(:,4), 'MinPeakHeight', CameraExposureCutoffHigh, 'MinPeakDistance', AverageExposureFrames);      % at least separated by average exposure frames
+        ExposurePulseCount = numel(peaks);
+        FirstExposurePulseDatapointNumber = peakLocationsStart(1);
+        peakLocationsFinish = peakLocationsStart + AverageExposureFrames;
+        CleanedSensorDataIdx = [];
+        for CurrentPeak = 1:ExposurePulseCount
+            CleanedSensorDataIdx(CurrentPeak, :) = peakLocationsStart(CurrentPeak):peakLocationsFinish(CurrentPeak);
+        end
+        CleanedSensorDataIdx(CleanedSensorDataIdx > TotalSamplePoints) = TotalSamplePoints;              % Replace indices more than sample numbers with the last sample.
+        CleanedSensorData = [];
+        parfor CurrentPeak = 1:ExposurePulseCount
+            CleanedSensorData(CurrentPeak, :) = mean(SensorData(CleanedSensorDataIdx(CurrentPeak, :), :))            
+        end
+        CleanedSensorData(:,5) = peakLocationsStart(:,1);    % should match
     end   % End of for loop
-%% =========== 
-    CleanedSensorData = CleanSensorDataTmp(1:EveryNthFrame:size(CleanSensorDataTmp,1),:);  
     
  %% ===========     
     if ~exist('SensorDataFullFilename', 'var'), SensorDataFullFilename = []; end
