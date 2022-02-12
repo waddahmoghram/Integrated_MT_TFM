@@ -2085,3 +2085,5 @@
         cmdToExecute = ['open ', CombinedAnalysisPath];
         [status, path] = system(cmdToExecute); %#ok<ASGLU>
     end
+    %% GenerateVideos
+    AIM3GenerateVideos      
