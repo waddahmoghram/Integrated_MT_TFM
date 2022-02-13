@@ -12,7 +12,7 @@
         Optimziation code.
 
 %}
-function [FluxON, FluxOFF, FluxTransient, FluxReadingsStatus] = FindFluxStatusControlledForce(CleanedSensorDataFullFileNameMAT_EPI)
+function [FluxON, FluxOFF, FluxTransient, FluxReadingsStatus] = FindFluxStatusControlledForce(CleanedSensorDataFullFileNameMAT_EPI, FluxNoiseLevelGs)
   % Returns flux status for a controlled-force MT experiment.
     if ~exist('CleanedSensorDataFullFileNameMAT_EPI', 'var') || nargin <1, CleanedSensorDataFullFileNameMAT_EPI = []; end
     if isempty(CleanedSensorDataFullFileNameMAT_EPI) || ~isfile(CleanedSensorDataFullFileNameMAT_EPI)
@@ -189,7 +189,7 @@ function [FluxON, FluxOFF, FluxTransient, FluxReadingsStatus] = FindFluxStatusCo
 %         disp('Default option is chosen of 3.0 Gs!');
 %         FluxNoiseLevelGs = 3;
 %     end
-    FluxNoiseLevelGs = 2; % 2 Gs. Modified by WIM on 2019-08-28
+%     FluxNoiseLevelGs = 2; % 2 Gs. Modified by WIM on 2019-08-28
 %     FluxNoiseLevelGs = 3;
     % FluxNoiseLevelGs = 1.75;
     % Updated on 4/29/2018 to reflect the Null Flux Correction scheme.
