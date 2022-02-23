@@ -110,9 +110,9 @@
     AnalysisPathEPI = [];
     TransientRegParamMethod = 'ON for Transients';
     
-    optimsetTolCriterion = 'TolX';    % tolerance based on function output, which in this case is Young's ('TolFun')     
+    optimsetTolCriterion = 'TolX';    % tolerance based on X or Young's Elastic Modulus vs. based on RMSE ('TolFun')     
     YoungModulusOptimizedCycle = 3;     % seconds cycle
-    YoungModulusOptimizedIntervalSec = 0.54;  % 1/2 second near the end
+    YoungModulusOptimizedIntervalSec = 1;  % 1/2 second near the end. 1 Second for last aim (when samples at 10.8 fpm with the slower camera).
     % number of significant figures beyond decimal point to estimate Young's elastic modulus.  
     tolerancePower = 3;
     tolerance = 10^(-tolerancePower);
@@ -1986,17 +1986,11 @@
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf|\itF\rm(\itt\rm)\bf|\rm or \bf|\itF_{MT}\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName); 
     legend('\bf|\itF\rm(\itt\rm)\bf|\rm', '\bf|\itF_{MT}\rm(\itt\rm)\bf|\rm', 'Location','eastoutside'  )
-
-    VerticalLine = [0,4];
-    c = plot([TransientFramesLimitsX(ii),TransientFramesLimitsX(ii)], VerticalLine, 'k--');
-
-
-    for ii = 1:numel(TransientFramesLimitsX)
-       c = plot([TransientFramesLimitsX(ii),TransientFramesLimitsX(ii)], VerticalLine, 'k--');
-%            c = plot(TimeStamps([TransientFramesLimitsX(ii),TransientFramesLimitsX(ii)]), VerticalLine, 'k--');
-       if ii~=1, c.HandleVisibility = 'Off'; end
-       hold on
-    end
+    VerticalLine = [figAxesHandleForce_MTvTFM.YLim(1), figAxesHandleForce_MTvTFM.YLim(2)];
+    OptimizedFrameDIC_First = plot([TimeStampsRT_Abs_DIC(OptimizedFramesDIC(1)),TimeStampsRT_Abs_DIC(OptimizedFramesDIC(1))], VerticalLine, 'b--', 'HandleVisibility', 'Off');
+    OptimizedFrameDIC_Last = plot([TimeStampsRT_Abs_DIC(OptimizedFramesDIC(end)),TimeStampsRT_Abs_DIC(OptimizedFramesDIC(end))], VerticalLine, 'b--', 'HandleVisibility', 'Off');
+    OptimizedFrameEPI_First = plot([TimeStampsRT_Abs_EPI(OptimizedFramesEPI(1)),TimeStampsRT_Abs_DIC(OptimizedFramesEPI(1))], VerticalLine, 'r--', 'HandleVisibility', 'Off');
+    OptimizedFrameEPI_Last = plot([TimeStampsRT_Abs_EPI(OptimizedFramesEPI(end)),TimeStampsRT_Abs_EPI(OptimizedFramesEPI(end))], VerticalLine, 'r--', 'HandleVisibility', 'Off');
 
 
     figHandleWorkEnergy_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
@@ -2101,4 +2095,4 @@
         [status, path] = system(cmdToExecute); %#ok<ASGLU>
     end
     %% GenerateVideos
-%     AIM3GenerateVideos      
+     AIM3GenerateVideos      

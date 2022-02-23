@@ -175,7 +175,7 @@ function [RMSE_Newtons, forceField , MT_Force_xy_N, grid_mat, TractionForce, reg
 %     disp('Calculating Traction Stresses using FTTC & the Optimized regularization parameter (BL2)...complete...');
 
 %% Calculating the RMSE for the optimized period of the difference. Only  magnitudes are important.
-    RMSE_Newtons  = gather(sqrt(mean(TractionForceNet(FramesOptimizedNumbers) - MT_Force_xy_N' , 'omitnan').^2));
+    RMSE_Newtons  = gather(sqrt(mean(TractionForceNet(FramesOptimizedNumbers) - MT_Force_xy_N' , 'omitnan').^2));    % or you can use rms(TractionForceNet(FramesOptimizedNumbers) - MT_Force_xy_N') function, but we need "omitnan" ability
     if useGPU
         TractionForceNet = gather(TractionForceNet);
         TractionForceX = gather(TractionForceX);
