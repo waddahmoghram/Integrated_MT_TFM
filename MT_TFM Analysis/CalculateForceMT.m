@@ -52,7 +52,7 @@
 function [Force_xyz_N, Force_xy_N, WorkBeadJ_Half_Cycles, WorkCycleFirstFrame, WorkCycleLastFrame, CompiledMT_Results] = CalculateForceMT(MagBeadCoordinatesMicronXYZ, ...
     NeedleTipRelativeCoordinatesXYZmicrons, ScaleMicronPerPixel,...
     NeedleInclinationAngleDegrees, FirstFrame_DIC, LastFrame_DIC, TimeStampsRT_Abs_DIC, CleanSensorDataDIC, CleanSensorDataFullFileName, ...
-    OutputPathName, MT_ForceFullFileName, ND2FileExtensionDIC, HeaderData, thickness_um, GelConcentrationMgMl, GelType)
+    OutputPathName, MT_ForceFullFileName, ND2FileExtensionDIC, HeaderData, thickness_um, GelConcentrationMgMl, GelType, FluxNoiseLevelGs)
 
 %%
     PlotsFontName = 'XITS';             % other fonts are cambria math
@@ -173,6 +173,10 @@ function [Force_xyz_N, Force_xy_N, WorkBeadJ_Half_Cycles, WorkCycleFirstFrame, W
     if ~exist('GelType', 'var'), GelType = []; end
     if  nargin < 16 || isempty(GelType)
         GelType = [];
+    end
+    if ~exist('FluxNoiseLevelGs', 'var'), FluxNoiseLevelGs = []; end
+    if  nargin < 17 || isempty(FluxNoiseLevelGs)
+        FluxNoiseLevelGs =  3;           % default +- 3 Gs level noise
     end
     
 % %% ======================= Cleaning the sensor data 
@@ -388,7 +392,7 @@ function [Force_xyz_N, Force_xy_N, WorkBeadJ_Half_Cycles, WorkCycleFirstFrame, W
 %         prompt = 'Enter the Flux Noise Level in Gs: ';
 %         FluxNoiseLevelGs = input(prompt);
 %         if isempty(FluxNoiseLevelGs)
-            FluxNoiseLevelGs = 3;                   % based on trial and error 2/4/2019. Will capture most of the ramps
+%             FluxNoiseLevelGs = 3;                   % based on trial and error 2/4/2019. Will capture most of the ramps
 %         end
 %     elseif FluxNoiseLevelPrompt == 'N'            
 %             FluxNoiseLevelGs = 3;

@@ -135,6 +135,7 @@ function correctMovieDisplacementField(movieData,varargin)
 
     FramesTrackedTF = (arrayfun(@(x) ~isempty(x.vec), displField));          % in case previous step was not tracked completely. WIM 2021-08-04
     FramesTrackedNumbers = find(FramesTrackedTF);
+    firstFrame = FramesTrackedNumbers(1);
     displField(~FramesTrackedTF) = [];                              % remove frames that were not tracked.
      
     useGrid=displParams.useGrid;
@@ -208,7 +209,7 @@ function correctMovieDisplacementField(movieData,varargin)
                 waitbar((CurrentFrame-firstFrame)/FramesToBeTrackedCount,wtBar,sprintf([logMsg, timeMsg(timeSec*FramesLeftCount)]));
             end
         end
-        if feature('ShowFigureWindows'), parfor_progress; end
+%         if feature('ShowFigureWindows'), parfor_progress; end
         parfor_progress(-1, parfor_progressPath);
     end
 %     if feature('ShowFigureWindows'), parfor_progress(0); end
