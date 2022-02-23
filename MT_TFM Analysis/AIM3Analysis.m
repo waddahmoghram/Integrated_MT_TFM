@@ -9,7 +9,9 @@
 % Initial Parameters. Make sure you track previously.
     format longg
     MT_Analysis_Only = false;
-    
+            
+    FluxNoiseLevelGs = 30;                % latest round of experiments were around 30 Gs. Previous rounds were around 3 GS. 
+
     choiceTrackDIC ='Yes';
     choiceOpenND2DIC = 'Yes';
     SaveOutput = true;
@@ -108,11 +110,11 @@
     AnalysisPathEPI = [];
     TransientRegParamMethod = 'ON for Transients';
     
-    optimsetTolCriterion = 'TolFun';    % tolerance based on function output, which in this case is Young's        
+    optimsetTolCriterion = 'TolX';    % tolerance based on X or Young's Elastic Modulus vs. based on RMSE ('TolFun')     
     YoungModulusOptimizedCycle = 3;     % seconds cycle
-    YoungModulusOptimizedIntervalSec = 0.5;  % 1/2 second near the end
+    YoungModulusOptimizedIntervalSec = 1;  % 1/2 second near the end. 1 Second for last aim (when samples at 10.8 fpm with the slower camera).
     % number of significant figures beyond decimal point to estimate Young's elastic modulus.  
-    tolerancePower = 2;
+    tolerancePower = 3;
     tolerance = 10^(-tolerancePower);
 
     ForceIntegrationMethod = 'Summed';
@@ -1195,7 +1197,7 @@
             [MT_Force_xyz_N, MT_Force_xy_N, WorkBeadJ_Half_Cycle, WorkCycleFirstFrame, WorkCycleLastFrame, CompiledMT_Results] = CalculateForceMT(MagBeadCoordinatesMicronXYZ, ...
                 NeedleTipRelativeCoordinatesXYZmicrons, ScaleMicronPerPixel_DIC, ...
                 NeedleInclinationAngleDegrees, FirstFrame_DIC, LastFrame_DIC, TimeStampsRT_Abs_DIC, CleanSensorDataDIC, SensorDataFullFilenameDIC, ...
-                MT_Force_OutputPath, MT_ForceFullFileName, ND2FileExtensionDIC, HeaderDataDIC, thickness_um, GelConcentrationMgMl, GelType);
+                MT_Force_OutputPath, MT_ForceFullFileName, ND2FileExtensionDIC, HeaderDataDIC, thickness_um, GelConcentrationMgMl, GelType, FluxNoiseLevelGs);
     end
     if CloseFigures, close all; end
     % ------------------- save all variables to workspace so that I can continue my analysis
@@ -1458,7 +1460,7 @@
     'OptimizedFramesDIC', 'OptimizedFramesEPI', 'FrameRateRT_Mean_DIC_EPI', 'optimsetTolCriterion', 'tolerance', 'CalculateRegParamMethod',...
         'YoungModulusPaInitialGuess', 'CornerPercentage', 'ForceIntegrationMethod', 'gridMagnification', 'WorkBeadJ_Half_Cycle', 'YoungModulusOptimizedCycle', ...
         'YoungModulusPaOptimum', 'GridtypeChoiceStr', 'PaddingChoiceStr', 'SpatialFilterChoiceStr', 'WienerWindowSize', 'FramesRegParamNumbers', ...
-        'HanWindowChoice', 'options', 'GelType', '-v7.3');
+        'HanWindowChoice', 'options', 'GelType', 'FluxNoiseLevelGs', '-v7.3');
     disp('Optimization output saved!');
 
 %% ============================ Re-evaluating traction stresses with the raw regularization parameters.
@@ -1795,7 +1797,7 @@
     save(forceFieldFullFileName, 'MD_EPI', 'displField', 'TimeFilterChoiceStr',  'SpatialFilterChoiceStr', 'WienerWindowSize', ...
          'EdgeErode',  'gridMagnification', 'GridtypeChoiceStr', 'InterpolationMethod','DriftCorrectionChoiceStr', 'ScaleMicronPerPixel_EPI',   ...
         'forceField', 'TimeStamps', 'CornerPercentage','Notes', ...
-        'TransientRegParamMethod', 'FluxON', 'FluxOFF', 'FluxTransient', 'reg_corner_averaged', ...
+        'TransientRegParamMethod', 'FluxON', 'FluxOFF', 'FluxTransient', 'reg_corner_averaged', 'FluxNoiseLevelGs', ...
         'reg_cornerChoiceStr', 'TractionStressMethod', 'PaddingChoiceStr', 'HanWindowChoice', 'forceFieldParameters', 'CalculateRegParamMethod', '-v7.3')
 
     TractionForceFullFileName = fullfile(TractionForcePath, sprintf('E_%0.3fPa_TractionForce_Averaged.mat', forceFieldParameters.YoungModulusPa));   
@@ -1969,7 +1971,8 @@
     plot(TimeStampsRT_Abs_DIC(FramesPlotted), ConversionNtoNN* MT_Force_xy_N(FramesPlotted), 'b.-', 'LineWidth', 1, 'MarkerSize', 2)
     xlim([0, max([TimeStampsRT_Abs_DIC(numel(FramesPlotted)), TimeStampsRT_Abs_EPI(numel(FramesPlotted))])]);
     title(titleStr4, 'interpreter', 'none');
-    set(findobj(gcf,'type', 'axes'), ...
+    figAxesHandleForce_MTvTFM = findobj(figHandleForce_MTvTFM,'type', 'axes');
+    set(figAxesHandleForce_MTvTFM, ...
         'FontSize',12, ...
         'FontName', 'Helvetica', ...
         'LineWidth',1, ...
@@ -1983,6 +1986,12 @@
     set(xlabelHandle, 'FontName', PlotsFontName)
     ylabel('\bf|\itF\rm(\itt\rm)\bf|\rm or \bf|\itF_{MT}\rm(\itt\rm)\bf|\rm [nN]', 'FontName', PlotsFontName); 
     legend('\bf|\itF\rm(\itt\rm)\bf|\rm', '\bf|\itF_{MT}\rm(\itt\rm)\bf|\rm', 'Location','eastoutside'  )
+    VerticalLine = [figAxesHandleForce_MTvTFM.YLim(1), figAxesHandleForce_MTvTFM.YLim(2)];
+    OptimizedFrameDIC_First = plot([TimeStampsRT_Abs_DIC(OptimizedFramesDIC(1)),TimeStampsRT_Abs_DIC(OptimizedFramesDIC(1))], VerticalLine, 'b--', 'HandleVisibility', 'Off');
+    OptimizedFrameDIC_Last = plot([TimeStampsRT_Abs_DIC(OptimizedFramesDIC(end)),TimeStampsRT_Abs_DIC(OptimizedFramesDIC(end))], VerticalLine, 'b--', 'HandleVisibility', 'Off');
+    OptimizedFrameEPI_First = plot([TimeStampsRT_Abs_EPI(OptimizedFramesEPI(1)),TimeStampsRT_Abs_DIC(OptimizedFramesEPI(1))], VerticalLine, 'r--', 'HandleVisibility', 'Off');
+    OptimizedFrameEPI_Last = plot([TimeStampsRT_Abs_EPI(OptimizedFramesEPI(end)),TimeStampsRT_Abs_EPI(OptimizedFramesEPI(end))], VerticalLine, 'r--', 'HandleVisibility', 'Off');
+
 
     figHandleWorkEnergy_MTvTFM = figure('visible',showPlots, 'color', 'w');     % added by WIM on 2019-02-07. To show, remove 'visible    
     set(figHandleWorkEnergy_MTvTFM, 'Position', [275, 435, 825, 375])
@@ -2086,4 +2095,4 @@
         [status, path] = system(cmdToExecute); %#ok<ASGLU>
     end
     %% GenerateVideos
-    AIM3GenerateVideos      
+     AIM3GenerateVideos      
