@@ -691,7 +691,7 @@ displacementParameters.referenceFramePath = RefFramePathEPI;
 %_____________ Construct the TFM package
 if isempty(MD_EPI.packages_)
     packageName = 'TFMPackage';
-    packageConstr = str2func(packageName);
+    packageConstr = str2func(packageName);  
     % Add package to movie
     packageIndx = MD_EPI.getPackageIndex(packageName, 1, true);
     MD_EPI.addPackage(packageConstr(MD_EPI, MD_EPI.outputDirectory_));
@@ -2279,4 +2279,4 @@ elseif ismac
 end
 
 %% GenerateVideos
-AIM3GenerateVideos
+% AIM3GenerateVideos

@@ -793,7 +793,7 @@
         %% 18. Separation Distance (small delta) vs. time. %% ******** CONSIDER MAKING THIS ITS OWN FUNCTION******************
         %     ForceInfo = sprintf('Needle-Bead Separation Distance at inclination angle of %.0f', InclinationAnglesDegrees);
         %     ForceInfo = [ForceInfo, char(176)];        % Add a degree at the end
-        titleStr2 = sprintf('%.0f %sm-thick, %.1f mg/mL %s', thickness_um, char(181), GelConcentrationMgMl, GelType{1});
+        titleStr2 = sprintf('%.0f %sm-thick, %.3g mg/mL %s', thickness_um, char(181), GelConcentrationMgMl, GelType{1});
         %             titleStr = {'Magnetic bead net displacements from starting position', titleStr2};
         titleStr = titleStr2;
 

@@ -246,7 +246,8 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
 
 %% 0. Initial Variables
     RendererMode = 'painters';
-    PlotsFontName = 'Arial';
+    PlotsFontName =  'Helvatica-Narrow';
+    PlotsTitleFontName = 'Inconsolata Condensed Medium';   
     AI7 = 'CameraExposureTTL';
     
     %%
@@ -426,21 +427,22 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
             plot(TimeSec, SensorData(:,2), 'b.', 'MarkerSize',2 )
             hold on
             plot(TimeSec, repmat(SensorZeroPointCore, size(TimeSec)), 'r-')
-            title({'Core Magnetic Flux Sensor Reading in [V] at the Blunt End over time', strcat(SensorDataFileName,'.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none')
-            xlabel('Time [s]', 'FontName', PlotsFontName)
-            ylabel('\bf\itB\rm_{Blunt} [V]', 'FontName', PlotsFontName)
 %             text(gca, sprintf('Calibrated Zero = %.6f V', SensorZeroPointCore))
             xlim([0, TimeSec(end)]);               % Adjust the end limit.
             findobj(figFluxV,'type', 'axes');
             set(findobj(gcf,'type', 'axes'), ...
                 'FontSize',12, ...
-                'FontName', 'Helvetica', ...
+                'FontName', PlotsTitleFontName, ...
                 'LineWidth',1, ...
                 'XMinorTick', 'on', ...
                 'YMinorTick', 'on', ...
                 'TickDir', 'out', ...
                 'TitleFontSizeMultiplier', 0.9, ...
                 'TitleFontWeight', 'bold');     % Make axes bold        
+            title({'Core Magnetic Flux Sensor Reading in [V] at the Blunt End over time', strcat(SensorDataFileName,'.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none', 'FontName', PlotsTitleFontName)
+            xlabel('Time [s]', 'FontName', PlotsFontName)
+            ylabel('\bf\itB\rm_{Blunt} [V]', 'FontName', PlotsFontName)
+
             if saveSensorPlots
                 savefig(figFluxV, strcat(figureFileNames{1,1}, '.fig'), 'compact');                    %             savefig(figFluxV,figureFileNames{1,1});                     
     %             saveas(figFluxV, strcat(figureFileNames{1,1}, '.eps'), 'eps'); 
@@ -454,21 +456,12 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
 
             % 2. Plot Current (V) Signal over Time
             figCurrent = figure('color', 'w', 'Renderer', RendererMode);
-            if strcmpi(SensorDataColumns{1},'Current AO (V)')
-            plot(TimeSec, SensorData(:,1) *0.4, 'b.', 'MarkerSize',2 ) %% AO Voltage is -10 to 104 to map -4 to 4 Amp
-                title({'Current to the Needle Coils based on AO voltage', strcat(SensorDataFileName, '.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none')
-            else
-                plot(TimeSec, SensorData(:,3), 'b.', 'MarkerSize',2 )
-                title({'Current to the Needle Coils through 1-Amp Resistor', strcat(SensorDataFileName, '.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none')
-            end
-                
+               
             hold on
             plot(TimeSec, zeros(size(TimeSec)), 'r-')
-            xlabel('Time [s]', 'FontName', PlotsFontName)
-            ylabel('\bf\itI\rm_{MT} [Amp]', 'FontName', PlotsFontName)
             set(findobj(gcf,'type', 'axes'), ...
                 'FontSize',12, ...
-                'FontName', 'Helvetica', ...
+                'FontName', PlotsFontName,...
                 'LineWidth',1, ...
                 'XMinorTick', 'on', ...
                 'YMinorTick', 'on', ...
@@ -476,6 +469,16 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
                 'TitleFontSizeMultiplier', 0.9, ...
                 'TitleFontWeight', 'bold');     % Make axes bold   
             xlim([0, TimeSec(end)]);               % Adjust the end limit.
+            xlabel('Time [s]', 'FontName', PlotsFontName)
+            ylabel('\bf\itI\rm_{MT} [Amp]', 'FontName', PlotsFontName)
+            if strcmpi(SensorDataColumns{1},'Current AO (V)')
+                plot(TimeSec, SensorData(:,1) *0.4, 'b.', 'MarkerSize',2 ) %% AO Voltage is -10 to 104 to map -4 to 4 Amp
+                title({'Current to the Needle Coils based on AO voltage', strcat(SensorDataFileName, '.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none', 'FontName', PlotsTitleFontName)
+            else
+                plot(TimeSec, SensorData(:,3), 'b.', 'MarkerSize',2 )
+                title({'Current to the Needle Coils through 1-Amp Resistor', strcat(SensorDataFileName, '.dat or .mat')}, 'FontWeight', 'bold', 'interpreter', 'none', 'FontName', PlotsTitleFontName)
+            end
+
             if saveSensorPlots
                 savefig(figCurrent, strcat(figureFileNames{1,2}, '.fig'), 'compact');
     %             saveas(figCurrent, strcat(figureFileNames{1,2}, '.eps'), 'eps'); 
@@ -491,27 +494,28 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
             plot(TimeSec, SensorData(:,4), 'b-', 'MarkerSize',2 )
             hold on
             plot(TimeSec, repmat(3, size(TimeSec)), 'r-')
-            switch AI7
-                case 'MagneticFluxTipV' 
-                    title({'Field Magnetic Flux Sensor Reading in [V] at the Tip over time', strcat(SensorDataFileName, '.dat or .mat')}, 'interpreter', 'none', 'FontWeight', 'bold')
-                    ylabel('\bf\itB\rm_{Tip} [V]', 'FontName', PlotsFontName)
-                case 'CameraExposureTTL'
-                    title({'Digital TTL Exposure Signal of the camera over time', strcat(SensorDataFileName, '.dat or .mat')}, 'interpreter', 'none', 'FontWeight', 'bold')
-                    ylabel('Camera Exposure Signal [V]', 'FontName', PlotsFontName)
-            end
-
-            xlabel('Time [s]', 'FontName', PlotsFontName)
-
             xlim([0, TimeSec(end)]);               % Adjust the end limit.
             set(findobj(gcf,'type', 'axes'), ...
                 'FontSize',12, ...
-                'FontName', 'Helvetica', ...
+                'FontName', PlotsFontName,...
                 'LineWidth',1, ...
                 'XMinorTick', 'on', ...
                 'YMinorTick', 'on', ...
                 'TickDir', 'out', ...
                 'TitleFontSizeMultiplier', 0.9, ...
                 'TitleFontWeight', 'bold');     % Make axes bold   
+
+            switch AI7
+                case 'MagneticFluxTipV' 
+                    title({'Field Magnetic Flux Sensor Reading in [V] at the Tip over time', strcat(SensorDataFileName, '.dat or .mat')}, 'interpreter', 'none', 'FontWeight', 'bold', 'FontName', PlotsTitleFontName)
+                    ylabel('\bf\itB\rm_{Tip} [V]', 'FontName', PlotsFontName)
+                case 'CameraExposureTTL'
+                    title({'Digital TTL Exposure Signal of the camera over time', strcat(SensorDataFileName, '.dat or .mat')}, 'interpreter', 'none', 'FontWeight', 'bold', 'FontName', PlotsTitleFontName)
+                    ylabel('Camera Exposure Signal [V]', 'FontName', PlotsFontName)
+            end 
+            
+            xlabel('Time [s]', 'FontName', PlotsFontName)
+
             if saveSensorPlots
                 savefig(figCameraExposureTTL,strcat(figureFileNames{1,3}, '.fig'), 'compact');
     %             saveas(figCameraExposureTTL,strct(figureFileNames{1,3}, .eps'), 'eps'); 
@@ -613,13 +617,10 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
             plot(TimeSec, (SensorData(:,2)-SensorZeroPointCore)/SensorSensitivityCore, 'b.', 'MarkerSize',2 )
             hold on
             plot(TimeSec, repmat(0, size(TimeSec)), 'r-')
-            title({'Core Magnetic Flux Sensor Reading at the Blunt End over time', strcat(SensorDataFileName, '.dat or .mat')}, 'interpreter', 'none', 'FontWeight', 'bold')
-            xlabel('Time [s]', 'FontName', PlotsFontName)
-            ylabel('\bf\itB\rm_{Blunt} [Gs]', 'FontName', PlotsFontName)
             xlim([0, TimeSec(end)]);               % Adjust the end limit.
             set(findobj(gcf,'type', 'axes'), ...
                 'FontSize',12, ...
-                'FontName', 'Helvetica', ...
+                'FontName', PlotsFontName,...
                 'LineWidth',1, ...
                 'XMinorTick', 'on', ...
                 'YMinorTick', 'on', ...
@@ -627,6 +628,10 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
                 'TitleFontSizeMultiplier', 0.9, ...
                 'TitleFontWeight', 'bold', ...
                 'ydir', 'reverse');     % Make axes bold   
+            title({'Core Magnetic Flux Sensor Reading at the Blunt End over time', strcat(SensorDataFileName, '.dat or .mat')}, 'interpreter', 'none', 'FontWeight', 'bold', 'FontName', PlotsTitleFontName)
+            xlabel('Time [s]', 'FontName', PlotsFontName)
+            ylabel('\bf\itB\rm_{Blunt} [Gs]', 'FontName', PlotsFontName)
+
             if saveSensorPlots
                 savefig(figCoreFluxGs, strcat(figureFileNames{1,4}, '.fig'), 'compact');
     %             saveas(figCoreFluxGs, strcat(figureFileNames{1,4}, '.eps'), 'eps'); 
@@ -638,19 +643,19 @@ function [SensorData, HeaderData, HeaderTitle, SensorDataFullFileNameMAT, Sensor
 %                     FrameCount = size(SensorData,1);
 %                     TimeSec = (1:FrameCount) /SamplingRate;
 %                     plot(TimeSec, (SensorData(:,4)-SensorZeroPointField)/SensorSensitivityField, 'b.', 'MarkerSize',2 )
-%                     title('Field Magnetic Flux Sensor Reading in [Gs] at the Tip over time', 'FontWeight', 'bold')
-%                     xlabel('Time [s]', 'FontName', PlotsFontName)
-%                     ylabel('\bf\itB\rm_{Tip} [Gs]', 'FontName', PlotsFontName)
 %                     xlim([0, TimeSec(end)]);               % Adjust the end limit.
 %                     set(findobj(gcf,'type', 'axes'), ...
 %                         'FontSize',12, ...
-%                         'FontName', 'Helvetica', ...
+%                         'FontName', PlotsFontName,...
 %                         'LineWidth',1, ...
 %                         'XMinorTick', 'on', ...
 %                         'YMinorTick', 'on', ...
 %                         'TickDir', 'out', ...
 %                         'TitleFontSizeMultiplier', 0.9, ...
-%                         'TitleFontWeight', 'bold');     % Make axes bold   
+%                         'TitleFontWeight', 'bold');     % Make axes bold  
+%                     title('Field Magnetic Flux Sensor Reading in [Gs] at the Tip over time', 'FontWeight', 'bold', 'FontName', PlotsTitleFontName)
+%                     xlabel('Time [s]', 'FontName', PlotsFontName)
+%                     ylabel('\bf\itB\rm_{Tip} [Gs]', 'FontName', PlotsFontName)
 %                     if saveSensorPlots
 %                         savefig(figFieldFluxGs, strcat(figureFileNames{1,5}, '.fig'), 'compact');
 %     %                     saveas(figFieldFluxGs, strcat(figureFileNames{1,5}, '.eps'), 'eps'); 
