@@ -10,12 +10,6 @@
 format longg
 MT_Analysis_Only = false;
 
-prompt = 'What is the flux noice in Gs? [Default = 3 Gs]: ';
-FluxNoiseLevelGs = input(prompt);
-if isempty(FluxNoiseLevelGs)
-    FluxNoiseLevelGs = 3; % latest round of experiments were around 30 Gs. Previous rounds were around 3 GS. = 30;
-end  
-
 choiceTrackDIC = 'Yes';
 choiceOpenND2DIC = 'Yes';
 SaveOutput = true;
@@ -264,6 +258,11 @@ switch controlMode
         end
 
         [SensorDataDIC, HeaderDataDIC, HeaderTitleDIC, SensorDataFullFilenameDIC, SensorOutputPathNameDIC, ~, SamplingRate, SensorDataColumns] = ReadSensorDataFile(SensorDataDICFullFileName, PlotSensorData, SensorOutputPath_DIC, AnalysisPath, HeaderLinesCount, 'Yes');
+        prompt = 'What is the flux noice in Gs? [Default = 3 Gs]: ';
+        FluxNoiseLevelGs = input(prompt);
+        if isempty(FluxNoiseLevelGs)
+            FluxNoiseLevelGs = 3; % latest round of experiments were around 30 Gs. Previous rounds were around 3 GS. = 30;
+        end  
         if CloseFigures, close all; end
         [CleanSensorDataDIC, ExposurePulseCountDIC, EveryNthFrameDIC, CleanedSensorDataFullFileName_DIC, HeaderData, HeaderTitle, FirstExposurePulseIndexDIC] = CleanSensorDataFile(SensorDataDIC, 1, SensorDataFullFilenameDIC, SamplingRate, HeaderDataDIC, HeaderTitleDIC, SensorDataColumns);
             %{
