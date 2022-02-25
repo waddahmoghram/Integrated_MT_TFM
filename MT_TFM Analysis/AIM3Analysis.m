@@ -10,7 +10,11 @@
 format longg
 MT_Analysis_Only = false;
 
-FluxNoiseLevelGs = 30; % latest round of experiments were around 30 Gs. Previous rounds were around 3 GS.
+prompt = 'What is the flux noice in Gs? [Default = 3 Gs]: ';
+FluxNoiseLevelGs = input(prompt);
+if isempty(FluxNoiseLevelGs)
+    FluxNoiseLevelGs = 3; % latest round of experiments were around 30 Gs. Previous rounds were around 3 GS. = 30;
+end  
 
 choiceTrackDIC = 'Yes';
 choiceOpenND2DIC = 'Yes';
@@ -2279,4 +2283,4 @@ elseif ismac
 end
 
 %% GenerateVideos
-% AIM3GenerateVideos
+ AIM3GenerateVideos
