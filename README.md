@@ -1,5 +1,5 @@
 # Integrated_MT_TFM
-Latest compilations of MT_TFM geared etween 2016-06-28 through 2021-10-31 for the my PhD thesis entitled, **"Integration of Magnetic Tweezers and Traction Force Microscopy to Investigate Extracellular Matrix Microrheology and Keratinocyte Mechanobiology"** [1].
+Latest compilations of MT_TFM geared between 2016-06-28 through 2021-10-31 for the my PhD thesis entitled, **"Integration of Magnetic Tweezers and Traction Force Microscopy to Investigate Extracellular Matrix Microrheology and Keratinocyte Mechanobiology"** [1].
 
 This code is a compilation of other codes that is to be used to conduct the complete analysis for the following:
 
